@@ -13,12 +13,14 @@ const D3Example = () => {
     return Math.round(n * y) / y;
   };
 
-  // size of final SVG
+  // size of final SVG in pixel
   const SVG_SIZE = { width: 500, height: 300 };
 
   // max values of both axis
   const X_MAX = 10;
   const Y_MAX = 10;
+
+  const SHOW_DOTTED_CURVE = false;
 
   // precision of the polynomial's coefficients and the draggable points
   // (i.e., number of significant figures)
@@ -104,50 +106,60 @@ const D3Example = () => {
       .style('fill', 'red');
   };
 
+  const drawCurveLines = (d3, focus, line, curvePoints) => {
+    // remove old lines
+    d3.select('svg')
+      .select('g')
+      .selectAll('path#curve')
+      .remove();
+
+    // draw new lines
+    focus
+      .append('path')
+      .datum(curvePoints)
+      .attr('id', 'curve')
+      .attr('fill', 'none')
+      .attr('stroke', 'steelblue')
+      .attr('stroke-linejoin', 'round')
+      .attr('stroke-linecap', 'round')
+      .attr('stroke-width', 1.5)
+      .attr('d', line);
+  };
+
   const init = () => {
+    // implementation based on:
     // https://bl.ocks.org/denisemauldin/538bfab8378ac9c3a32187b4d7aed2c2
-    // define svg and and add it to the dom
-    let svg = d3.select(SVG_REF.current);
+
+    // define svg and link it with the dom element
+    const svg = d3.select(SVG_REF.current);
 
     // set properties
-    let margin = { top: 20, right: 20, bottom: 30, left: 50 };
-    let width = +svg.attr('width') - margin.left - margin.right;
-    let height = +svg.attr('height') - margin.top - margin.bottom;
+    const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+    const width = +svg.attr('width') - margin.left - margin.right;
+    const height = +svg.attr('height') - margin.top - margin.bottom;
 
-    // create random points
-    //let points = d3.range(1, 5).map(i => [(i * width) / 10, 50 + Math.random() * (height - 100)]);
+    // define range of x and y axis (in pixel)
+    const x = d3.scaleLinear().rangeRound([0, width]);
+    const y = d3.scaleLinear().rangeRound([height, 0]);
 
-    // define range of x and y axis
-    let x = d3.scaleLinear().rangeRound([0, width]);
-    let y = d3.scaleLinear().rangeRound([height, 0]);
+    // set position of x and y axis
+    const xAxis = d3.axisBottom(x);
+    const yAxis = d3.axisLeft(y);
 
-    // set x and y axis
-    let xAxis = d3.axisBottom(x);
-    let yAxis = d3.axisLeft(y);
-
-    let line = d3
+    // define how lines should be drawn
+    const line = d3
       .line()
       .x(d => x(d[0]))
       .y(d => y(d[1]));
 
-    // https://stackoverflow.com/questions/46171347/how-to-fit-a-polynomial-curve-with-d3
-    // https://github.com/d3/d3-shape/blob/master/README.md#curves
-    // line = d3
-    //   .line()
-    //   .x(d => x(d[0]))
-    //   .y(d => y(d[1]))
-    //   .curve(d3.curveCardinal.tension(0));
-    //.curve(d3.curveNatural);
-    //.curve(d3.curveCatmullRom);
-    //.curve(d3.curveBasis);
-
-    // define drag events (methods defined at the end of this )
-    let drag = d3
+    // define drag events (methods are defined at the end)
+    const drag = d3
       .drag()
       .on('start', dragstarted)
       .on('drag', dragged)
       .on('end', dragended);
 
+    // configure svg
     svg
       .append('rect')
       .attr('class', 'zoom')
@@ -158,25 +170,25 @@ const D3Example = () => {
       .attr('height', height)
       .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-    var focus = svg
+    // create "drawing area" on svg
+    const focus = svg
       .append('g')
       .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-    x.domain(d3.extent(points, d => d[0]));
-    y.domain(d3.extent(points, d => d[1]));
-
+    // set domains of x and y axis
     x.domain([0, X_MAX]);
     y.domain([0, Y_MAX]);
 
-    // draw curve
+    // draw initial curve
     focus
       .append('path')
       .datum(curvePoints)
+      .attr('id', 'initial') // id is currently not used
       .attr('fill', 'none')
-      .attr('stroke', 'steelblue')
+      .attr('stroke', 'lightgray')
       .attr('stroke-linejoin', 'round')
       .attr('stroke-linecap', 'round')
-      .attr('stroke-width', 1.5)
+      .attr('stroke-width', 1)
       .attr('d', line);
 
     // draw draggable points
@@ -189,9 +201,8 @@ const D3Example = () => {
       .attr('cx', d => x(d[0]))
       .attr('cy', d => y(d[1]))
       .style('cursor', 'pointer');
-    //.style('fill', 'steelblue');
 
-    // add drag behaviour to all dragable points
+    // add drag behaviour to all draggable points
     focus.selectAll('circle').call(drag);
 
     // draw x axis
@@ -207,12 +218,17 @@ const D3Example = () => {
       .attr('class', 'axis axis--y')
       .call(yAxis);
 
+    // make initial regression "through" the draggable points
     const regression = polynomialRegression(points, order);
     setEquation(regression.string);
     setR2(regression.r2);
 
-    // init
-    drawCurvePoints(d3, focus, x, y, curvePoints);
+    // draw curve points or lines
+    if (SHOW_DOTTED_CURVE) {
+      drawCurvePoints(d3, focus, x, y, curvePoints);
+    } else {
+      drawCurveLines(d3, focus, line, curvePoints);
+    }
 
     function dragstarted(d) {
       d3.select(this)
@@ -237,12 +253,14 @@ const D3Example = () => {
 
       curvePoints = calculateCurvePoints(points, order);
 
-      focus.select('path').attr('d', line);
-
-      drawCurvePoints(d3, focus, x, y, curvePoints);
-
       // sort points to not have "invalid" functions
       setPoints(sortPointsByX(points));
+
+      if (SHOW_DOTTED_CURVE) {
+        drawCurvePoints(d3, focus, x, y, curvePoints);
+      } else {
+        drawCurveLines(d3, focus, line, curvePoints);
+      }
     }
 
     function dragended(d) {
@@ -253,7 +271,7 @@ const D3Example = () => {
   const updateOrder = e => {
     const newOrder = parseInt(e.target.value);
 
-    // add or remove points until there are one more point than the new order
+    // add or remove points until there is one more point than the new order
     let cPoints = JSON.parse(JSON.stringify(points)); // deep copy
     while (cPoints.length - 1 != newOrder) {
       cPoints.length - 1 < newOrder && addPoint(cPoints);
@@ -292,7 +310,7 @@ const D3Example = () => {
         </select>
         <pre>
           <div>Order: {JSON.stringify(order)}</div>
-          <div>Equation: {JSON.stringify(equation)}</div>
+          <div>Equation: {equation}</div>
           <div>Coefficient of Determination (R^2): {JSON.stringify(r2)}</div>
           <div>Points:</div>
           <div>
