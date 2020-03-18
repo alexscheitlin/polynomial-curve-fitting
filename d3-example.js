@@ -5,14 +5,17 @@ import regression from 'regression';
 // polynomial regression made with
 // https://github.com/Tom-Alexander/regression-js
 
-const D3Example = () => {
-  // round n to x decimal places
-  const round = n => {
-    const x = PRECISION_POINTS;
-    const y = Math.pow(10, x);
-    return Math.round(n * y) / y;
-  };
+// round n to x decimal places
+const round = (n, p) => {
+  const x = p;
+  const y = Math.pow(10, x);
+  return Math.round(n * y) / y;
+};
 
+const D3Example = () => {
+  /***************************************************************************/
+  /* Settings                                                                */
+  /***************************************************************************/
   // size of final SVG in pixel
   const SVG_SIZE = { width: 500, height: 300 };
 
@@ -22,8 +25,10 @@ const D3Example = () => {
 
   const SHOW_DOTTED_CURVE = false;
 
-  // precision of the polynomial's coefficients and the draggable points
-  // (i.e., number of significant figures)
+  // precision (i.e., number of significant figures) of the
+  // - polynomial's coefficients
+  // - draggable points
+  //
   // maybe this should be the same as the points of the regression have the
   // same precision as the polynomial's coefficients
   const PRECISION_COEFFICIENT = 4;
@@ -35,31 +40,30 @@ const D3Example = () => {
   // create random points based on the initial order
   const startPoints = d3
     .range(0, startOrder + 1)
-    .map(i => [(X_MAX / startOrder) * i, round(Math.random() * Y_MAX)]);
+    .map(i => [(X_MAX / startOrder) * i, round(Math.random() * Y_MAX, PRECISION_POINTS)]);
 
-  const SVG_REF = React.useRef();
-  const [order, setOrder] = React.useState(startOrder);
-  const [equation, setEquation] = React.useState('y = f(x)');
-  const [r2, setR2] = React.useState(0.0);
-  const [points, setPoints] = React.useState(startPoints);
+  /***************************************************************************/
+  /* Methods                                                                 */
+  /***************************************************************************/
 
-  React.useEffect(() => init(), [order]);
-
+  // in place sorting of points by x coordinate
   const sortPointsByX = points => points.sort((a, b) => a[0] - b[0]);
 
+  // polynomial regression for given points of desired order
   const polynomialRegression = (points, order) =>
     regression.polynomial(points, { order: order, precision: PRECISION_COEFFICIENT });
 
+  // calculate "many" points lying on the polynomial generated be using
+  // polynomial regressions
   const calculateCurvePoints = (points, order) => {
     const frequency = 7;
+    const regression = polynomialRegression(points, order);
     return [...Array(frequency * X_MAX + 1).keys()]
       .map(x => x / frequency)
-      .map(x => polynomialRegression(points, order).predict(x));
+      .map(x => regression.predict(x));
   };
 
-  let curvePoints = calculateCurvePoints(points, order);
-
-  // remove point form points array (in place)
+  // remove point from points array (in place)
   const removePoint = points => points.splice(1, 1);
 
   // add point to points array (in place)
@@ -75,10 +79,11 @@ const D3Example = () => {
       points.find((p, i) => Math.abs(p[0] - (points[i + 1] || p)[0]) === maxDiff)[0] + maxDiff / 2;
     const newY = polynomialRegression(points, points.length).predict(newX)[1];
 
-    points.push([round(newX), round(newY)]);
-    points = sortPointsByX(points);
+    points.push([round(newX, PRECISION_POINTS), round(newY, PRECISION_POINTS)]);
+    sortPointsByX(points);
   };
 
+  // remove all drawings from svg
   const clearSVG = () => {
     d3.select('svg')
       .select('g')
@@ -126,6 +131,45 @@ const D3Example = () => {
       .attr('d', line);
   };
 
+  const drawDraggablePoints = (focus, x, y, drag, points) => {
+    // remove old points
+    d3.select('svg')
+      .select('g')
+      .selectAll('circle')
+      .remove();
+
+    focus
+      .selectAll('circle')
+      .data(points)
+      .enter()
+      .append('circle')
+      .attr('r', 8.0)
+      .attr('cx', d => x(d[0]))
+      .attr('cy', d => y(d[1]))
+      .style('cursor', 'pointer');
+
+    // add drag behaviour to all draggable points
+    focus.selectAll('circle').call(drag);
+  };
+
+  /***************************************************************************/
+  /* Variables                                                               */
+  /***************************************************************************/
+
+  const SVG_REF = React.useRef();
+  const [order, setOrder] = React.useState(startOrder);
+  const [points, setPoints] = React.useState(startPoints);
+  const [curvePoints, setCurvePoints] = React.useState(calculateCurvePoints(points, order));
+  const [equation, setEquation] = React.useState(polynomialRegression(points, order).string);
+  const [r2, setR2] = React.useState(polynomialRegression(points, order).r2);
+  const [drawing, setDrawing] = React.useState({}); // most likely, this is not best practice
+
+  React.useEffect(() => init(), [order]);
+
+  /***************************************************************************/
+  /* Main                                                                    */
+  /***************************************************************************/
+
   const init = () => {
     // implementation based on:
     // https://bl.ocks.org/denisemauldin/538bfab8378ac9c3a32187b4d7aed2c2
@@ -133,7 +177,7 @@ const D3Example = () => {
     // define svg and link it with the dom element
     const svg = d3.select(SVG_REF.current);
 
-    // set properties
+    // define svg properties
     const margin = { top: 20, right: 20, bottom: 30, left: 50 };
     const width = +svg.attr('width') - margin.left - margin.right;
     const height = +svg.attr('height') - margin.top - margin.bottom;
@@ -171,39 +215,13 @@ const D3Example = () => {
       .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
     // create "drawing area" on svg
-    const focus = svg
+    let focus = svg
       .append('g')
       .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
     // set domains of x and y axis
     x.domain([0, X_MAX]);
     y.domain([0, Y_MAX]);
-
-    // draw initial curve
-    focus
-      .append('path')
-      .datum(curvePoints)
-      .attr('id', 'initial') // id is currently not used
-      .attr('fill', 'none')
-      .attr('stroke', 'lightgray')
-      .attr('stroke-linejoin', 'round')
-      .attr('stroke-linecap', 'round')
-      .attr('stroke-width', 1)
-      .attr('d', line);
-
-    // draw draggable points
-    focus
-      .selectAll('circle')
-      .data(points)
-      .enter()
-      .append('circle')
-      .attr('r', 8.0)
-      .attr('cx', d => x(d[0]))
-      .attr('cy', d => y(d[1]))
-      .style('cursor', 'pointer');
-
-    // add drag behaviour to all draggable points
-    focus.selectAll('circle').call(drag);
 
     // draw x axis
     focus
@@ -218,10 +236,23 @@ const D3Example = () => {
       .attr('class', 'axis axis--y')
       .call(yAxis);
 
-    // make initial regression "through" the draggable points
-    const regression = polynomialRegression(points, order);
-    setEquation(regression.string);
-    setR2(regression.r2);
+    // draw initial curve
+    focus
+      .append('path')
+      .datum(curvePoints)
+      .attr('id', 'initial') // id is currently not used
+      .attr('fill', 'none')
+      .attr('stroke', 'lightgray')
+      .attr('stroke-linejoin', 'round')
+      .attr('stroke-linecap', 'round')
+      .attr('stroke-width', 1)
+      .attr('d', line);
+
+    // 1. create draggable points that need to be of type 'circle' so that the
+    //    dragging events are correctly added
+    // 2. add drag behaviour to all draggable points
+    drawDraggablePoints(focus, x, y, drag, points);
+    focus.selectAll('circle').call(drag);
 
     // draw curve points or lines
     if (SHOW_DOTTED_CURVE) {
@@ -229,6 +260,17 @@ const D3Example = () => {
     } else {
       drawCurveLines(d3, focus, line, curvePoints);
     }
+
+    // most likely, this is not best practice
+    // (these variables are needed for `handleChange`)
+    setDrawing({
+      d3: d3,
+      focus: focus,
+      x: x,
+      y: y,
+      drag: drag,
+      line: line,
+    });
 
     function dragstarted(d) {
       d3.select(this)
@@ -238,8 +280,8 @@ const D3Example = () => {
 
     function dragged(d) {
       // change coordinate of points
-      d[0] = round(x.invert(d3.event.x));
-      d[1] = round(y.invert(d3.event.y));
+      d[0] = round(x.invert(d3.event.x), PRECISION_POINTS);
+      d[1] = round(y.invert(d3.event.y), PRECISION_POINTS);
 
       // update location of point
       d3.select(this)
@@ -251,15 +293,17 @@ const D3Example = () => {
       setR2(regression.r2);
       console.log(regression);
 
-      curvePoints = calculateCurvePoints(points, order);
+      const newCurvePoints = calculateCurvePoints(points, order);
+      setCurvePoints(newCurvePoints);
 
       // sort points to not have "invalid" functions
-      setPoints(sortPointsByX(points));
+      sortPointsByX(points);
+      setPoints(points);
 
       if (SHOW_DOTTED_CURVE) {
-        drawCurvePoints(d3, focus, x, y, curvePoints);
+        drawCurvePoints(d3, focus, x, y, newCurvePoints);
       } else {
-        drawCurveLines(d3, focus, line, curvePoints);
+        drawCurveLines(d3, focus, line, newCurvePoints);
       }
     }
 
@@ -280,8 +324,38 @@ const D3Example = () => {
 
     clearSVG();
 
-    setPoints(sortPointsByX(cPoints));
+    sortPointsByX(cPoints);
+    setPoints(cPoints);
     setOrder(newOrder);
+  };
+
+  const handleChange = (event, pointIndex, coordinateIndex) => {
+    let value = event.target.value;
+
+    // handle invalid input
+    if (value === '' || parseFloat(value) === NaN) {
+      value = 0;
+    }
+
+    // update changed coordinate in points list and re-draw draggable points
+    const newPoints = [...points];
+    newPoints[pointIndex][coordinateIndex] = parseFloat(value);
+    setPoints(newPoints);
+    drawDraggablePoints(drawing.focus, drawing.x, drawing.y, drawing.drag, points);
+
+    // calculate new curve points and re-draw curve (dotted or lined)
+    const newCurvePoints = calculateCurvePoints(points, order);
+    setCurvePoints(newCurvePoints);
+    if (SHOW_DOTTED_CURVE) {
+      drawCurvePoints(drawing.d3, drawing.focus, drawing.x, drawing.y, newCurvePoints);
+    } else {
+      drawCurveLines(drawing.d3, drawing.focus, drawing.line, newCurvePoints);
+    }
+
+    // re-compute regression
+    const regression = polynomialRegression(points, order);
+    setEquation(regression.string);
+    setR2(regression.r2);
   };
 
   return (
@@ -289,10 +363,10 @@ const D3Example = () => {
       <svg ref={SVG_REF} width={SVG_SIZE.width} height={SVG_SIZE.height} style={{ float: 'left' }}>
         <defs>
           <style type="text/css">{`
-            circle{
+            circle {
               fill: steelblue;
             }
-            circle.active{
+            circle.active {
               fill: gray;
               stroke: black;
             }
@@ -312,15 +386,41 @@ const D3Example = () => {
           <div>Order: {JSON.stringify(order)}</div>
           <div>Equation: {equation}</div>
           <div>Coefficient of Determination (R^2): {JSON.stringify(r2)}</div>
-          <div>Points:</div>
-          <div>
-            {JSON.stringify(
-              points.map(p => [p[0], p[1]]),
-              null,
-              2
-            )}
-          </div>
         </pre>
+        <div>
+          {points.map((point, i) => {
+            return (
+              <div key={i}>
+                P{i + 1} - x:{' '}
+                <input
+                  className="number"
+                  type="number"
+                  min="0"
+                  max={X_MAX}
+                  step="0.1"
+                  value={point[0]}
+                  onChange={e => handleChange(e, i, 0)}
+                />{' '}
+                y:{' '}
+                <input
+                  className="number"
+                  type="number"
+                  min="0"
+                  max={Y_MAX}
+                  step="0.1"
+                  value={point[1]}
+                  onChange={e => handleChange(e, i, 1)}
+                />
+                <style>{`
+                  .number {
+                    width: 75px;
+                    height: 35px;
+                  }
+                `}</style>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
