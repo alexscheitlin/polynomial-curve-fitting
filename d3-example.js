@@ -152,6 +152,62 @@ const D3Example = () => {
     focus.selectAll('circle').call(drag);
   };
 
+  const addCrossHair = (d3, focus, width, height) => {
+    // based on
+    // https://stackoverflow.com/questions/38687588/add-horizontal-crosshair-to-d3-js-chart
+    const color = 'lightgray';
+    const lineWidth = 1.0;
+    const dashes = '3 3'; // width of one dash and space between two dashes
+
+    const transpRect = focus
+      .append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', width)
+      .attr('height', height)
+      .attr('fill', 'white')
+      .attr('opacity', 0);
+
+    var verticalLine = focus
+      .append('line')
+      .attr('opacity', 0)
+      .attr('y1', 0)
+      .attr('y2', height)
+      .attr('stroke', color)
+      .attr('stroke-width', lineWidth)
+      .attr('pointer-events', 'none')
+      .style('stroke-dasharray', dashes);
+
+    var horizontalLine = focus
+      .append('line')
+      .attr('opacity', 0)
+      .attr('x1', 0)
+      .attr('x2', width)
+      .attr('stroke', color)
+      .attr('stroke-width', lineWidth)
+      .attr('pointer-events', 'none')
+      .style('stroke-dasharray', dashes);
+
+    transpRect
+      .on('mousemove', function() {
+        let mouse = d3.mouse(this);
+        let mousex = mouse[0];
+        let mousey = mouse[1];
+        verticalLine
+          .attr('x1', mousex)
+          .attr('x2', mousex)
+          .attr('opacity', 1);
+        horizontalLine
+          .attr('y1', mousey)
+          .attr('y2', mousey)
+          .attr('opacity', 1);
+      })
+      .on('mouseout', function() {
+        verticalLine.attr('opacity', 0);
+        horizontalLine.attr('opacity', 0);
+      });
+  };
+
   /***************************************************************************/
   /* Variables                                                               */
   /***************************************************************************/
@@ -235,6 +291,8 @@ const D3Example = () => {
       .append('g')
       .attr('class', 'axis axis--y')
       .call(yAxis);
+
+    addCrossHair(d3, focus, width, height);
 
     // draw initial curve
     focus
@@ -383,7 +441,6 @@ const D3Example = () => {
           <option value="6">6</option>
         </select>
         <pre>
-          <div>Order: {JSON.stringify(order)}</div>
           <div>Equation: {equation}</div>
           <div>Coefficient of Determination (R^2): {JSON.stringify(r2)}</div>
         </pre>
