@@ -2,70 +2,6 @@ import * as React from 'react';
 import * as d3 from 'd3';
 import regression from 'regression';
 
-// polynomial regression made with
-// https://github.com/Tom-Alexander/regression-js
-
-// round n to x decimal places
-const round = (n, p) => {
-  const x = p;
-  const y = Math.pow(10, x);
-  return Math.round(n * y) / y;
-};
-
-// calculate the y value to the given x value using the polynomial defined by
-// the provided coefficients
-// e.g. (2, [-1, 2, 1]) => 1 // polynomial: y = -x^2 + 2x + 1
-const polynomialCallback = (x, coefficients) =>
-  coefficients.map((c, i) => c * Math.pow(x, coefficients.length - i - 1)).reduce((a, b) => a + b);
-
-// given the coefficients of a polynomial, construct its equation
-// e.g. [3,-2,1] => 3*x^2 - 2*x + 1
-const constructPolynomialEquation = coefficients =>
-  coefficients
-    .map((coefficient, index) => {
-      // polynomial (poly: many, nomial: terms)
-      // polynomial:    -4*x^2 + 3*x - 0.5
-      // terms:         -4*x^2,  3*x, -0.5
-      // coefficients:      -4,    3, -0.5
-      // signs:              -,    +,    -
-      // exponents:          2,    1,    0
-      // variable:                       x
-
-      const variable = 'x';
-      const exponent = coefficients.length - index - 1;
-
-      let sign = '';
-      // - only use spaces if it is not the first term
-      // - do not show a '+' if it is the first term
-      // - do not show a '+' or spaces for a '-' if all terms before have a
-      //   coefficient of value '0' and therefore are not shown
-      const anyTermShownBefore =
-        coefficients.slice(0, index).reduce((a, b) => Math.abs(a) + Math.abs(b), []) !== 0;
-      if (coefficient >= 0) {
-        sign = index === 0 || !anyTermShownBefore ? '' : ' + ';
-      } else {
-        sign = index === 0 || !anyTermShownBefore ? '-' : ' - ';
-      }
-
-      let variablePart = ''; // x^0 => ''
-      if (exponent > 1) {
-        // x^2, x^3, x^4, ...
-        variablePart = `*${variable}^` + exponent.toString();
-      } else if (exponent === 1) {
-        // x^1 => x
-        variablePart = `${variable}`;
-      }
-
-      let coefficientPart = Math.abs(coefficient);
-      // do not show a '1' as coefficient if there is a variable coming
-      if (coefficientPart === 1 && variablePart != '') {
-        coefficientPart = '';
-      }
-
-      return coefficientPart !== 0 ? `${sign}${coefficientPart}${variablePart}` : '';
-    })
-    .join('');
-
 const D3Example = () => {
   /***************************************************************************/
   /* Settings                                                                */
@@ -79,7 +15,7 @@ const D3Example = () => {
 
   const SHOW_DOTTED_CURVE = false;
 
-  // precision (i.e., number of significant figures) of the
+  // precision (i.e., number of considered decimal places) of the
   // - polynomial's coefficients
   // - draggable points
   //
@@ -92,50 +28,11 @@ const D3Example = () => {
   const startOrder = 2;
 
   // create random points based on the initial order
-  const startPoints = d3
-    .range(0, startOrder + 1)
-    .map(i => [(X_MAX / startOrder) * i, round(Math.random() * Y_MAX, PRECISION_POINTS)]);
+  const startPoints = generateRandomPoints(startOrder + 1, PRECISION_POINTS, X_MAX, Y_MAX);
 
   /***************************************************************************/
-  /* Methods                                                                 */
+  /* Drawing Methods                                                         */
   /***************************************************************************/
-
-  // in place sorting of points by x coordinate
-  const sortPointsByX = points => points.sort((a, b) => a[0] - b[0]);
-
-  // polynomial regression for given points of desired order
-  const polynomialRegression = (points, order) =>
-    regression.polynomial(points, { order: order, precision: PRECISION_COEFFICIENT });
-
-  // calculate "many" points lying on the polynomial generated be using
-  // polynomial regressions
-  const calculateCurvePoints = (points, order) => {
-    const frequency = 7;
-    const regression = polynomialRegression(points, order);
-    return [...Array(frequency * X_MAX + 1).keys()]
-      .map(x => x / frequency)
-      .map(x => regression.predict(x));
-  };
-
-  // remove point from points array (in place)
-  const removePoint = points => points.splice(1, 1);
-
-  // add point to points array (in place)
-  const addPoint = points => {
-    // 1. get max difference on x axis between neighboring points
-    // 2. x coordinate of point to insert shall be between the two
-    //    points having the largest distance (centered)
-    // 3. based on the already existing points, make a polynomial
-    //    regression and get the y coordinate of the just computed
-    //    x value
-    const maxDiff = Math.max(...points.map((p, i) => Math.abs(p[0] - (points[i + 1] || p)[0])));
-    const newX =
-      points.find((p, i) => Math.abs(p[0] - (points[i + 1] || p)[0]) === maxDiff)[0] + maxDiff / 2;
-    const newY = polynomialRegression(points, points.length).predict(newX)[1];
-
-    points.push([round(newX, PRECISION_POINTS), round(newY, PRECISION_POINTS)]);
-    sortPointsByX(points);
-  };
 
   // remove all drawings from svg
   const clearSVG = () => {
@@ -269,12 +166,16 @@ const D3Example = () => {
   const SVG_REF = React.useRef();
   const [order, setOrder] = React.useState(startOrder);
   const [points, setPoints] = React.useState(startPoints);
-  const [curvePoints, setCurvePoints] = React.useState(calculateCurvePoints(points, order));
-  const [coefficients, setCoefficients] = React.useState(
-    polynomialRegression(points, order).equation
+  const [curvePoints, setCurvePoints] = React.useState(
+    generateCurvePoints(points, order, X_MAX, PRECISION_COEFFICIENT)
   );
-  const [equation, setEquation] = React.useState(polynomialRegression(points, order).string);
-  const [r2, setR2] = React.useState(polynomialRegression(points, order).r2);
+  const [coefficients, setCoefficients] = React.useState(
+    polynomialRegression(points, order, PRECISION_COEFFICIENT).equation
+  );
+  const [equation, setEquation] = React.useState(
+    polynomialRegression(points, order, PRECISION_COEFFICIENT).string
+  );
+  const [r2, setR2] = React.useState(polynomialRegression(points, order, PRECISION_COEFFICIENT).r2);
   const [drawing, setDrawing] = React.useState({}); // most likely, this is not best practice
 
   React.useEffect(() => init(), [order]);
@@ -403,17 +304,16 @@ const D3Example = () => {
         .attr('cx', x(d[0]))
         .attr('cy', y(d[1]));
 
-      const regression = polynomialRegression(points, order);
+      const regression = polynomialRegression(points, order, PRECISION_COEFFICIENT);
       setCoefficients(regression.equation);
       setEquation(regression.string);
       setR2(regression.r2);
 
-      const newCurvePoints = calculateCurvePoints(points, order);
+      const newCurvePoints = generateCurvePoints(points, order, X_MAX, PRECISION_COEFFICIENT);
       setCurvePoints(newCurvePoints);
 
       // sort points to not have "invalid" functions
-      sortPointsByX(points);
-      setPoints(points);
+      setPoints(sortPointsByX(points));
 
       if (SHOW_DOTTED_CURVE) {
         drawCurvePoints(d3, focus, x, y, newCurvePoints);
@@ -427,20 +327,19 @@ const D3Example = () => {
     }
   };
 
-  const updateOrder = e => {
-    const newOrder = parseInt(e.target.value);
+  const updateOrder = event => {
+    const newOrder = parseInt(event.target.value);
 
     // add or remove points until there is one more point than the new order
-    let cPoints = JSON.parse(JSON.stringify(points)); // deep copy
+    let cPoints = deepCopy(points);
     while (cPoints.length - 1 != newOrder) {
-      cPoints.length - 1 < newOrder && addPoint(cPoints);
+      cPoints.length - 1 < newOrder && addPoint(cPoints, PRECISION_COEFFICIENT, PRECISION_POINTS);
       cPoints.length - 1 > newOrder && removePoint(cPoints);
     }
 
     clearSVG();
 
-    sortPointsByX(cPoints);
-    setPoints(cPoints);
+    setPoints(sortPointsByX(cPoints));
     setOrder(newOrder);
   };
 
@@ -459,7 +358,7 @@ const D3Example = () => {
     drawDraggablePoints(drawing.focus, drawing.x, drawing.y, drawing.drag, points);
 
     // calculate new curve points and re-draw curve (dotted or lined)
-    const newCurvePoints = calculateCurvePoints(points, order);
+    const newCurvePoints = generateCurvePoints(points, order, X_MAX, PRECISION_COEFFICIENT);
     setCurvePoints(newCurvePoints);
     if (SHOW_DOTTED_CURVE) {
       drawCurvePoints(drawing.d3, drawing.focus, drawing.x, drawing.y, newCurvePoints);
@@ -468,7 +367,7 @@ const D3Example = () => {
     }
 
     // re-compute regression
-    const regression = polynomialRegression(points, order);
+    const regression = polynomialRegression(points, order, PRECISION_COEFFICIENT);
     setCoefficients(regression.equation);
     setEquation(regression.string);
     setR2(regression.r2);
@@ -488,7 +387,7 @@ const D3Example = () => {
 
     // calculate new y values for the x values
     const newPoints = [...points].map(point => {
-      point[1] = round(polynomialCallback(point[0], newCoefficients), PRECISION_POINTS);
+      point[1] = round(polynomialValue(point[0], newCoefficients), PRECISION_POINTS);
       return point;
     });
     setPoints(newPoints);
@@ -497,7 +396,7 @@ const D3Example = () => {
     drawDraggablePoints(drawing.focus, drawing.x, drawing.y, drawing.drag, newPoints);
 
     // calculate new curve points and re-draw curve (dotted or lined)
-    const newCurvePoints = calculateCurvePoints(points, order);
+    const newCurvePoints = generateCurvePoints(points, order, X_MAX, PRECISION_COEFFICIENT);
     setCurvePoints(newCurvePoints);
     if (SHOW_DOTTED_CURVE) {
       drawCurvePoints(drawing.d3, drawing.focus, drawing.x, drawing.y, newCurvePoints);
@@ -506,7 +405,7 @@ const D3Example = () => {
     }
 
     // re-compute regression
-    const regression = polynomialRegression(newPoints, order);
+    const regression = polynomialRegression(newPoints, order, PRECISION_COEFFICIENT);
     setCoefficients(regression.equation);
     setEquation(regression.string);
     setR2(regression.r2);
@@ -547,7 +446,7 @@ const D3Example = () => {
         <hr></hr>
         <div>
           <pre>
-            <div>Coeffs: {`  y = ${constructPolynomialEquation(coefficients)}`}</div>
+            <div>Coeffs: {`  y = ${generatePolynomialEquation(coefficients)}`}</div>
             <div>Equation: {equation}</div>
           </pre>
           <span>{'y = '}</span>
@@ -614,3 +513,235 @@ const D3Example = () => {
 };
 
 export default D3Example;
+
+/*****************************************************************************/
+/* Polynomial Regression with linear least-squares                           */
+/*                                                                           */
+/* made with https://github.com/Tom-Alexander/regression-js                  */
+/*****************************************************************************/
+//import regression from 'regression';
+
+/**
+ * Fits the `points` to a polynomial curve with the given `order` with the
+ * equation `a_n*x^n ... + a_1*x + a_0`.
+ *
+ * The coefficients `a_n` have `precision` number of decimal places.
+ *
+ * Example:
+ * https://github.com/Tom-Alexander/regression-js#regressionpolynomialdata-options
+ *
+ * @param {number[][]} points
+ * @param {number} order
+ * @param {number} precision
+ */
+const polynomialRegression = (points, order, precision) =>
+  regression.polynomial(points, { order: order, precision: precision });
+
+/**
+ * Generate evenly distributed points between `0` and `xMax` on a polynomial
+ * curve with the given `order`.
+ *
+ * The polynomial is created using linear least-squares regression with the
+ * provided `points`. The coefficients of the polynomial have `precision`
+ * number of decimal places.
+ *
+ * @param {number[][]} points
+ * @param {number} order
+ * @param {number} xMax
+ * @param {number} precision
+ * @returns {number[][]}
+ */
+const generateCurvePoints = (points, order, xMax, precision) => {
+  // TODO: check precision of output points (if it is the same as `precision`,
+  // then the precision constants of the points and coefficients need to be
+  // the same)
+  const frequency = 7;
+  return range(frequency * xMax + 1)
+    .map(x => x / frequency)
+    .map(x => polynomialRegression(points, order, precision).predict(x));
+};
+
+/*****************************************************************************/
+/* Utils                                                                     */
+/*****************************************************************************/
+
+/**
+ * Deep copy an object.
+ *
+ * @param {any} x
+ * @returns {any}
+ */
+const deepCopy = x => JSON.parse(JSON.stringify(x));
+
+/**
+ * Round the number `n` to `p` decimal places.
+ *
+ * Example:
+ * `(7.128, 2)` => `7.13`
+ *
+ * @param {number} n
+ * @param {number} p
+ * @returns {number}
+ */
+const round = (n, p) => {
+  const m = Math.pow(10, p);
+  return Math.round(n * m) / m;
+};
+
+/**
+ * Create a range of `n` numbers starting from `0` up to `n-1`.
+ *
+ * Example:
+ * `(5)` => `[0, 1, 2, 3, 4]`
+ *
+ * @param {number} n
+ * @returns {number[]}
+ */
+const range = n => [...Array(n).keys()];
+
+/**
+ * Create `n` points that are evenly distributed between `0` and `xMax` and
+ * have random y values.
+ *
+ * The x-coordinate of the first point is `0` and the x-coordinate of the last
+ * point is `xMax`. The y-coordinate is a random value between `0` and yMax`.
+ * All coordinates have `p` decimal places.
+ *
+ * Example:
+ * `(3, 2, 10, 10)` => `[[0, 3.12], [5, 8.42], [10, 4.1]]
+ *
+ * @param {number} n
+ * @param {number} p
+ * @param {number} xMax
+ * @param {number} yMax
+ * @returns {number[][]}
+ */
+const generateRandomPoints = (n, p, xMax, yMax) =>
+  range(n).map(i => [(xMax / (n - 1)) * i, round(Math.random() * yMax, p)]);
+
+/**
+ * Sort the provided `points` by their x values.
+ *
+ * The sorting does not happen in-place. A shallow (but NO deep) copy of the
+ * array is created, sorted, and returned.
+ * @param {number[][]} points Points with `x` and `y` values as first and
+ *                            second array items (e.g, `x,y` = `3,4` =>
+ *                            `[3, 4]`).
+ * @returns {number[][]}
+ */
+const sortPointsByX = points => [...points].sort((a, b) => a[0] - b[0]);
+
+/**
+ * Remove the second point from the list of `points` in-place and return the
+ * removed item. If there is no second item to be removed, `false` is returned.
+ *
+ * Examples:
+ * - `([[0, 1], [4, 2], [3,5]])` => `[4, 2]`
+ * - `([[0, 1]])` => `false`
+ *
+ * @param {any} points
+ */
+const removePoint = points => points.length > 1 && points.splice(1, 1);
+
+/**
+ * Insert a new point (lying on a curve) into the provided list of `points`
+ * (in-place).
+ *
+ * The curve is a polynomial generated using linear least-squares regression
+ * with the provided `points`. The coefficients of the polynomial have
+ * `coefficientPrecision` number of decimal places. The inserted point
+ * has `pointsPrecision` number of decimal places.
+ *
+ * @param {number[][]} points
+ * @param {number} coefficientPrecision
+ * @param {number} pointsPrecision
+ */
+const addPoint = (points, coefficientPrecision, pointsPrecision) => {
+  // get max difference on x axis between neighboring points
+  const maxDiff = Math.max(...points.map((p, i) => Math.abs(p[0] - (points[i + 1] || p)[0])));
+
+  // the x coordinate of the point to insert shall be between the two points
+  // having the largest distance (centered)
+  // => get the new x value
+  const newX =
+    points.find((p, i) => Math.abs(p[0] - (points[i + 1] || p)[0]) === maxDiff)[0] + maxDiff / 2;
+
+  // based on the already existing points, make a linear least-squares
+  // regression and get the corresponding y coordinate to the just
+  // computed x coordinate
+  const newY = polynomialRegression(points, points.length, coefficientPrecision).predict(newX)[1];
+
+  // insert new point into the list of points and sort the list by the point's
+  // x-coordinate
+  points.push([round(newX, pointsPrecision), round(newY, pointsPrecision)]);
+  points = sortPointsByX(points);
+};
+
+/**
+ * Given the `x` value, calculate the corresponding `y` value on the polynomial
+ * defined by the provided `coefficients`.
+ *
+ * Example:
+ * `(2, [-1, 2, 1])` => `1` | polynomial: *y = -x^2 + 2x + 1*
+ *
+ * @param {number} x
+ * @param {number[]} coefficients
+ * @returns {number}
+ */
+const polynomialValue = (x, coefficients) =>
+  coefficients.map((c, i) => c * Math.pow(x, coefficients.length - i - 1)).reduce((a, b) => a + b);
+
+/**
+ * Generate the polynomial equation given the polynomial's `coefficients`.
+ *
+ * Example:
+ * `[3,-2,1]` => `3*x^2 - 2*x + 1`
+ *
+ * @param {number[]} coefficients
+ * @returns {string}
+ */
+const generatePolynomialEquation = coefficients =>
+  coefficients
+    .map((coefficient, index) => {
+      // polynomial (poly: many, nomial: terms)
+      // polynomial:    -4*x^2 + 3*x - 0.5
+      // terms:         -4*x^2,  3*x, -0.5
+      // coefficients:      -4,    3, -0.5
+      // signs:              -,    +,    -
+      // exponents:          2,    1,    0
+      // variable:                       x
+
+      const variable = 'x';
+      const exponent = coefficients.length - index - 1;
+
+      let sign = '';
+      // - only use spaces if it is not the first term
+      // - do not show a '+' if it is the first term
+      // - do not show a '+' or spaces for a '-' if all terms before have a
+      //   coefficient of value '0' and therefore are not shown
+      const anyTermShownBefore =
+        coefficients.slice(0, index).reduce((a, b) => Math.abs(a) + Math.abs(b), []) !== 0;
+      if (coefficient >= 0) {
+        sign = index === 0 || !anyTermShownBefore ? '' : ' + ';
+      } else {
+        sign = index === 0 || !anyTermShownBefore ? '-' : ' - ';
+      }
+
+      let variablePart = ''; // x^0 => ''
+      if (exponent > 1) {
+        // x^2, x^3, x^4, ...
+        variablePart = `*${variable}^` + exponent.toString();
+      } else if (exponent === 1) {
+        // x^1 => x
+        variablePart = `${variable}`;
+      }
+
+      let coefficientPart = Math.abs(coefficient);
+      // do not show a '1' as coefficient if there is a variable coming
+      if (coefficientPart === 1 && variablePart != '') {
+        coefficientPart = '';
+      }
+
+      return coefficientPart !== 0 ? `${sign}${coefficientPart}${variablePart}` : '';
+    })
+    .join('');
