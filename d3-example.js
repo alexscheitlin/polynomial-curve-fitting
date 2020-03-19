@@ -12,51 +12,59 @@ const round = (n, p) => {
   return Math.round(n * y) / y;
 };
 
+// calculate the y value to the given x value using the polynomial defined by
+// the provided coefficients
+// e.g. (2, [-1, 2, 1]) => 1 // polynomial: y = -x^2 + 2x + 1
+const polynomialCallback = (x, coefficients) =>
+  coefficients.map((c, i) => c * Math.pow(x, coefficients.length - i - 1)).reduce((a, b) => a + b);
+
 // given the coefficients of a polynomial, construct its equation
 // e.g. [3,-2,1] => 3*x^2 - 2*x + 1
 const constructPolynomialEquation = coefficients =>
-  coefficients.map((coefficient, index) => {
-    // polynomial (poly: many, nomial: terms)
-    // polynomial:    -4*x^2 + 3*x - 0.5
-    // terms:         -4*x^2,  3*x, -0.5
-    // coefficients:      -4,    3, -0.5
-    // signs:              -,    +,    -
-    // exponents:          2,    1,    0
-    // variable:                       x
+  coefficients
+    .map((coefficient, index) => {
+      // polynomial (poly: many, nomial: terms)
+      // polynomial:    -4*x^2 + 3*x - 0.5
+      // terms:         -4*x^2,  3*x, -0.5
+      // coefficients:      -4,    3, -0.5
+      // signs:              -,    +,    -
+      // exponents:          2,    1,    0
+      // variable:                       x
 
-    const variable = 'x';
-    const exponent = coefficients.length - index - 1;
+      const variable = 'x';
+      const exponent = coefficients.length - index - 1;
 
-    let sign = '';
-    // - only use spaces if it is not the first term
-    // - do not show a '+' if it is the first term
-    // - do not show a '+' or spaces for a '-' if all terms before have a
-    //   coefficient of value '0' and therefore are not shown
-    const anyTermShownBefore =
-      coefficients.slice(0, index).reduce((a, b) => Math.abs(a) + Math.abs(b), []) !== 0;
-    if (coefficient >= 0) {
-      sign = index === 0 || !anyTermShownBefore ? '' : ' + ';
-    } else {
-      sign = index === 0 || !anyTermShownBefore ? '-' : ' - ';
-    }
+      let sign = '';
+      // - only use spaces if it is not the first term
+      // - do not show a '+' if it is the first term
+      // - do not show a '+' or spaces for a '-' if all terms before have a
+      //   coefficient of value '0' and therefore are not shown
+      const anyTermShownBefore =
+        coefficients.slice(0, index).reduce((a, b) => Math.abs(a) + Math.abs(b), []) !== 0;
+      if (coefficient >= 0) {
+        sign = index === 0 || !anyTermShownBefore ? '' : ' + ';
+      } else {
+        sign = index === 0 || !anyTermShownBefore ? '-' : ' - ';
+      }
 
-    let variablePart = ''; // x^0 => ''
-    if (exponent > 1) {
-      // x^2, x^3, x^4, ...
-      variablePart = `*${variable}^` + exponent.toString();
-    } else if (exponent === 1) {
-      // x^1 => x
-      variablePart = `${variable}`;
-    }
+      let variablePart = ''; // x^0 => ''
+      if (exponent > 1) {
+        // x^2, x^3, x^4, ...
+        variablePart = `*${variable}^` + exponent.toString();
+      } else if (exponent === 1) {
+        // x^1 => x
+        variablePart = `${variable}`;
+      }
 
-    let coefficientPart = Math.abs(coefficient);
-    // do not show a '1' as coefficient if there is a variable coming
-    if (coefficientPart === 1 && variablePart != '') {
-      coefficientPart = '';
-    }
+      let coefficientPart = Math.abs(coefficient);
+      // do not show a '1' as coefficient if there is a variable coming
+      if (coefficientPart === 1 && variablePart != '') {
+        coefficientPart = '';
+      }
 
-    return coefficientPart !== 0 ? `${sign}${coefficientPart}${variablePart}` : '';
-  });
+      return coefficientPart !== 0 ? `${sign}${coefficientPart}${variablePart}` : '';
+    })
+    .join('');
 
 const D3Example = () => {
   /***************************************************************************/
@@ -369,7 +377,7 @@ const D3Example = () => {
     }
 
     // most likely, this is not best practice
-    // (these variables are needed for `handleChange`)
+    // (these variables are needed for `handlePointCoordinateChange`)
     setDrawing({
       d3: d3,
       focus: focus,
@@ -436,7 +444,7 @@ const D3Example = () => {
     setOrder(newOrder);
   };
 
-  const handleChange = (event, pointIndex, coordinateIndex) => {
+  const handlePointCoordinateChange = (event, pointIndex, coordinateIndex) => {
     let value = event.target.value;
 
     // handle invalid input
@@ -466,6 +474,46 @@ const D3Example = () => {
     setR2(regression.r2);
   };
 
+  const handleCurveCoefficientChange = (event, coefficientIndex) => {
+    let value = event.target.value;
+
+    // handle invalid input
+    if (value === '' || parseFloat(value) === NaN) {
+      value = 0;
+    }
+
+    // update coefficient list (don't update state yet)
+    const newCoefficients = [...coefficients];
+    newCoefficients[coefficientIndex] = parseFloat(value);
+
+    // calculate new y values for the x values
+    const newPoints = [...points].map(point => {
+      point[1] = round(polynomialCallback(point[0], newCoefficients), PRECISION_POINTS);
+      return point;
+    });
+    setPoints(newPoints);
+
+    // re-draw draggable points
+    drawDraggablePoints(drawing.focus, drawing.x, drawing.y, drawing.drag, newPoints);
+
+    // calculate new curve points and re-draw curve (dotted or lined)
+    const newCurvePoints = calculateCurvePoints(points, order);
+    setCurvePoints(newCurvePoints);
+    if (SHOW_DOTTED_CURVE) {
+      drawCurvePoints(drawing.d3, drawing.focus, drawing.x, drawing.y, newCurvePoints);
+    } else {
+      drawCurveLines(drawing.d3, drawing.focus, drawing.line, newCurvePoints);
+    }
+
+    // re-compute regression
+    const regression = polynomialRegression(newPoints, order);
+    setCoefficients(regression.equation);
+    setEquation(regression.string);
+    setR2(regression.r2);
+
+    // TODO: be sure to not enter an endless loop :/
+  };
+
   return (
     <div style={{ display: 'flex' }}>
       <svg ref={SVG_REF} width={SVG_SIZE.width} height={SVG_SIZE.height} style={{ float: 'left' }}>
@@ -490,16 +538,41 @@ const D3Example = () => {
           <option value="5">5</option>
           <option value="6">6</option>
         </select>
+        <hr></hr>
         <pre>
-          <div>
-            Coeffs:{' y = '}
-            {constructPolynomialEquation(coefficients)}
-          </div>
-          <div>Equation: {equation}</div>
           <div style={{ color: r2 === 1 ? 'green' : 'red' }}>
             Coefficient of Determination (R^2): {JSON.stringify(r2)}
           </div>
         </pre>
+        <hr></hr>
+        <div>
+          <pre>
+            <div>Coeffs: {`  y = ${constructPolynomialEquation(coefficients)}`}</div>
+            <div>Equation: {equation}</div>
+          </pre>
+          <span>{'y = '}</span>
+          {coefficients.map((coefficient, i) => {
+            return (
+              <span key={i}>
+                {
+                  <input
+                    className="number"
+                    type="number"
+                    step={Math.pow(10, -(PRECISION_COEFFICIENT - 1))}
+                    value={coefficient}
+                    onChange={e => handleCurveCoefficientChange(e, i)}
+                  />
+                }
+                {coefficients.length - i - 1 > 1
+                  ? ' * x^' + (coefficients.length - i - 1).toString()
+                  : ''}
+                {coefficients.length - i - 1 === 1 ? ' * x' : ''}
+                {i < coefficients.length - 1 ? ' + ' : ''}
+              </span>
+            );
+          })}
+        </div>
+        <hr></hr>
         <div>
           {points.map((point, i) => {
             return (
@@ -510,9 +583,9 @@ const D3Example = () => {
                   type="number"
                   min="0"
                   max={X_MAX}
-                  step="0.1"
+                  step={Math.pow(10, -(PRECISION_POINTS - 1))}
                   value={point[0]}
-                  onChange={e => handleChange(e, i, 0)}
+                  onChange={e => handlePointCoordinateChange(e, i, 0)}
                 />{' '}
                 y:{' '}
                 <input
@@ -520,9 +593,9 @@ const D3Example = () => {
                   type="number"
                   min="0"
                   max={Y_MAX}
-                  step="0.1"
+                  step={Math.pow(10, -(PRECISION_POINTS - 1))}
                   value={point[1]}
-                  onChange={e => handleChange(e, i, 1)}
+                  onChange={e => handlePointCoordinateChange(e, i, 1)}
                 />
                 <style>{`
                   .number {
@@ -534,6 +607,7 @@ const D3Example = () => {
             );
           })}
         </div>
+        <hr></hr>
       </div>
     </div>
   );
