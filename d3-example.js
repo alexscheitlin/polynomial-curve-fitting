@@ -12,6 +12,52 @@ const round = (n, p) => {
   return Math.round(n * y) / y;
 };
 
+// given the coefficients of a polynomial, construct its equation
+// e.g. [3,-2,1] => 3*x^2 - 2*x + 1
+const constructPolynomialEquation = coefficients =>
+  coefficients.map((coefficient, index) => {
+    // polynomial (poly: many, nomial: terms)
+    // polynomial:    -4*x^2 + 3*x - 0.5
+    // terms:         -4*x^2,  3*x, -0.5
+    // coefficients:      -4,    3, -0.5
+    // signs:              -,    +,    -
+    // exponents:          2,    1,    0
+    // variable:                       x
+
+    const variable = 'x';
+    const exponent = coefficients.length - index - 1;
+
+    let sign = '';
+    // - only use spaces if it is not the first term
+    // - do not show a '+' if it is the first term
+    // - do not show a '+' or spaces for a '-' if all terms before have a
+    //   coefficient of value '0' and therefore are not shown
+    const anyTermShownBefore =
+      coefficients.slice(0, index).reduce((a, b) => Math.abs(a) + Math.abs(b), []) !== 0;
+    if (coefficient >= 0) {
+      sign = index === 0 || !anyTermShownBefore ? '' : ' + ';
+    } else {
+      sign = index === 0 || !anyTermShownBefore ? '-' : ' - ';
+    }
+
+    let variablePart = ''; // x^0 => ''
+    if (exponent > 1) {
+      // x^2, x^3, x^4, ...
+      variablePart = `*${variable}^` + exponent.toString();
+    } else if (exponent === 1) {
+      // x^1 => x
+      variablePart = `${variable}`;
+    }
+
+    let coefficientPart = Math.abs(coefficient);
+    // do not show a '1' as coefficient if there is a variable coming
+    if (coefficientPart === 1 && variablePart != '') {
+      coefficientPart = '';
+    }
+
+    return coefficientPart !== 0 ? `${sign}${coefficientPart}${variablePart}` : '';
+  });
+
 const D3Example = () => {
   /***************************************************************************/
   /* Settings                                                                */
@@ -216,6 +262,9 @@ const D3Example = () => {
   const [order, setOrder] = React.useState(startOrder);
   const [points, setPoints] = React.useState(startPoints);
   const [curvePoints, setCurvePoints] = React.useState(calculateCurvePoints(points, order));
+  const [coefficients, setCoefficients] = React.useState(
+    polynomialRegression(points, order).equation
+  );
   const [equation, setEquation] = React.useState(polynomialRegression(points, order).string);
   const [r2, setR2] = React.useState(polynomialRegression(points, order).r2);
   const [drawing, setDrawing] = React.useState({}); // most likely, this is not best practice
@@ -347,9 +396,9 @@ const D3Example = () => {
         .attr('cy', y(d[1]));
 
       const regression = polynomialRegression(points, order);
+      setCoefficients(regression.equation);
       setEquation(regression.string);
       setR2(regression.r2);
-      console.log(regression);
 
       const newCurvePoints = calculateCurvePoints(points, order);
       setCurvePoints(newCurvePoints);
@@ -412,6 +461,7 @@ const D3Example = () => {
 
     // re-compute regression
     const regression = polynomialRegression(points, order);
+    setCoefficients(regression.equation);
     setEquation(regression.string);
     setR2(regression.r2);
   };
@@ -441,8 +491,14 @@ const D3Example = () => {
           <option value="6">6</option>
         </select>
         <pre>
+          <div>
+            Coeffs:{' y = '}
+            {constructPolynomialEquation(coefficients)}
+          </div>
           <div>Equation: {equation}</div>
-          <div>Coefficient of Determination (R^2): {JSON.stringify(r2)}</div>
+          <div style={{ color: r2 === 1 ? 'green' : 'red' }}>
+            Coefficient of Determination (R^2): {JSON.stringify(r2)}
+          </div>
         </pre>
         <div>
           {points.map((point, i) => {
