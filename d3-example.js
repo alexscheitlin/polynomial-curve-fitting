@@ -196,6 +196,10 @@ const D3Example = () => {
       .attr('x', (SVG_SIZE.width - element.getComputedTextLength()) / 2 - SVG_PADDING.left);
   };
 
+  const drawXAxisLabel = (svg, value) => svg.select('text#x-axis-label').text(value);
+
+  const drawYAxisLabel = (svg, value) => svg.select('text#y-axis-label').text(value);
+
   /***************************************************************************/
   /* Variables                                                               */
   /***************************************************************************/
@@ -214,7 +218,10 @@ const D3Example = () => {
   );
   const [r2, setR2] = React.useState(polynomialRegression(points, order, PRECISION_COEFFICIENT).r2);
   const [drawing, setDrawing] = React.useState({}); // most likely, this is not best practice
+
   const [curveName, setCurveName] = React.useState('');
+  const [xAxisLabel, setXAxisLabel] = React.useState('');
+  const [yAxisLabel, setYAxisLabel] = React.useState('');
 
   React.useEffect(() => init(), [order]);
 
@@ -318,6 +325,7 @@ const D3Example = () => {
     // (these variables are needed for `handlePointCoordinateChange`)
     setDrawing({
       d3: d3,
+      svg: svg,
       focus: focus,
       x: x,
       y: y,
@@ -332,6 +340,29 @@ const D3Example = () => {
       .attr('font-size', '0.75rem')
       .attr('fill', 'black');
     drawCurveName(focus, curveName);
+
+    // text label for the x axis
+    // https://bl.ocks.org/d3noob/23e42c8f67210ac6c678db2cd07a747e
+    svg
+      .append('text')
+      .attr('id', 'x-axis-label')
+      .attr(
+        'transform',
+        'translate(' + width / 2 + ' ,' + (height + SVG_PADDING.top + SVG_PADDING.bottom) + ')'
+      )
+      .style('text-anchor', 'middle')
+      .text(xAxisLabel);
+
+    // text label for the y axis
+    svg
+      .append('text')
+      .attr('id', 'y-axis-label')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', 0)
+      .attr('x', 0 - height / 2)
+      .attr('dy', '1.5rem')
+      .style('text-anchor', 'middle')
+      .text(yAxisLabel);
 
     function dragstarted(d) {
       d3.select(this)
@@ -469,6 +500,18 @@ const D3Example = () => {
     drawCurveName(drawing.focus, value);
   };
 
+  const handleXAxisLabelChange = event => {
+    const value = event.target.value;
+    setXAxisLabel(value);
+    drawXAxisLabel(drawing.svg, value);
+  };
+
+  const handleYAxisLabelChange = event => {
+    const value = event.target.value;
+    setYAxisLabel(value);
+    drawYAxisLabel(drawing.svg, value);
+  };
+
   return (
     <div style={{ display: 'flex' }}>
       <svg ref={SVG_REF} width={SVG_SIZE.width} height={SVG_SIZE.height} style={{ float: 'left' }}>
@@ -486,14 +529,35 @@ const D3Example = () => {
       </svg>
       <div>
         <div>
-          <label>Name:</label>
-          <input
-            type="text"
-            value={curveName}
-            onChange={e => handleCurveNameChange(e)}
-            placeholder="Curve Name"
-          />
+          <div>
+            <label>Name:</label>
+            <input
+              type="text"
+              value={curveName}
+              onChange={e => handleCurveNameChange(e)}
+              placeholder="Curve Name"
+            />
+          </div>
+          <div>
+            <label>X-Axis:</label>
+            <input
+              type="text"
+              value={xAxisLabel}
+              onChange={e => handleXAxisLabelChange(e)}
+              placeholder="TODO"
+            />
+          </div>
+          <div>
+            <label>Y-Axis:</label>
+            <input
+              type="text"
+              value={yAxisLabel}
+              onChange={e => handleYAxisLabelChange(e)}
+              placeholder="TODO"
+            />
+          </div>
         </div>
+        <hr></hr>
         <select onChange={updateOrder} value={order}>
           <option value="1">1</option>
           <option value="2">2</option>
