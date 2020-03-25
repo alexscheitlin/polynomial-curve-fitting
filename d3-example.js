@@ -9,6 +9,9 @@ const D3Example = () => {
   // size of final SVG in pixel
   const SVG_SIZE = { width: 500, height: 300 };
 
+  // padding within the svg before the drawing of the cartesian coordinate system
+  const SVG_PADDING = { top: 20, right: 20, bottom: 30, left: 50 };
+
   // max values of both axis
   const X_MAX = 10;
   const Y_MAX = 10;
@@ -178,6 +181,21 @@ const D3Example = () => {
       });
   };
 
+  const drawCurveName = (focus, value) => {
+    // set new text
+    focus.select('text#curve-name').text(value);
+
+    // get text length
+    const element = document.getElementById('curve-name');
+    const textLength = element.getComputedTextLength();
+
+    // re-position text
+    focus
+      .select('text#curve-name')
+      .attr('y', 0)
+      .attr('x', (SVG_SIZE.width - element.getComputedTextLength()) / 2 - SVG_PADDING.left);
+  };
+
   /***************************************************************************/
   /* Variables                                                               */
   /***************************************************************************/
@@ -196,6 +214,7 @@ const D3Example = () => {
   );
   const [r2, setR2] = React.useState(polynomialRegression(points, order, PRECISION_COEFFICIENT).r2);
   const [drawing, setDrawing] = React.useState({}); // most likely, this is not best practice
+  const [curveName, setCurveName] = React.useState('');
 
   React.useEffect(() => init(), [order]);
 
@@ -211,9 +230,8 @@ const D3Example = () => {
     const svg = d3.select(SVG_REF.current);
 
     // define svg properties
-    const margin = { top: 20, right: 20, bottom: 30, left: 50 };
-    const width = +svg.attr('width') - margin.left - margin.right;
-    const height = +svg.attr('height') - margin.top - margin.bottom;
+    const width = +svg.attr('width') - SVG_PADDING.left - SVG_PADDING.right;
+    const height = +svg.attr('height') - SVG_PADDING.top - SVG_PADDING.bottom;
 
     // define range of x and y axis (in pixel)
     const x = d3.scaleLinear().rangeRound([0, width]);
@@ -245,12 +263,12 @@ const D3Example = () => {
       .attr('pointer-events', 'all')
       .attr('width', width)
       .attr('height', height)
-      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+      .attr('transform', 'translate(' + SVG_PADDING.left + ',' + SVG_PADDING.top + ')');
 
     // create "drawing area" on svg
     let focus = svg
       .append('g')
-      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+      .attr('transform', 'translate(' + SVG_PADDING.left + ',' + SVG_PADDING.top + ')');
 
     // set domains of x and y axis
     x.domain([0, X_MAX]);
@@ -306,6 +324,14 @@ const D3Example = () => {
       drag: drag,
       line: line,
     });
+
+    // draw curve name
+    focus
+      .append('text')
+      .attr('id', 'curve-name')
+      .attr('font-size', '0.75rem')
+      .attr('fill', 'black');
+    drawCurveName(focus, curveName);
 
     function dragstarted(d) {
       d3.select(this)
@@ -437,6 +463,12 @@ const D3Example = () => {
     // TODO: be sure to not enter an endless loop :/
   };
 
+  const handleCurveNameChange = event => {
+    const value = event.target.value;
+    setCurveName(value);
+    drawCurveName(drawing.focus, value);
+  };
+
   return (
     <div style={{ display: 'flex' }}>
       <svg ref={SVG_REF} width={SVG_SIZE.width} height={SVG_SIZE.height} style={{ float: 'left' }}>
@@ -453,6 +485,15 @@ const D3Example = () => {
         </defs>
       </svg>
       <div>
+        <div>
+          <label>Name:</label>
+          <input
+            type="text"
+            value={curveName}
+            onChange={e => handleCurveNameChange(e)}
+            placeholder="Curve Name"
+          />
+        </div>
         <select onChange={updateOrder} value={order}>
           <option value="1">1</option>
           <option value="2">2</option>
