@@ -106,7 +106,7 @@ const D3Example = () => {
     focus.selectAll('circle').call(drag);
   };
 
-  const addCrossHair = (d3, focus, width, height) => {
+  const addCrossHair = (d3, focus, x, y, width, height) => {
     // based on
     // https://stackoverflow.com/questions/38687588/add-horizontal-crosshair-to-d3-js-chart
     const color = 'lightgray';
@@ -122,7 +122,7 @@ const D3Example = () => {
       .attr('fill', 'white')
       .attr('opacity', 0);
 
-    var verticalLine = focus
+    const verticalLine = focus
       .append('line')
       .attr('opacity', 0)
       .attr('y1', 0)
@@ -132,7 +132,7 @@ const D3Example = () => {
       .attr('pointer-events', 'none')
       .style('stroke-dasharray', dashes);
 
-    var horizontalLine = focus
+    const horizontalLine = focus
       .append('line')
       .attr('opacity', 0)
       .attr('x1', 0)
@@ -142,23 +142,39 @@ const D3Example = () => {
       .attr('pointer-events', 'none')
       .style('stroke-dasharray', dashes);
 
+    const text = focus
+      .append('text')
+      .attr('opacity', 0)
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('dx', '.5em')
+      .attr('dy', '1em')
+      .attr('font-size', '0.75rem')
+      .attr('fill', 'gray');
+
     transpRect
       .on('mousemove', function() {
-        let mouse = d3.mouse(this);
-        let mousex = mouse[0];
-        let mousey = mouse[1];
+        const mouse = d3.mouse(this);
+        const mouseX = mouse[0];
+        const mouseY = mouse[1];
         verticalLine
-          .attr('x1', mousex)
-          .attr('x2', mousex)
+          .attr('x1', mouseX)
+          .attr('x2', mouseX)
           .attr('opacity', 1);
         horizontalLine
-          .attr('y1', mousey)
-          .attr('y2', mousey)
+          .attr('y1', mouseY)
+          .attr('y2', mouseY)
+          .attr('opacity', 1);
+        text
+          .attr('x', d => mouseX)
+          .attr('y', d => mouseY)
+          .text(() => `x: ${round(x.invert(mouseX), 2)}, y: ${round(y.invert(mouseY), 2)}`)
           .attr('opacity', 1);
       })
       .on('mouseout', function() {
         verticalLine.attr('opacity', 0);
         horizontalLine.attr('opacity', 0);
+        text.attr('opacity', 0);
       });
   };
 
@@ -253,7 +269,7 @@ const D3Example = () => {
       .attr('class', 'axis axis--y')
       .call(yAxis);
 
-    addCrossHair(d3, focus, width, height);
+    addCrossHair(d3, focus, x, y, width, height);
 
     // draw initial curve
     focus
