@@ -14,6 +14,9 @@ const D3Example = () => {
   const Y_MAX = 10;
 
   const SHOW_DOTTED_CURVE = false;
+  const CURVE_LINE_COLOR = 'steelblue'; // visible if SHOW_DOTTED_CURVE == true
+  const CURVE_DOTS_COLOR = 'red'; // visible if SHOW_DOTTED_CURVE === false
+  const DRAGGABLE_DOTS_COLOR = 'navy';
 
   // precision (i.e., number of considered decimal places) of the
   // - polynomial's coefficients
@@ -75,7 +78,7 @@ const D3Example = () => {
       .datum(curvePoints)
       .attr('id', 'curve')
       .attr('fill', 'none')
-      .attr('stroke', 'steelblue')
+      .attr('stroke', CURVE_LINE_COLOR)
       .attr('stroke-linejoin', 'round')
       .attr('stroke-linecap', 'round')
       .attr('stroke-width', 1.5)
@@ -264,18 +267,18 @@ const D3Example = () => {
       .attr('stroke-width', 1)
       .attr('d', line);
 
-    // 1. create draggable points that need to be of type 'circle' so that the
-    //    dragging events are correctly added
-    // 2. add drag behaviour to all draggable points
-    drawDraggablePoints(focus, x, y, drag, points);
-    focus.selectAll('circle').call(drag);
-
     // draw curve points or lines
     if (SHOW_DOTTED_CURVE) {
       drawCurvePoints(d3, focus, x, y, curvePoints);
     } else {
       drawCurveLines(d3, focus, line, curvePoints);
     }
+
+    // 1. create draggable points that need to be of type 'circle' so that the
+    //    dragging events are correctly added
+    // 2. add drag behaviour to all draggable points
+    drawDraggablePoints(focus, x, y, drag, points);
+    focus.selectAll('circle').call(drag);
 
     // most likely, this is not best practice
     // (these variables are needed for `handlePointCoordinateChange`)
@@ -320,6 +323,9 @@ const D3Example = () => {
       } else {
         drawCurveLines(d3, focus, line, newCurvePoints);
       }
+
+      // re-draw draggable points
+      drawDraggablePoints(focus, x, y, drag, points);
     }
 
     function dragended(d) {
@@ -351,11 +357,10 @@ const D3Example = () => {
       value = 0;
     }
 
-    // update changed coordinate in points list and re-draw draggable points
+    // update changed coordinate in points list
     const newPoints = [...points];
     newPoints[pointIndex][coordinateIndex] = parseFloat(value);
     setPoints(newPoints);
-    drawDraggablePoints(drawing.focus, drawing.x, drawing.y, drawing.drag, points);
 
     // calculate new curve points and re-draw curve (dotted or lined)
     const newCurvePoints = generateCurvePoints(points, order, X_MAX, PRECISION_COEFFICIENT);
@@ -365,6 +370,9 @@ const D3Example = () => {
     } else {
       drawCurveLines(drawing.d3, drawing.focus, drawing.line, newCurvePoints);
     }
+
+    // re-draw draggable points
+    drawDraggablePoints(drawing.focus, drawing.x, drawing.y, drawing.drag, points);
 
     // re-compute regression
     const regression = polynomialRegression(points, order, PRECISION_COEFFICIENT);
@@ -392,9 +400,6 @@ const D3Example = () => {
     });
     setPoints(newPoints);
 
-    // re-draw draggable points
-    drawDraggablePoints(drawing.focus, drawing.x, drawing.y, drawing.drag, newPoints);
-
     // calculate new curve points and re-draw curve (dotted or lined)
     const newCurvePoints = generateCurvePoints(points, order, X_MAX, PRECISION_COEFFICIENT);
     setCurvePoints(newCurvePoints);
@@ -403,6 +408,9 @@ const D3Example = () => {
     } else {
       drawCurveLines(drawing.d3, drawing.focus, drawing.line, newCurvePoints);
     }
+
+    // re-draw draggable points
+    drawDraggablePoints(drawing.focus, drawing.x, drawing.y, drawing.drag, newPoints);
 
     // re-compute regression
     const regression = polynomialRegression(newPoints, order, PRECISION_COEFFICIENT);
@@ -419,7 +427,7 @@ const D3Example = () => {
         <defs>
           <style type="text/css">{`
             circle {
-              fill: steelblue;
+              fill: ${DRAGGABLE_DOTS_COLOR};
             }
             circle.active {
               fill: gray;
