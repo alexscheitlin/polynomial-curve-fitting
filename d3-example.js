@@ -339,13 +339,13 @@ const D3Example = () => {
       } else {
         drawCurveLines(d3, focus, line, newCurvePoints);
       }
-
-      // re-draw draggable points
-      drawDraggablePoints(focus, x, y, drag, points);
     }
 
     function dragended(d) {
       d3.select(this).classed('active', false);
+
+      // re-draw draggable points
+      drawDraggablePoints(focus, x, y, drag, points);
     }
   };
 
