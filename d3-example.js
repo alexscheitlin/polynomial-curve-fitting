@@ -9,12 +9,12 @@ const D3Example = () => {
   // size of final SVG in pixel
   const SVG_SIZE = { width: 500, height: 300 };
 
-  // padding within the svg before the drawing of the cartesian coordinate system
-  const SVG_PADDING = { top: 20, right: 20, bottom: 30, left: 50 };
+  // margins of the graph (within the svg)
+  const GRAPH_MARGIN = { top: 20, right: 20, bottom: 30, left: 50 };
 
-  // max values of both axis
-  const X_MAX = 10;
-  const Y_MAX = 10;
+  // ranges of the x and y axes
+  const X_AXIS = { min: -5, max: 10 };
+  const Y_AXIS = { min: -5, max: 10 };
 
   const SHOW_DOTTED_CURVE = false;
   const CURVE_LINE_COLOR = 'steelblue'; // visible if SHOW_DOTTED_CURVE == true
@@ -34,7 +34,14 @@ const D3Example = () => {
   const startOrder = 2;
 
   // create random points based on the initial order
-  const startPoints = generateRandomPoints(startOrder + 1, PRECISION_POINTS, X_MAX, Y_MAX);
+  const startPoints = generateRandomPoints(
+    startOrder + 1,
+    PRECISION_POINTS,
+    X_AXIS.min,
+    X_AXIS.max,
+    Y_AXIS.min,
+    Y_AXIS.max
+  );
 
   /***************************************************************************/
   /* Drawing Methods                                                         */
@@ -48,7 +55,7 @@ const D3Example = () => {
     //.selectAll('*') // remove everything withing the svg tag (including the styling)
   };
 
-  const drawCurvePoints = (d3, focus, x, y, curvePoints) => {
+  const drawCurvePoints = (d3, graph, x, y, curvePoints) => {
     // remove old points
     d3.select('svg')
       .select('g')
@@ -56,7 +63,7 @@ const D3Example = () => {
       .remove();
 
     // draw new points
-    focus
+    graph
       .selectAll('ellipse')
       .data(curvePoints)
       .enter()
@@ -68,7 +75,7 @@ const D3Example = () => {
       .style('fill', 'red');
   };
 
-  const drawCurveLines = (d3, focus, line, curvePoints) => {
+  const drawCurveLines = (d3, graph, line, curvePoints) => {
     // remove old lines
     d3.select('svg')
       .select('g')
@@ -76,7 +83,7 @@ const D3Example = () => {
       .remove();
 
     // draw new lines
-    focus
+    graph
       .append('path')
       .datum(curvePoints)
       .attr('id', 'curve')
@@ -88,14 +95,14 @@ const D3Example = () => {
       .attr('d', line);
   };
 
-  const drawDraggablePoints = (focus, x, y, drag, points) => {
+  const drawDraggablePoints = (graph, x, y, drag, points) => {
     // remove old points
     d3.select('svg')
       .select('g')
       .selectAll('circle')
       .remove();
 
-    focus
+    graph
       .selectAll('circle')
       .data(points)
       .enter()
@@ -106,17 +113,17 @@ const D3Example = () => {
       .style('cursor', 'pointer');
 
     // add drag behaviour to all draggable points
-    focus.selectAll('circle').call(drag);
+    graph.selectAll('circle').call(drag);
   };
 
-  const addCrossHair = (d3, focus, x, y, width, height) => {
+  const addCrossHair = (d3, graph, x, y, width, height) => {
     // based on
     // https://stackoverflow.com/questions/38687588/add-horizontal-crosshair-to-d3-js-chart
     const color = 'lightgray';
     const lineWidth = 1.0;
     const dashes = '3 3'; // width of one dash and space between two dashes
 
-    const transpRect = focus
+    const transpRect = graph
       .append('rect')
       .attr('x', 0)
       .attr('y', 0)
@@ -125,7 +132,7 @@ const D3Example = () => {
       .attr('fill', 'white')
       .attr('opacity', 0);
 
-    const verticalLine = focus
+    const verticalLine = graph
       .append('line')
       .attr('opacity', 0)
       .attr('y1', 0)
@@ -135,7 +142,7 @@ const D3Example = () => {
       .attr('pointer-events', 'none')
       .style('stroke-dasharray', dashes);
 
-    const horizontalLine = focus
+    const horizontalLine = graph
       .append('line')
       .attr('opacity', 0)
       .attr('x1', 0)
@@ -145,7 +152,7 @@ const D3Example = () => {
       .attr('pointer-events', 'none')
       .style('stroke-dasharray', dashes);
 
-    const text = focus
+    const text = graph
       .append('text')
       .attr('opacity', 0)
       .attr('x', 0)
@@ -181,19 +188,19 @@ const D3Example = () => {
       });
   };
 
-  const drawCurveName = (focus, value) => {
+  const drawCurveName = (graph, value) => {
     // set new text
-    focus.select('text#curve-name').text(value);
+    graph.select('text#curve-name').text(value);
 
     // get text length
     const element = document.getElementById('curve-name');
     const textLength = element.getComputedTextLength();
 
     // re-position text
-    focus
+    graph
       .select('text#curve-name')
       .attr('y', 0)
-      .attr('x', (SVG_SIZE.width - element.getComputedTextLength()) / 2 - SVG_PADDING.left);
+      .attr('x', (SVG_SIZE.width - element.getComputedTextLength()) / 2 - GRAPH_MARGIN.left);
   };
 
   const drawXAxisLabel = (svg, value) => svg.select('text#x-axis-label').text(value);
@@ -208,7 +215,7 @@ const D3Example = () => {
   const [order, setOrder] = React.useState(startOrder);
   const [points, setPoints] = React.useState(startPoints);
   const [curvePoints, setCurvePoints] = React.useState(
-    generateCurvePoints(points, order, X_MAX, PRECISION_COEFFICIENT)
+    generateCurvePoints(points, order, X_AXIS.min, X_AXIS.max, PRECISION_COEFFICIENT)
   );
   const [coefficients, setCoefficients] = React.useState(
     polynomialRegression(points, order, PRECISION_COEFFICIENT).equation
@@ -236,13 +243,13 @@ const D3Example = () => {
     // define svg and link it with the dom element
     const svg = d3.select(SVG_REF.current);
 
-    // define svg properties
-    const width = +svg.attr('width') - SVG_PADDING.left - SVG_PADDING.right;
-    const height = +svg.attr('height') - SVG_PADDING.top - SVG_PADDING.bottom;
+    // define size of graph
+    const graphWidth = +svg.attr('width') - GRAPH_MARGIN.left - GRAPH_MARGIN.right;
+    const graphHeight = +svg.attr('height') - GRAPH_MARGIN.top - GRAPH_MARGIN.bottom;
 
     // define range of x and y axis (in pixel)
-    const x = d3.scaleLinear().rangeRound([0, width]);
-    const y = d3.scaleLinear().rangeRound([height, 0]);
+    const x = d3.scaleLinear().rangeRound([0, graphWidth]);
+    const y = d3.scaleLinear().rangeRound([graphHeight, 0]);
 
     // set position of x and y axis
     const xAxis = d3.axisBottom(x);
@@ -261,43 +268,43 @@ const D3Example = () => {
       .on('drag', dragged)
       .on('end', dragended);
 
-    // configure svg
-    svg
-      .append('rect')
-      .attr('class', 'zoom')
-      .attr('cursor', 'default')
-      .attr('fill', 'none')
-      .attr('pointer-events', 'all')
-      .attr('width', width)
-      .attr('height', height)
-      .attr('transform', 'translate(' + SVG_PADDING.left + ',' + SVG_PADDING.top + ')');
+    // // configure svg
+    // svg
+    //   .append('rect')
+    //   .attr('cursor', 'default')
+    //   .attr('fill', 'none')
+    //   .attr('pointer-events', 'all')
+    //   .attr('width', graphWidth)
+    //   .attr('height', graphHeight)
+    //   .attr('transform', 'translate(' + GRAPH_MARGIN.left + ',' + GRAPH_MARGIN.top + ')');
 
-    // create "drawing area" on svg
-    let focus = svg
+    // append graph as 'group' element to the svg and move it to the top left margin
+    const graph = svg
       .append('g')
-      .attr('transform', 'translate(' + SVG_PADDING.left + ',' + SVG_PADDING.top + ')');
+      .attr('id', 'graph')
+      .attr('transform', 'translate(' + GRAPH_MARGIN.left + ',' + GRAPH_MARGIN.top + ')');
 
     // set domains of x and y axis
-    x.domain([0, X_MAX]);
-    y.domain([0, Y_MAX]);
+    x.domain([X_AXIS.min, X_AXIS.max]);
+    y.domain([Y_AXIS.min, Y_AXIS.max]);
 
     // draw x axis
-    focus
+    graph
       .append('g')
       .attr('class', 'axis axis--x')
-      .attr('transform', 'translate(0,' + height + ')')
+      .attr('transform', 'translate(0,' + graphHeight + ')')
       .call(xAxis);
 
     // draw y axis
-    focus
+    graph
       .append('g')
       .attr('class', 'axis axis--y')
       .call(yAxis);
 
-    addCrossHair(d3, focus, x, y, width, height);
+    addCrossHair(d3, graph, x, y, graphWidth, graphHeight);
 
     // draw initial curve
-    focus
+    graph
       .append('path')
       .datum(curvePoints)
       .attr('id', 'initial') // id is currently not used
@@ -310,23 +317,23 @@ const D3Example = () => {
 
     // draw curve points or lines
     if (SHOW_DOTTED_CURVE) {
-      drawCurvePoints(d3, focus, x, y, curvePoints);
+      drawCurvePoints(d3, graph, x, y, curvePoints);
     } else {
-      drawCurveLines(d3, focus, line, curvePoints);
+      drawCurveLines(d3, graph, line, curvePoints);
     }
 
     // 1. create draggable points that need to be of type 'circle' so that the
     //    dragging events are correctly added
     // 2. add drag behaviour to all draggable points
-    drawDraggablePoints(focus, x, y, drag, points);
-    focus.selectAll('circle').call(drag);
+    drawDraggablePoints(graph, x, y, drag, points);
+    graph.selectAll('circle').call(drag);
 
     // most likely, this is not best practice
     // (these variables are needed for `handlePointCoordinateChange`)
     setDrawing({
       d3: d3,
       svg: svg,
-      focus: focus,
+      graph: graph,
       x: x,
       y: y,
       drag: drag,
@@ -334,12 +341,12 @@ const D3Example = () => {
     });
 
     // draw curve name
-    focus
+    graph
       .append('text')
       .attr('id', 'curve-name')
       .attr('font-size', '0.75rem')
       .attr('fill', 'black');
-    drawCurveName(focus, curveName);
+    drawCurveName(graph, curveName);
 
     // text label for the x axis
     // https://bl.ocks.org/d3noob/23e42c8f67210ac6c678db2cd07a747e
@@ -348,7 +355,11 @@ const D3Example = () => {
       .attr('id', 'x-axis-label')
       .attr(
         'transform',
-        'translate(' + width / 2 + ' ,' + (height + SVG_PADDING.top + SVG_PADDING.bottom) + ')'
+        'translate(' +
+          graphWidth / 2 +
+          ' ,' +
+          (graphHeight + GRAPH_MARGIN.top + GRAPH_MARGIN.bottom) +
+          ')'
       )
       .style('text-anchor', 'middle')
       .text(xAxisLabel);
@@ -359,7 +370,7 @@ const D3Example = () => {
       .attr('id', 'y-axis-label')
       .attr('transform', 'rotate(-90)')
       .attr('y', 0)
-      .attr('x', 0 - height / 2)
+      .attr('x', 0 - graphHeight / 2)
       .attr('dy', '1.5rem')
       .style('text-anchor', 'middle')
       .text(yAxisLabel);
@@ -385,16 +396,22 @@ const D3Example = () => {
       setEquation(regression.string);
       setR2(regression.r2);
 
-      const newCurvePoints = generateCurvePoints(points, order, X_MAX, PRECISION_COEFFICIENT);
+      const newCurvePoints = generateCurvePoints(
+        points,
+        order,
+        X_AXIS.min,
+        X_AXIS.max,
+        PRECISION_COEFFICIENT
+      );
       setCurvePoints(newCurvePoints);
 
       // sort points to not have "invalid" functions
       setPoints(sortPointsByX(points));
 
       if (SHOW_DOTTED_CURVE) {
-        drawCurvePoints(d3, focus, x, y, newCurvePoints);
+        drawCurvePoints(d3, graph, x, y, newCurvePoints);
       } else {
-        drawCurveLines(d3, focus, line, newCurvePoints);
+        drawCurveLines(d3, graph, line, newCurvePoints);
       }
     }
 
@@ -402,7 +419,7 @@ const D3Example = () => {
       d3.select(this).classed('active', false);
 
       // re-draw draggable points
-      drawDraggablePoints(focus, x, y, drag, points);
+      drawDraggablePoints(graph, x, y, drag, points);
     }
   };
 
@@ -436,16 +453,22 @@ const D3Example = () => {
     setPoints(newPoints);
 
     // calculate new curve points and re-draw curve (dotted or lined)
-    const newCurvePoints = generateCurvePoints(points, order, X_MAX, PRECISION_COEFFICIENT);
+    const newCurvePoints = generateCurvePoints(
+      points,
+      order,
+      X_AXIS.min,
+      X_AXIS.max,
+      PRECISION_COEFFICIENT
+    );
     setCurvePoints(newCurvePoints);
     if (SHOW_DOTTED_CURVE) {
-      drawCurvePoints(drawing.d3, drawing.focus, drawing.x, drawing.y, newCurvePoints);
+      drawCurvePoints(drawing.d3, drawing.graph, drawing.x, drawing.y, newCurvePoints);
     } else {
-      drawCurveLines(drawing.d3, drawing.focus, drawing.line, newCurvePoints);
+      drawCurveLines(drawing.d3, drawing.graph, drawing.line, newCurvePoints);
     }
 
     // re-draw draggable points
-    drawDraggablePoints(drawing.focus, drawing.x, drawing.y, drawing.drag, points);
+    drawDraggablePoints(drawing.graph, drawing.x, drawing.y, drawing.drag, points);
 
     // re-compute regression
     const regression = polynomialRegression(points, order, PRECISION_COEFFICIENT);
@@ -474,16 +497,22 @@ const D3Example = () => {
     setPoints(newPoints);
 
     // calculate new curve points and re-draw curve (dotted or lined)
-    const newCurvePoints = generateCurvePoints(points, order, X_MAX, PRECISION_COEFFICIENT);
+    const newCurvePoints = generateCurvePoints(
+      points,
+      order,
+      X_AXIS.min,
+      X_AXIS.max,
+      PRECISION_COEFFICIENT
+    );
     setCurvePoints(newCurvePoints);
     if (SHOW_DOTTED_CURVE) {
-      drawCurvePoints(drawing.d3, drawing.focus, drawing.x, drawing.y, newCurvePoints);
+      drawCurvePoints(drawing.d3, drawing.graph, drawing.x, drawing.y, newCurvePoints);
     } else {
-      drawCurveLines(drawing.d3, drawing.focus, drawing.line, newCurvePoints);
+      drawCurveLines(drawing.d3, drawing.graph, drawing.line, newCurvePoints);
     }
 
     // re-draw draggable points
-    drawDraggablePoints(drawing.focus, drawing.x, drawing.y, drawing.drag, newPoints);
+    drawDraggablePoints(drawing.graph, drawing.x, drawing.y, drawing.drag, newPoints);
 
     // re-compute regression
     const regression = polynomialRegression(newPoints, order, PRECISION_COEFFICIENT);
@@ -497,7 +526,7 @@ const D3Example = () => {
   const handleCurveNameChange = event => {
     const value = event.target.value;
     setCurveName(value);
-    drawCurveName(drawing.focus, value);
+    drawCurveName(drawing.graph, value);
   };
 
   const handleXAxisLabelChange = event => {
@@ -610,7 +639,7 @@ const D3Example = () => {
                   className="number"
                   type="number"
                   min="0"
-                  max={X_MAX}
+                  max={X_AXIS.max}
                   step={Math.pow(10, -(PRECISION_POINTS - 1))}
                   value={point[0]}
                   onChange={e => handlePointCoordinateChange(e, i, 0)}
@@ -620,7 +649,7 @@ const D3Example = () => {
                   className="number"
                   type="number"
                   min="0"
-                  max={Y_MAX}
+                  max={Y_AXIS.max}
                   step={Math.pow(10, -(PRECISION_POINTS - 1))}
                   value={point[1]}
                   onChange={e => handlePointCoordinateChange(e, i, 1)}
@@ -667,7 +696,7 @@ const polynomialRegression = (points, order, precision) =>
   regression.polynomial(points, { order: order, precision: precision });
 
 /**
- * Generate evenly distributed points between `0` and `xMax` on a polynomial
+ * Generate evenly distributed points between `xMin` and `xMax` on a polynomial
  * curve with the given `order`.
  *
  * The polynomial is created using linear least-squares regression with the
@@ -676,17 +705,19 @@ const polynomialRegression = (points, order, precision) =>
  *
  * @param {number[][]} points
  * @param {number} order
+ * @param {number} xMin
  * @param {number} xMax
  * @param {number} precision
  * @returns {number[][]}
  */
-const generateCurvePoints = (points, order, xMax, precision) => {
+const generateCurvePoints = (points, order, xMin, xMax, precision) => {
   // TODO: check precision of output points (if it is the same as `precision`,
   // then the precision constants of the points and coefficients need to be
   // the same)
   const frequency = 7;
-  return range(frequency * xMax + 1)
-    .map(x => x / frequency)
+  const xLength = xMax - xMin;
+  return range(frequency * xLength + 1)
+    .map(x => x / frequency + xMin)
     .map(x => polynomialRegression(points, order, precision).predict(x));
 };
 
@@ -729,24 +760,40 @@ const round = (n, p) => {
 const range = n => [...Array(n).keys()];
 
 /**
- * Create `n` points that are evenly distributed between `0` and `xMax` and
- * have random y values.
+ * Create `n` points that are evenly distributed between `xMin` and `xMax` and
+ * have random y values between `yMin` and `yMax`.
  *
  * The x-coordinate of the first point is `0` and the x-coordinate of the last
  * point is `xMax`. The y-coordinate is a random value between `0` and yMax`.
  * All coordinates have `p` decimal places.
  *
  * Example:
- * `(3, 2, 10, 10)` => `[[0, 3.12], [5, 8.42], [10, 4.1]]
+ * `(3, 2, -10, 10, -10, 10)` => `[[-10, -5.02], [0, 6.5], [10, -4.91]]
  *
- * @param {number} n
- * @param {number} p
- * @param {number} xMax
- * @param {number} yMax
+ * @param {number} n the number of points to generate
+ * @param {number} p the precision of the coordinates (i.e., the number of decimal places)
+ * @param {number} xMin the minimum value of the x axis (needs to be smaller than `xMax`)
+ * @param {number} xMax the maximum value of the x axis (needs to be greater than `xMin`)
+ * @param {number} yMin the minimum value of the y axis (needs to be smaller than `yMax`)
+ * @param {number} yMax the maximum value of the y axis (needs to be greater than `yMin`)
  * @returns {number[][]}
  */
-const generateRandomPoints = (n, p, xMax, yMax) =>
-  range(n).map(i => [(xMax / (n - 1)) * i, round(Math.random() * yMax, p)]);
+const generateRandomPoints = (n, p, xMin, xMax, yMin, yMax) => {
+  const xLength = xMax - xMin;
+  const yLength = yMax - yMin;
+
+  // get array with `n` elements from `0` to `n-1`
+  return (
+    range(n)
+      // get points with `x` eqaully distributed between `0` and `xLength` and `y` being a
+      // random value between `0` and `yLength`
+      .map(i => [(xLength / (n - 1)) * i, Math.random() * yLength])
+      // shift `x` and `y` values acording to `xMin` and `yMin`
+      .map(point => [point[0] + xMin, point[1] + yMin])
+      // round `y` value to precision `p`
+      .map(point => [point[0], round(point[1], p)])
+  );
+};
 
 /**
  * Sort the provided `points` by their x values.
@@ -772,6 +819,7 @@ const sortPointsByX = points => [...points].sort((a, b) => a[0] - b[0]);
  */
 const removePoint = points => points.length > 1 && points.splice(1, 1);
 
+// TODO: properly check whether this works with negative coordinates
 /**
  * Insert a new point (lying on a curve) into the provided list of `points`
  * (in-place).
