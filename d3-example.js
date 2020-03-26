@@ -847,7 +847,9 @@ const addPoint = (points, coefficientPrecision, pointsPrecision) => {
   // based on the already existing points, make a linear least-squares
   // regression and get the corresponding y coordinate to the just
   // computed x coordinate
-  const newY = polynomialRegression(points, points.length, coefficientPrecision).predict(newX)[1];
+  const newY = polynomialRegression(points, points.length - 1, coefficientPrecision).predict(
+    newX
+  )[1];
 
   // insert new point into the list of points and sort the list by the point's
   // x-coordinate
