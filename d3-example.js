@@ -716,9 +716,10 @@ const generateCurvePoints = (points, order, xMin, xMax, precision) => {
   // the same)
   const frequency = 7;
   const xLength = xMax - xMin;
+  const regression = polynomialRegression(points, order, precision);
   return range(frequency * xLength + 1)
     .map(x => x / frequency + xMin)
-    .map(x => polynomialRegression(points, order, precision).predict(x));
+    .map(x => regression.predict(x));
 };
 
 /*****************************************************************************/
