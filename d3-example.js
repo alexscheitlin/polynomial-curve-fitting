@@ -329,7 +329,7 @@ const D3Example = () => {
     graph.selectAll('circle').call(drag);
 
     // most likely, this is not best practice
-    // (these variables are needed for `handlePointCoordinateChange`)
+    // (these variables are needed for methods like `handlePointCoordinateChange`)
     setDrawing({
       d3: d3,
       svg: svg,
@@ -391,10 +391,7 @@ const D3Example = () => {
         .attr('cx', x(d[0]))
         .attr('cy', y(d[1]));
 
-      const regression = polynomialRegression(points, order, PRECISION_COEFFICIENT);
-      setCoefficients(regression.equation);
-      setEquation(regression.string);
-      setR2(regression.r2);
+      updateRegressionState(points, order);
 
       const newCurvePoints = generateCurvePoints(
         points,
@@ -417,26 +414,116 @@ const D3Example = () => {
 
     function dragended(d) {
       d3.select(this).classed('active', false);
-
-      // re-draw draggable points
       drawDraggablePoints(graph, x, y, drag, points);
     }
   };
 
-  const updateOrder = event => {
-    const newOrder = parseInt(event.target.value);
+  /***************************************************************************/
+  /* State Updates                                                           */
+  /***************************************************************************/
+  // update the state and possibly other states if needed
+  // re-draw some graphics if needed
 
+  const updateCurveNameState = newValue => {
+    setCurveName(newValue);
+    drawCurveName(drawing.graph, newValue);
+  };
+
+  const updateXAxisLabelState = newValue => {
+    setXAxisLabel(newValue);
+    drawXAxisLabel(drawing.svg, newValue);
+  };
+
+  const updateYAxisLabelState = newValue => {
+    setYAxisLabel(newValue);
+    drawYAxisLabel(drawing.svg, newValue);
+  };
+
+  const updateOrderState = newValue => {
     // add or remove points until there is one more point than the new order
     let cPoints = deepCopy(points);
-    while (cPoints.length - 1 != newOrder) {
-      cPoints.length - 1 < newOrder && addPoint(cPoints, PRECISION_COEFFICIENT, PRECISION_POINTS);
-      cPoints.length - 1 > newOrder && removePoint(cPoints);
+    while (cPoints.length - 1 != newValue) {
+      cPoints.length - 1 < newValue && addPoint(cPoints, PRECISION_COEFFICIENT, PRECISION_POINTS);
+      cPoints.length - 1 > newValue && removePoint(cPoints);
     }
 
     clearSVG();
 
     setPoints(sortPointsByX(cPoints));
-    setOrder(newOrder);
+    setOrder(newValue);
+  };
+
+  const updateCoefficientState = (newValue, coefficientIndex) => {
+    // update coefficient list (don't update state yet -> is done in updatePointsState)
+    const newCoefficients = [...coefficients];
+    newCoefficients[coefficientIndex] = parseFloat(newValue);
+
+    // calculate new y values for the x values
+    const newPoints = [...points].map(point => {
+      point[1] = round(polynomialValue(point[0], newCoefficients), PRECISION_POINTS);
+      return point;
+    });
+
+    updatePointsState(newPoints, order);
+  };
+
+  const updatePointCoordinateState = (newValue, pointIndex, coordinateIndex) => {
+    // update changed coordinate in points list
+    const newPoints = [...points];
+    newPoints[pointIndex][coordinateIndex] = parseFloat(newValue);
+
+    updatePointsState(newPoints, order);
+  };
+
+  const updatePointsState = (points, order) => {
+    setPoints(points);
+
+    // generate new points on the curve and redraw the curve
+    const newCurvePoints = generateCurvePoints(
+      points,
+      order,
+      X_AXIS.min,
+      X_AXIS.max,
+      PRECISION_COEFFICIENT
+    );
+    setCurvePoints(newCurvePoints);
+
+    if (SHOW_DOTTED_CURVE) {
+      drawCurvePoints(drawing.d3, drawing.graph, drawing.x, drawing.y, newCurvePoints);
+    } else {
+      drawCurveLines(drawing.d3, drawing.graph, drawing.line, newCurvePoints);
+    }
+
+    drawDraggablePoints(drawing.graph, drawing.x, drawing.y, drawing.drag, points);
+    updateRegressionState(points, order);
+  };
+
+  const updateRegressionState = (points, order) => {
+    const regression = polynomialRegression(points, order, PRECISION_COEFFICIENT);
+    setCoefficients(regression.equation);
+    setEquation(regression.string);
+    setR2(regression.r2);
+  };
+
+  /***************************************************************************/
+  /* Input Handling                                                          */
+  /***************************************************************************/
+  // extract and validate input and then update the state
+
+  const handleCurveNameChange = event => updateCurveNameState(event.target.value);
+  const handleXAxisLabelChange = event => updateXAxisLabelState(event.target.value);
+  const handleYAxisLabelChange = event => updateYAxisLabelState(event.target.value);
+  const handleOrderChange = event => updateOrderState(parseInt(event.target.value));
+
+  const handleCurveCoefficientsChange = (event, coefficientIndex) => {
+    let value = event.target.value;
+
+    // handle invalid input
+    if (value === '' || parseFloat(value) === NaN) {
+      value = 0;
+    }
+
+    updateCoefficientState(value, coefficientIndex);
   };
 
   const handlePointCoordinateChange = (event, pointIndex, coordinateIndex) => {
@@ -447,98 +534,7 @@ const D3Example = () => {
       value = 0;
     }
 
-    // update changed coordinate in points list
-    const newPoints = [...points];
-    newPoints[pointIndex][coordinateIndex] = parseFloat(value);
-    setPoints(newPoints);
-
-    // calculate new curve points and re-draw curve (dotted or lined)
-    const newCurvePoints = generateCurvePoints(
-      points,
-      order,
-      X_AXIS.min,
-      X_AXIS.max,
-      PRECISION_COEFFICIENT
-    );
-    setCurvePoints(newCurvePoints);
-    if (SHOW_DOTTED_CURVE) {
-      drawCurvePoints(drawing.d3, drawing.graph, drawing.x, drawing.y, newCurvePoints);
-    } else {
-      drawCurveLines(drawing.d3, drawing.graph, drawing.line, newCurvePoints);
-    }
-
-    // re-draw draggable points
-    drawDraggablePoints(drawing.graph, drawing.x, drawing.y, drawing.drag, points);
-
-    // re-compute regression
-    const regression = polynomialRegression(points, order, PRECISION_COEFFICIENT);
-    setCoefficients(regression.equation);
-    setEquation(regression.string);
-    setR2(regression.r2);
-  };
-
-  const handleCurveCoefficientChange = (event, coefficientIndex) => {
-    let value = event.target.value;
-
-    // handle invalid input
-    if (value === '' || parseFloat(value) === NaN) {
-      value = 0;
-    }
-
-    // update coefficient list (don't update state yet)
-    const newCoefficients = [...coefficients];
-    newCoefficients[coefficientIndex] = parseFloat(value);
-
-    // calculate new y values for the x values
-    const newPoints = [...points].map(point => {
-      point[1] = round(polynomialValue(point[0], newCoefficients), PRECISION_POINTS);
-      return point;
-    });
-    setPoints(newPoints);
-
-    // calculate new curve points and re-draw curve (dotted or lined)
-    const newCurvePoints = generateCurvePoints(
-      points,
-      order,
-      X_AXIS.min,
-      X_AXIS.max,
-      PRECISION_COEFFICIENT
-    );
-    setCurvePoints(newCurvePoints);
-    if (SHOW_DOTTED_CURVE) {
-      drawCurvePoints(drawing.d3, drawing.graph, drawing.x, drawing.y, newCurvePoints);
-    } else {
-      drawCurveLines(drawing.d3, drawing.graph, drawing.line, newCurvePoints);
-    }
-
-    // re-draw draggable points
-    drawDraggablePoints(drawing.graph, drawing.x, drawing.y, drawing.drag, newPoints);
-
-    // re-compute regression
-    const regression = polynomialRegression(newPoints, order, PRECISION_COEFFICIENT);
-    setCoefficients(regression.equation);
-    setEquation(regression.string);
-    setR2(regression.r2);
-
-    // TODO: be sure to not enter an endless loop :/
-  };
-
-  const handleCurveNameChange = event => {
-    const value = event.target.value;
-    setCurveName(value);
-    drawCurveName(drawing.graph, value);
-  };
-
-  const handleXAxisLabelChange = event => {
-    const value = event.target.value;
-    setXAxisLabel(value);
-    drawXAxisLabel(drawing.svg, value);
-  };
-
-  const handleYAxisLabelChange = event => {
-    const value = event.target.value;
-    setYAxisLabel(value);
-    drawYAxisLabel(drawing.svg, value);
+    updatePointCoordinateState(value, pointIndex, coordinateIndex);
   };
 
   return (
@@ -567,45 +563,53 @@ const D3Example = () => {
               placeholder="Curve Name"
             />
           </div>
+
           <div>
             <label>X-Axis:</label>
             <input
               type="text"
               value={xAxisLabel}
               onChange={e => handleXAxisLabelChange(e)}
-              placeholder="TODO"
+              placeholder="X-Axis Label"
             />
           </div>
+
           <div>
             <label>Y-Axis:</label>
             <input
               type="text"
               value={yAxisLabel}
               onChange={e => handleYAxisLabelChange(e)}
-              placeholder="TODO"
+              placeholder="Y-Axis Label"
             />
           </div>
         </div>
+
         <hr></hr>
-        <select onChange={updateOrder} value={order}>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-          <option value="6">6</option>
-        </select>
+
+        <div>
+          <select onChange={e => handleOrderChange(e)} value={order}>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+          </select>
+        </div>
+
         <hr></hr>
-        <pre>
-          <div style={{ color: r2 === 1 ? 'green' : 'red' }}>
-            Coefficient of Determination (R^2): {JSON.stringify(r2)}
-          </div>
+
+        <pre style={{ color: r2 === 1 ? 'green' : 'red' }}>
+          Coefficient of Determination (R^2): {JSON.stringify(r2)}
         </pre>
+
         <hr></hr>
+
         <div>
           <pre>
-            <div>Coeffs: {`  y = ${generatePolynomialEquation(coefficients)}`}</div>
-            <div>Equation: {equation}</div>
+            <div>Polynomial: {`  y = ${generatePolynomialEquation(coefficients)}`}</div>
+            {/*<div>Equation: {equation}</div>*/}
           </pre>
           <span>{'y = '}</span>
           {coefficients.map((coefficient, i) => {
@@ -617,7 +621,7 @@ const D3Example = () => {
                     type="number"
                     step={Math.pow(10, -(PRECISION_COEFFICIENT - 1))}
                     value={coefficient}
-                    onChange={e => handleCurveCoefficientChange(e, i)}
+                    onChange={e => handleCurveCoefficientsChange(e, i)}
                   />
                 }
                 {coefficients.length - i - 1 > 1
@@ -629,7 +633,9 @@ const D3Example = () => {
             );
           })}
         </div>
+
         <hr></hr>
+
         <div>
           {points.map((point, i) => {
             return (
@@ -638,7 +644,7 @@ const D3Example = () => {
                 <input
                   className="number"
                   type="number"
-                  min="0"
+                  min={X_AXIS.min}
                   max={X_AXIS.max}
                   step={Math.pow(10, -(PRECISION_POINTS - 1))}
                   value={point[0]}
@@ -648,7 +654,7 @@ const D3Example = () => {
                 <input
                   className="number"
                   type="number"
-                  min="0"
+                  min={Y_AXIS.min}
                   max={Y_AXIS.max}
                   step={Math.pow(10, -(PRECISION_POINTS - 1))}
                   value={point[1]}
