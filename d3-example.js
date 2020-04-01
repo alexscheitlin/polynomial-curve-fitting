@@ -30,18 +30,31 @@ const D3Example = () => {
   const PRECISION_COEFFICIENT = 4;
   const PRECISION_POINTS = 2;
 
-  // initial order of the polynomial
-  const startOrder = 2;
+  /***************************************************************************/
+  /* Initial Values                                                          */
+  /***************************************************************************/
+
+  const initialPolynomialOrder = 2;
+  const initialCurveName = `Random Polynomial of order ${initialPolynomialOrder}`;
+  const initialXAxisLabel = 'x Values';
+  const initialYAxisLabel = 'y Values';
 
   // create random points based on the initial order
-  const startPoints = generateRandomPoints(
-    startOrder + 1,
+  const initialPoints = generateRandomPoints(
+    initialPolynomialOrder + 1,
     PRECISION_POINTS,
     X_AXIS.min,
     X_AXIS.max,
     Y_AXIS.min,
     Y_AXIS.max
   );
+
+  // use predefined points (needs to be one more than the specified order of the polynomial)
+  // const initialPoints = [
+  //   [0, 0],
+  //   [5, 8],
+  //   [10, 2],
+  // ];
 
   /***************************************************************************/
   /* Drawing Methods                                                         */
@@ -212,8 +225,8 @@ const D3Example = () => {
   /***************************************************************************/
 
   const SVG_REF = React.useRef();
-  const [order, setOrder] = React.useState(startOrder);
-  const [points, setPoints] = React.useState(startPoints);
+  const [order, setOrder] = React.useState(initialPolynomialOrder);
+  const [points, setPoints] = React.useState(initialPoints);
   const [curvePoints, setCurvePoints] = React.useState(
     generateCurvePoints(points, order, X_AXIS.min, X_AXIS.max, PRECISION_COEFFICIENT)
   );
@@ -226,9 +239,9 @@ const D3Example = () => {
   const [r2, setR2] = React.useState(polynomialRegression(points, order, PRECISION_COEFFICIENT).r2);
   const [drawing, setDrawing] = React.useState({}); // most likely, this is not best practice
 
-  const [curveName, setCurveName] = React.useState('');
-  const [xAxisLabel, setXAxisLabel] = React.useState('');
-  const [yAxisLabel, setYAxisLabel] = React.useState('');
+  const [curveName, setCurveName] = React.useState(initialCurveName);
+  const [xAxisLabel, setXAxisLabel] = React.useState(initialXAxisLabel);
+  const [yAxisLabel, setYAxisLabel] = React.useState(initialYAxisLabel);
 
   React.useEffect(() => init(), [order]);
 
@@ -344,7 +357,8 @@ const D3Example = () => {
     graph
       .append('text')
       .attr('id', 'curve-name')
-      .attr('font-size', '0.75rem')
+      .attr('font-size', '1rem')
+      .attr('font-weight', 'bold')
       .attr('fill', 'black');
     drawCurveName(graph, curveName);
 
@@ -554,35 +568,54 @@ const D3Example = () => {
       </svg>
       <div>
         <div>
-          <div>
-            <label>Name:</label>
-            <input
-              type="text"
-              value={curveName}
-              onChange={e => handleCurveNameChange(e)}
-              placeholder="Curve Name"
-            />
-          </div>
-
-          <div>
-            <label>X-Axis:</label>
-            <input
-              type="text"
-              value={xAxisLabel}
-              onChange={e => handleXAxisLabelChange(e)}
-              placeholder="X-Axis Label"
-            />
-          </div>
-
-          <div>
-            <label>Y-Axis:</label>
-            <input
-              type="text"
-              value={yAxisLabel}
-              onChange={e => handleYAxisLabelChange(e)}
-              placeholder="Y-Axis Label"
-            />
-          </div>
+          <table>
+            <tbody>
+              <tr>
+                <td>
+                  <label>Name:</label>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    value={curveName}
+                    onChange={e => handleCurveNameChange(e)}
+                    placeholder="Curve Name"
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <label>X-Axis:</label>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    value={xAxisLabel}
+                    onChange={e => handleXAxisLabelChange(e)}
+                    placeholder="X-Axis Label"
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <label>Y-Axis:</label>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    value={yAxisLabel}
+                    onChange={e => handleYAxisLabelChange(e)}
+                    placeholder="Y-Axis Label"
+                  />
+                </td>
+              </tr>
+            </tbody>
+            <style>{`
+              table input {
+                width: 300px;
+              }
+            `}</style>
+          </table>
         </div>
 
         <hr></hr>
