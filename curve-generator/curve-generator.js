@@ -13,7 +13,7 @@ const CurveGenerator = props => {
   /* Settings                                                                */
   /***************************************************************************/
   // size of final SVG in pixel
-  const SVG_SIZE = { width: 500, height: 300 };
+  const SVG_SIZE = { width: 750, height: 450 };
 
   // margins of the graph (within the svg)
   const GRAPH_MARGIN = { top: 20, right: 20, bottom: 30, left: 50 };
@@ -575,15 +575,15 @@ const CurveGenerator = props => {
   return (
     <div style={{ display: 'flex' }}>
       <div>
-        <p style={{ width: '500px' }}>{curveDescription}</p>
-        <svg
-          ref={SVG_REF}
-          width={SVG_SIZE.width}
-          height={SVG_SIZE.height}
-          style={{ float: 'left' }}
-        >
-          <defs>
-            <style type="text/css">{`
+        <div style={{ width: `${SVG_SIZE.width}px`, height: `${SVG_SIZE.height}px` }}>
+          <svg
+            ref={SVG_REF}
+            width={SVG_SIZE.width}
+            height={SVG_SIZE.height}
+            style={{ float: 'left' }}
+          >
+            <defs>
+              <style type="text/css">{`
             circle {
               fill: ${DRAGGABLE_DOTS_COLOR};
             }
@@ -592,78 +592,15 @@ const CurveGenerator = props => {
               stroke: black;
             }
           `}</style>
-          </defs>
-        </svg>
-        <br></br>
-      </div>
-      <div>
-        <div>
-          <table>
-            <tbody>
-              <tr>
-                <td>
-                  <label>Name:</label>
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={curveName}
-                    onChange={e => handleCurveNameChange(e)}
-                    placeholder="Curve Name"
-                  />
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <label>X-Axis:</label>
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={xAxisLabel}
-                    onChange={e => handleXAxisLabelChange(e)}
-                    placeholder="X-Axis Label"
-                  />
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <label>Y-Axis:</label>
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    value={yAxisLabel}
-                    onChange={e => handleYAxisLabelChange(e)}
-                    placeholder="Y-Axis Label"
-                  />
-                </td>
-              </tr>
-            </tbody>
-            <style>{`
-              table input {
-                width: 300px;
-              }
-            `}</style>
-          </table>
-
-          <br></br>
-
-          <div>
-            <label>Description:</label>
-            <br></br>
-
-            <textarea
-              rows="4"
-              cols="43"
-              onChange={e => handleCurveDescriptionChange(e)}
-              value={curveDescription}
-            ></textarea>
-          </div>
+            </defs>
+          </svg>
         </div>
+        <p style={{ width: `${SVG_SIZE.width}px`, padding: '5px', textAlign: 'center' }}>
+          {curveDescription}
+        </p>
+      </div>
 
-        <hr></hr>
-
+      <div style={{ marginLeft: '1rem' }}>
         <div>
           <select onChange={e => handleOrderChange(e)} value={order}>
             <option value="1">1</option>
@@ -748,6 +685,71 @@ const CurveGenerator = props => {
           })}
         </div>
         <hr></hr>
+      </div>
+
+      <div style={{ marginLeft: '2rem' }}>
+        <table>
+          <tbody>
+            <tr>
+              <td>
+                <label>Name:</label>
+              </td>
+              <td>
+                <input
+                  type="text"
+                  value={curveName}
+                  onChange={e => handleCurveNameChange(e)}
+                  placeholder="Curve Name"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <label>X-Axis:</label>
+              </td>
+              <td>
+                <input
+                  type="text"
+                  value={xAxisLabel}
+                  onChange={e => handleXAxisLabelChange(e)}
+                  placeholder="X-Axis Label"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <label>Y-Axis:</label>
+              </td>
+              <td>
+                <input
+                  type="text"
+                  value={yAxisLabel}
+                  onChange={e => handleYAxisLabelChange(e)}
+                  placeholder="Y-Axis Label"
+                />
+              </td>
+            </tr>
+          </tbody>
+          <style>{`
+              table input {
+                width: 300px;
+              }
+            `}</style>
+        </table>
+
+        <br></br>
+
+        <div>
+          <label>Description:</label>
+          <br></br>
+
+          <textarea
+            rows="4"
+            cols="43"
+            onChange={e => handleCurveDescriptionChange(e)}
+            value={curveDescription}
+          ></textarea>
+        </div>
       </div>
     </div>
   );
