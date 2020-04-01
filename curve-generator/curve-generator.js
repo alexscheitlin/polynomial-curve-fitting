@@ -684,7 +684,6 @@ const CurveGenerator = props => {
             );
           })}
         </div>
-        <hr></hr>
       </div>
 
       <div style={{ marginLeft: '2rem' }}>
@@ -744,7 +743,7 @@ const CurveGenerator = props => {
           <br></br>
 
           <textarea
-            rows="4"
+            rows="20"
             cols="43"
             onChange={e => handleCurveDescriptionChange(e)}
             value={curveDescription}

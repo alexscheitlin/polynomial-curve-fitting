@@ -2,7 +2,7 @@ import regression, { DataPoint, Result } from 'regression';
 import { range } from './utils';
 
 /*****************************************************************************/
-/* Polynomial Regression with linear least-squares                           */
+/* Polynomial Regression with least-squares                                  */
 /*                                                                           */
 /* made with https://github.com/Tom-Alexander/regression-js                  */
 /*****************************************************************************/
