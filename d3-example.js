@@ -36,6 +36,7 @@ const D3Example = () => {
 
   const initialPolynomialOrder = 2;
   const initialCurveName = `Random Polynomial of order ${initialPolynomialOrder}`;
+  const initialCurveDescription = 'This is some random polynomial.';
   const initialXAxisLabel = 'x Values';
   const initialYAxisLabel = 'y Values';
 
@@ -240,6 +241,7 @@ const D3Example = () => {
   const [drawing, setDrawing] = React.useState({}); // most likely, this is not best practice
 
   const [curveName, setCurveName] = React.useState(initialCurveName);
+  const [curveDescription, setCurveDescription] = React.useState(initialCurveDescription);
   const [xAxisLabel, setXAxisLabel] = React.useState(initialXAxisLabel);
   const [yAxisLabel, setYAxisLabel] = React.useState(initialYAxisLabel);
 
@@ -443,6 +445,10 @@ const D3Example = () => {
     drawCurveName(drawing.graph, newValue);
   };
 
+  const updateCurveDescriptionState = newValue => {
+    setCurveDescription(newValue);
+  };
+
   const updateXAxisLabelState = newValue => {
     setXAxisLabel(newValue);
     drawXAxisLabel(drawing.svg, newValue);
@@ -525,6 +531,7 @@ const D3Example = () => {
   // extract and validate input and then update the state
 
   const handleCurveNameChange = event => updateCurveNameState(event.target.value);
+  const handleCurveDescriptionChange = event => updateCurveDescriptionState(event.target.value);
   const handleXAxisLabelChange = event => updateXAxisLabelState(event.target.value);
   const handleYAxisLabelChange = event => updateYAxisLabelState(event.target.value);
   const handleOrderChange = event => updateOrderState(parseInt(event.target.value));
@@ -553,9 +560,16 @@ const D3Example = () => {
 
   return (
     <div style={{ display: 'flex' }}>
-      <svg ref={SVG_REF} width={SVG_SIZE.width} height={SVG_SIZE.height} style={{ float: 'left' }}>
-        <defs>
-          <style type="text/css">{`
+      <div>
+        <p style={{ width: '500px' }}>{curveDescription}</p>
+        <svg
+          ref={SVG_REF}
+          width={SVG_SIZE.width}
+          height={SVG_SIZE.height}
+          style={{ float: 'left' }}
+        >
+          <defs>
+            <style type="text/css">{`
             circle {
               fill: ${DRAGGABLE_DOTS_COLOR};
             }
@@ -564,8 +578,10 @@ const D3Example = () => {
               stroke: black;
             }
           `}</style>
-        </defs>
-      </svg>
+          </defs>
+        </svg>
+        <br></br>
+      </div>
       <div>
         <div>
           <table>
@@ -616,6 +632,17 @@ const D3Example = () => {
               }
             `}</style>
           </table>
+
+          <br></br>
+
+          <div>
+            <label>Description:</label>
+            <br></br>
+
+            <textarea rows="4" cols="43" onChange={e => handleCurveDescriptionChange(e)}>
+              {curveDescription}
+            </textarea>
+          </div>
         </div>
 
         <hr></hr>
