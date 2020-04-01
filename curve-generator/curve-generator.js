@@ -4,7 +4,11 @@ import * as d3 from 'd3';
 import * as Utils from './utils';
 import * as Regression from './regression';
 
-const CurveGenerator = () => {
+const CurveGenerator = props => {
+  const changeCurveName = value => props.changeCurveName(value);
+  const changeCurveDescription = value => props.changeCurveDescription(value);
+  const changePolynomialOrder = value => props.changePolynomialOrder(value);
+
   /***************************************************************************/
   /* Settings                                                                */
   /***************************************************************************/
@@ -33,12 +37,21 @@ const CurveGenerator = () => {
   const PRECISION_POINTS = 2;
 
   /***************************************************************************/
+  /* Default Values                                                          */
+  /***************************************************************************/
+  // The default values are used if no prop values are specified.
+
+  const DEFAULT_CURVE_NAME = `Random Polynomial`;
+  const DEFAULT_CURVE_DESCRIPTION = 'This is some random polynomial.';
+  const DEFAULT_POLYNOMIAL_ORDER = 3;
+
+  /***************************************************************************/
   /* Initial Values                                                          */
   /***************************************************************************/
 
-  const initialPolynomialOrder = 2;
-  const initialCurveName = `Random Polynomial of order ${initialPolynomialOrder}`;
-  const initialCurveDescription = 'This is some random polynomial.';
+  const initialCurveName = props.curveName || DEFAULT_CURVE_NAME;
+  const initialCurveDescription = props.curveDescription || DEFAULT_CURVE_DESCRIPTION;
+  const initialPolynomialOrder = props.polynomialOrder || DEFAULT_POLYNOMIAL_ORDER;
   const initialXAxisLabel = 'x Values';
   const initialYAxisLabel = 'y Values';
 
@@ -448,6 +461,7 @@ const CurveGenerator = () => {
 
   const updateCurveNameState = newValue => {
     setCurveName(newValue);
+    changeCurveName(newValue);
     drawCurveName(drawing.graph, newValue);
   };
 
@@ -650,9 +664,12 @@ const CurveGenerator = () => {
             <label>Description:</label>
             <br></br>
 
-            <textarea rows="4" cols="43" onChange={e => handleCurveDescriptionChange(e)}>
-              {curveDescription}
-            </textarea>
+            <textarea
+              rows="4"
+              cols="43"
+              onChange={e => handleCurveDescriptionChange(e)}
+              value={curveDescription}
+            ></textarea>
           </div>
         </div>
 
