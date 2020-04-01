@@ -4,7 +4,7 @@ import * as d3 from 'd3';
 import * as Utils from './utils';
 import * as Regression from './regression';
 
-const D3Example = () => {
+const CurveGenerator = () => {
   /***************************************************************************/
   /* Settings                                                                */
   /***************************************************************************/
@@ -747,4 +747,4 @@ const D3Example = () => {
   );
 };
 
-export default D3Example;
+export default CurveGenerator;
