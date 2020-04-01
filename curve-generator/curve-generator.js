@@ -186,8 +186,8 @@ const CurveGenerator = props => {
       .attr('opacity', 0)
       .attr('x', 0)
       .attr('y', 0)
-      .attr('dx', '.5em')
-      .attr('dy', '1em')
+      .attr('dx', '1em')
+      .attr('dy', '-1em')
       .attr('font-size', '0.75rem')
       .attr('fill', 'gray');
 
