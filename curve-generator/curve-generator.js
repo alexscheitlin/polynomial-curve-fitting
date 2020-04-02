@@ -16,7 +16,7 @@ const CurveGenerator = props => {
   const SVG_SIZE = { width: 750, height: 450 };
 
   // margins of the graph (within the svg)
-  const GRAPH_MARGIN = { top: 20, right: 20, bottom: 30, left: 50 };
+  const GRAPH_MARGIN = { top: 30, right: 20, bottom: 30, left: 50 };
 
   const SHOW_DOTTED_CURVE = false;
   const CURVE_LINE_COLOR = 'steelblue'; // visible if SHOW_DOTTED_CURVE == true
@@ -292,7 +292,7 @@ const CurveGenerator = props => {
       });
   };
 
-  const drawCurveName = (graph, value) => graph.select('text#curve-name').text(value);
+  const drawCurveName = (svg, value) => svg.select('text#curve-name').text(value);
 
   const drawXAxisLabel = (svg, value) => svg.select('text#x-axis-label').text(value);
 
@@ -431,15 +431,18 @@ const CurveGenerator = props => {
     });
 
     // draw curve name
-    graph
+    svg
       .append('text')
       .attr('id', 'curve-name')
-      .attr('transform', 'translate(' + (SVG_SIZE.width / 2 - GRAPH_MARGIN.left) + ' ,' + 0 + ')')
+      .attr(
+        'transform',
+        'translate(' + (graphWidth / 2 + GRAPH_MARGIN.left) + ', ' + GRAPH_MARGIN.top / 2 + ')'
+      )
       .attr('font-size', '1rem')
       .attr('font-weight', 'bold')
       .attr('fill', 'black')
-      .style('text-anchor', 'middle');
-    drawCurveName(graph, curveName);
+      .style('text-anchor', 'middle')
+      .text(curveName);
 
     // text label for the x axis
     // https://bl.ocks.org/d3noob/23e42c8f67210ac6c678db2cd07a747e
@@ -450,7 +453,7 @@ const CurveGenerator = props => {
         'transform',
         'translate(' +
           (graphWidth / 2 + GRAPH_MARGIN.left) +
-          ' ,' +
+          ', ' +
           (graphHeight + GRAPH_MARGIN.top + GRAPH_MARGIN.bottom) +
           ')'
       )
@@ -461,10 +464,14 @@ const CurveGenerator = props => {
     svg
       .append('text')
       .attr('id', 'y-axis-label')
-      .attr('transform', 'rotate(-90)')
-      .attr('y', 0)
-      .attr('x', 0 - graphHeight / 2 - GRAPH_MARGIN.top)
-      .attr('dy', '1.5rem')
+      .attr(
+        'transform',
+        'rotate(-90), translate(' +
+          (-graphHeight / 2 - GRAPH_MARGIN.top) +
+          ', ' +
+          GRAPH_MARGIN.left / 2 +
+          ')'
+      )
       .style('text-anchor', 'middle')
       .text(yAxisLabel);
 
@@ -554,7 +561,7 @@ const CurveGenerator = props => {
   const updateCurveNameState = newValue => {
     setCurveName(newValue);
     changeCurveName(newValue);
-    drawCurveName(drawing.graph, newValue);
+    drawCurveName(drawing.svg, newValue);
   };
 
   const updateCurveDescriptionState = newValue => {
