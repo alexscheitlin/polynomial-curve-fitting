@@ -423,6 +423,10 @@ const CurveGenerator = props => {
 
   React.useEffect(() => init(xAxis, yAxis, curvePoints), [order]);
 
+  // needed for zooming and moving the coordinate system
+  let dragged = false;
+  let diffDragged = [0, 0];
+
   /***************************************************************************/
   /* Main                                                                    */
   /***************************************************************************/
@@ -540,15 +544,111 @@ const CurveGenerator = props => {
       .style('text-anchor', 'middle')
       .text(yAxisLabel);
 
-    // base on: https://stackoverflow.com/questions/39387727/d3v4-zooming-equivalent-to-d3-zoom-x
+    // based on: https://stackoverflow.com/questions/39387727/d3v4-zooming-equivalent-to-d3-zoom-x
     const zoom = d3.zoom().on('zoom', () => zoomed());
     graph.call(zoom).on('mousedown.zoom', null);
 
+    // let the graph be "movable" with the mouse
+    graph
+      .on('mousedown.drag', () => mouseDown())
+      .on('mousemove.drag', () => mouseMove(graphWidth, graphHeight))
+      .on('mouseup.drag', () => mouseUp())
+      .on('mouseleave', () => mouseUp());
+
+    const mouseDown = () => {
+      d3.select('body').style('cursor', 'move');
+      dragged = true;
+    };
+
+    const mouseMove = (graphWidth, graphHeight) => {
+      if (dragged) {
+        // get length of both axes
+        const xAxisLength = xAxis.max - xAxis.min;
+        const yAxisLength = yAxis.max - yAxis.min;
+
+        // calculate differences of the coordinates during the mouse move
+        const diffX = (d3.event.movementX / graphWidth) * xAxisLength;
+        const diffY = (d3.event.movementY / graphHeight) * yAxisLength;
+
+        // add these differences to the ones from the previous calls to this function
+        diffDragged = [diffDragged[0] + diffX, diffDragged[1] + diffY];
+
+        // redraw the whole graph if the drag difference of either the x or the y axis is above some threshold
+        const threshold = 0.5; // min/max of the axis will be rounded with no decimal places
+        const isDiffXAbove = Math.abs(diffDragged[0]) >= threshold;
+        const isDiffYAbove = Math.abs(diffDragged[1]) >= threshold;
+        if (isDiffXAbove || isDiffYAbove) {
+          const newDrawing = { ...drawing };
+          let newXAxis = xAxis;
+          let newYAxis = yAxis;
+
+          if (isDiffXAbove) {
+            // shift x domain by drag difference
+            const newXDomain = [xAxis.min - diffDragged[0], [xAxis.max - diffDragged[0]]];
+
+            // set new min and max values of the x axis
+            newXAxis = {
+              min: Utils.round(newXDomain[0], 0),
+              max: Utils.round(newXDomain[1], 0),
+            };
+            setXAxis(newXAxis);
+
+            // reset the domain of the global x axis object used to draw with d3
+            x.domain([newXAxis.min, newXAxis.max]);
+            newDrawing.x = x;
+
+            // reset drag difference of the x coordinate
+            diffDragged[0] = 0;
+          }
+
+          if (isDiffYAbove) {
+            // shift y domain by drag difference
+            const newYDomain = [yAxis.min + diffDragged[1], [yAxis.max + diffDragged[1]]];
+
+            // set new min and max values of the y axis
+            newYAxis = {
+              min: Utils.round(newYDomain[0], 0),
+              max: Utils.round(newYDomain[1], 0),
+            };
+            setYAxis(newYAxis);
+
+            // reset the domain of the global y axis object used to draw with d3
+            y.domain([newYAxis.min, newYAxis.max]);
+            newDrawing.y = y;
+
+            // reset drag difference of the x coordinate
+            diffDragged[1] = 0;
+          }
+
+          // remove all drawings from the svg and store the new global axes for d3
+          clearSVG();
+          setDrawing(newDrawing);
+
+          // generate new curve points and redraw everything
+          const newCurvePoints = Regression.generateCurvePoints(
+            points,
+            order,
+            newXAxis.min,
+            newXAxis.max,
+            PRECISION_COEFFICIENT
+          );
+          setCurvePoints(newCurvePoints);
+          init(newXAxis, newYAxis, newCurvePoints);
+        }
+      }
+    };
+
+    const mouseUp = () => {
+      d3.select('body').style('cursor', 'auto');
+      diffDragged = [0, 0];
+      dragged = false;
+    };
+
     const zoomed = () => {
       const newXDomain = d3.event.transform.rescaleX(x).domain();
-      const newYDoamin = d3.event.transform.rescaleY(y).domain();
+      const newYDomain = d3.event.transform.rescaleY(y).domain();
       const newXAxis = { min: Utils.round(newXDomain[0], 0), max: Utils.round(newXDomain[1], 0) };
-      const newYAxis = { min: Utils.round(newXDomain[0], 0), max: Utils.round(newXDomain[1], 0) };
+      const newYAxis = { min: Utils.round(newYDomain[0], 0), max: Utils.round(newYDomain[1], 0) };
       setXAxis(newXAxis);
       setYAxis(newYAxis);
 
@@ -557,7 +657,7 @@ const CurveGenerator = props => {
 
       const newDrawing = { ...drawing };
       newDrawing.x = x;
-      newDrawing.x = y;
+      newDrawing.y = y;
 
       clearSVG();
       setDrawing(newDrawing);
