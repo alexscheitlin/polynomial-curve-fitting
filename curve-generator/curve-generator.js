@@ -217,7 +217,7 @@ const CurveGenerator = props => {
       .attr('d', line);
   };
 
-  const drawDraggablePoints = (graph, x, y, line, points) => {
+  const drawDraggablePoints = (graph, x, y, line, points, xAxis, yAxis) => {
     // remove old points
     d3.select('svg')
       .select('g')
@@ -239,28 +239,32 @@ const CurveGenerator = props => {
     // define drag events (methods are defined below)
     const drag = d3
       .drag()
-      .on('start', dragstarted)
-      .on('drag', dragged)
-      .on('end', dragended);
+      .on('start', (d, i, n) => dragStarted(d, i, n))
+      .on('drag', (d, i, n) => dragged(d, i, n))
+      .on('end', (d, i, n) => dragEnded(d, i, n));
 
     // add drag behaviour to all draggable points
     draggablePoints.selectAll('circle').call(drag);
 
-    function dragstarted(d) {
-      d3.select(this)
+    const dragStarted = (datum, index, nodes) => {
+      // https://stackoverflow.com/questions/45262172/retrieve-dom-target-from-drag-callback-when-this-is-not-available/45262284#45262284
+      const node = nodes[index]; // regular function: this = nodes[index]
+      d3.select(node)
         .raise()
         .classed('active', true);
-    }
+    };
 
-    function dragged(d) {
+    const dragged = (datum, index, nodes) => {
+      const node = nodes[index];
+
       // change coordinate of points
-      d[0] = Utils.round(x.invert(d3.event.x), PRECISION_POINTS);
-      d[1] = Utils.round(y.invert(d3.event.y), PRECISION_POINTS);
+      datum[0] = Utils.round(x.invert(d3.event.x), PRECISION_POINTS);
+      datum[1] = Utils.round(y.invert(d3.event.y), PRECISION_POINTS);
 
       // update location of point
-      d3.select(this)
-        .attr('cx', x(d[0]))
-        .attr('cy', y(d[1]));
+      d3.select(node)
+        .attr('cx', x(datum[0]))
+        .attr('cy', y(datum[1]));
 
       updateRegressionState(points, order);
 
@@ -281,12 +285,13 @@ const CurveGenerator = props => {
       } else {
         drawCurveLines(d3, graph, line, newCurvePoints);
       }
-    }
+    };
 
-    function dragended(d) {
-      d3.select(this).classed('active', false);
-      drawDraggablePoints(graph, x, y, line, points);
-    }
+    const dragEnded = (datum, index, nodes) => {
+      const node = nodes[index];
+      d3.select(node).classed('active', false);
+      drawDraggablePoints(graph, x, y, line, points, xAxis, yAxis);
+    };
   };
 
   const addCrosshair = (d3, graph, x, y, width, height) => {
@@ -341,31 +346,39 @@ const CurveGenerator = props => {
       .attr('fill', 'gray');
 
     transpRect
-      .on('mousemove', function() {
-        const mouse = d3.mouse(this);
-        const mouseX = mouse[0];
-        const mouseY = mouse[1];
-        verticalLine
-          .attr('x1', mouseX)
-          .attr('x2', mouseX)
-          .attr('opacity', 1);
-        horizontalLine
-          .attr('y1', mouseY)
-          .attr('y2', mouseY)
-          .attr('opacity', 1);
-        text
-          .attr('x', d => mouseX)
-          .attr('y', d => mouseY)
-          .text(
-            () => `x: ${Utils.round(x.invert(mouseX), 2)}, y: ${Utils.round(y.invert(mouseY), 2)}`
-          )
-          .attr('opacity', 1);
-      })
-      .on('mouseout', function() {
-        verticalLine.attr('opacity', 0);
-        horizontalLine.attr('opacity', 0);
-        text.attr('opacity', 0);
-      });
+      .on('mousemove', (d, i, n) => mouseMove(d, i, n))
+      .on('mouseout', (d, i, n) => mouseOut(d, i, n));
+
+    const mouseMove = (datum, index, nodes) => {
+      const node = nodes[index];
+      const mouse = d3.mouse(node);
+      const mouseX = mouse[0];
+      const mouseY = mouse[1];
+
+      verticalLine
+        .attr('x1', mouseX)
+        .attr('x2', mouseX)
+        .attr('opacity', 1);
+
+      horizontalLine
+        .attr('y1', mouseY)
+        .attr('y2', mouseY)
+        .attr('opacity', 1);
+
+      text
+        .attr('x', d => mouseX)
+        .attr('y', d => mouseY)
+        .text(
+          () => `x: ${Utils.round(x.invert(mouseX), 2)}, y: ${Utils.round(y.invert(mouseY), 2)}`
+        )
+        .attr('opacity', 1);
+    };
+
+    const mouseOut = (datum, index, nodes) => {
+      verticalLine.attr('opacity', 0);
+      horizontalLine.attr('opacity', 0);
+      text.attr('opacity', 0);
+    };
   };
 
   const drawCurveName = (svg, value) => svg.select('text#curve-name').text(value);
@@ -415,7 +428,6 @@ const CurveGenerator = props => {
   /***************************************************************************/
 
   const init = (xAxis, yAxis, curvePoints) => {
-    //console.log(curvePoints);
     // implementation based on:
     // https://bl.ocks.org/denisemauldin/538bfab8378ac9c3a32187b4d7aed2c2
 
@@ -470,7 +482,7 @@ const CurveGenerator = props => {
     }
 
     addCrosshair(d3, graph, x, y, graphWidth, graphHeight);
-    drawDraggablePoints(graph, x, y, line, points);
+    drawDraggablePoints(graph, x, y, line, points, xAxis, yAxis);
 
     // most likely, this is not best practice
     // (these variables are needed for methods like `handlePointCoordinateChange`)
@@ -529,10 +541,10 @@ const CurveGenerator = props => {
       .text(yAxisLabel);
 
     // base on: https://stackoverflow.com/questions/39387727/d3v4-zooming-equivalent-to-d3-zoom-x
-    const zoom = d3.zoom().on('zoom', zoomed);
+    const zoom = d3.zoom().on('zoom', () => zoomed());
     graph.call(zoom).on('mousedown.zoom', null);
 
-    function zoomed() {
+    const zoomed = () => {
       const newXDomain = d3.event.transform.rescaleX(x).domain();
       const newYDoamin = d3.event.transform.rescaleY(y).domain();
       const newXAxis = { min: Utils.round(newXDomain[0], 0), max: Utils.round(newXDomain[1], 0) };
@@ -560,7 +572,7 @@ const CurveGenerator = props => {
 
       setCurvePoints(newCurvePoints);
       init(newXAxis, newYAxis, newCurvePoints);
-    }
+    };
   };
 
   /***************************************************************************/
@@ -645,7 +657,7 @@ const CurveGenerator = props => {
       drawCurveLines(drawing.d3, drawing.graph, drawing.line, newCurvePoints);
     }
 
-    drawDraggablePoints(drawing.graph, drawing.x, drawing.y, drawing.line, points);
+    drawDraggablePoints(drawing.graph, drawing.x, drawing.y, drawing.line, points, xAxis, yAxis);
     updateRegressionState(points, order);
   };
 
