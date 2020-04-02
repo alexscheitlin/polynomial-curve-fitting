@@ -84,6 +84,52 @@ const CurveGenerator = props => {
     //.selectAll('*') // remove everything withing the svg tag (including the styling)
   };
 
+  // draw both the x and y axes through 0/0 spanning the whole graph
+  const drawAxesOnGraph = (graph, x, y, graphWidth, graphHeight) => {
+    const color = 'black';
+    const lineWidth = 0.3;
+
+    // x axis
+    graph
+      .append('g')
+      .append('line')
+      .attr('y1', 0)
+      .attr('y2', graphHeight)
+      .attr('stroke', color)
+      .attr('stroke-width', lineWidth)
+      .attr('transform', 'translate(' + x(0) + ' , 0)');
+
+    // y axis
+    graph
+      .append('g')
+      .append('line')
+      .attr('x1', 0)
+      .attr('x2', graphWidth)
+      .attr('stroke', color)
+      .attr('stroke-width', lineWidth)
+      .attr('transform', 'translate(0, ' + y(0) + ')');
+  };
+
+  // draw both the x and y axes around the graph (not necessarily through 0/0))
+  const drawAxesAroundGraph = (d3, graph, x, y, graphWidth, graphHeight) => {
+    // set position of the axes
+    const xAxis = d3.axisBottom(x);
+    const yAxis = d3.axisLeft(y);
+
+    // draw x axis
+    graph
+      .append('g')
+      .attr('class', 'axis axis--x')
+      .attr('transform', 'translate(0,' + graphHeight + ')')
+      .call(xAxis);
+
+    // draw y axis
+    graph
+      .append('g')
+      .attr('class', 'axis axis--y')
+      .call(yAxis);
+  };
+
   const drawCurvePoints = (d3, graph, x, y, curvePoints) => {
     // remove old points
     d3.select('svg')
@@ -272,10 +318,6 @@ const CurveGenerator = props => {
     const x = d3.scaleLinear().rangeRound([0, graphWidth]);
     const y = d3.scaleLinear().rangeRound([graphHeight, 0]);
 
-    // set position of x and y axis
-    const xAxis = d3.axisBottom(x);
-    const yAxis = d3.axisLeft(y);
-
     // define how lines should be drawn
     const line = d3
       .line()
@@ -309,18 +351,8 @@ const CurveGenerator = props => {
     x.domain([X_AXIS.min, X_AXIS.max]);
     y.domain([Y_AXIS.min, Y_AXIS.max]);
 
-    // draw x axis
-    graph
-      .append('g')
-      .attr('class', 'axis axis--x')
-      .attr('transform', 'translate(0,' + graphHeight + ')')
-      .call(xAxis);
-
-    // draw y axis
-    graph
-      .append('g')
-      .attr('class', 'axis axis--y')
-      .call(yAxis);
+    drawAxesOnGraph(graph, x, y, graphWidth, graphHeight);
+    drawAxesAroundGraph(d3, graph, x, y, graphWidth, graphHeight);
 
     addCrossHair(d3, graph, x, y, graphWidth, graphHeight);
 
