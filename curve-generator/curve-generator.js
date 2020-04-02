@@ -76,9 +76,16 @@ const CurveGenerator = props => {
 
   // remove all drawings from svg
   const clearSVG = () => {
+    // remove graph
     d3.select('svg')
       .select('g')
       .remove();
+
+    // remove title and axis labels
+    d3.select('svg')
+      .selectAll('text')
+      .remove();
+
     //.selectAll('*') // remove everything withing the svg tag (including the styling)
   };
 
