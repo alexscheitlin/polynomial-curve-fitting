@@ -18,10 +18,6 @@ const CurveGenerator = props => {
   // margins of the graph (within the svg)
   const GRAPH_MARGIN = { top: 20, right: 20, bottom: 30, left: 50 };
 
-  // ranges of the x and y axes
-  const X_AXIS = { min: -5, max: 10 };
-  const Y_AXIS = { min: -5, max: 10 };
-
   const SHOW_DOTTED_CURVE = false;
   const CURVE_LINE_COLOR = 'steelblue'; // visible if SHOW_DOTTED_CURVE == true
   const CURVE_DOTS_COLOR = 'red'; // visible if SHOW_DOTTED_CURVE === false
@@ -54,15 +50,17 @@ const CurveGenerator = props => {
   const initialPolynomialOrder = props.polynomialOrder || DEFAULT_POLYNOMIAL_ORDER;
   const initialXAxisLabel = 'x Values';
   const initialYAxisLabel = 'y Values';
+  const initialXAxis = { min: -5, max: 10 };
+  const initialYAxis = { min: -5, max: 10 };
 
   // create random points based on the initial order
   const initialPoints = Utils.generateRandomPoints(
     initialPolynomialOrder + 1,
     PRECISION_POINTS,
-    X_AXIS.min,
-    X_AXIS.max,
-    Y_AXIS.min,
-    Y_AXIS.max
+    initialXAxis.min,
+    initialXAxis.max,
+    initialYAxis.min,
+    initialYAxis.max
   );
 
   // use predefined points (needs to be one more than the specified order of the polynomial)
@@ -308,7 +306,13 @@ const CurveGenerator = props => {
   const [order, setOrder] = React.useState(initialPolynomialOrder);
   const [points, setPoints] = React.useState(initialPoints);
   const [curvePoints, setCurvePoints] = React.useState(
-    Regression.generateCurvePoints(points, order, X_AXIS.min, X_AXIS.max, PRECISION_COEFFICIENT)
+    Regression.generateCurvePoints(
+      points,
+      order,
+      initialXAxis.min,
+      initialXAxis.max,
+      PRECISION_COEFFICIENT
+    )
   );
   const [coefficients, setCoefficients] = React.useState(
     Regression.polynomialRegression(points, order, PRECISION_COEFFICIENT).equation
@@ -320,19 +324,22 @@ const CurveGenerator = props => {
     Regression.polynomialRegression(points, order, PRECISION_COEFFICIENT).r2
   );
   const [drawing, setDrawing] = React.useState({}); // most likely, this is not best practice
+  const [xAxis, setXAxis] = React.useState(initialXAxis);
+  const [yAxis, setYAxis] = React.useState(initialYAxis);
 
   const [curveName, setCurveName] = React.useState(initialCurveName);
   const [curveDescription, setCurveDescription] = React.useState(initialCurveDescription);
   const [xAxisLabel, setXAxisLabel] = React.useState(initialXAxisLabel);
   const [yAxisLabel, setYAxisLabel] = React.useState(initialYAxisLabel);
 
-  React.useEffect(() => init(), [order]);
+  React.useEffect(() => init(xAxis, yAxis, curvePoints), [order]);
 
   /***************************************************************************/
   /* Main                                                                    */
   /***************************************************************************/
 
-  const init = () => {
+  const init = (xAxis, yAxis, curvePoints) => {
+    //console.log(curvePoints);
     // implementation based on:
     // https://bl.ocks.org/denisemauldin/538bfab8378ac9c3a32187b4d7aed2c2
 
@@ -377,8 +384,8 @@ const CurveGenerator = props => {
       .attr('transform', 'translate(' + GRAPH_MARGIN.left + ',' + GRAPH_MARGIN.top + ')');
 
     // set domains of x and y axis
-    x.domain([X_AXIS.min, X_AXIS.max]);
-    y.domain([Y_AXIS.min, Y_AXIS.max]);
+    x.domain([xAxis.min, xAxis.max]);
+    y.domain([yAxis.min, yAxis.max]);
 
     drawGrid(d3, graph, x, y, graphWidth, graphHeight);
     drawAxesOnGraph(graph, x, y, graphWidth, graphHeight);
@@ -461,6 +468,40 @@ const CurveGenerator = props => {
       .style('text-anchor', 'middle')
       .text(yAxisLabel);
 
+    // base on: https://stackoverflow.com/questions/39387727/d3v4-zooming-equivalent-to-d3-zoom-x
+    const zoom = d3.zoom().on('zoom', zoomed);
+    graph.call(zoom).on('mousedown.zoom', null);
+
+    function zoomed() {
+      const newXDomain = d3.event.transform.rescaleX(x).domain();
+      const newYDoamin = d3.event.transform.rescaleY(y).domain();
+      const newXAxis = { min: Utils.round(newXDomain[0], 0), max: Utils.round(newXDomain[1], 0) };
+      const newYAxis = { min: Utils.round(newXDomain[0], 0), max: Utils.round(newXDomain[1], 0) };
+      setXAxis(newXAxis);
+      setYAxis(newYAxis);
+
+      x.domain([newXAxis.min, newXAxis.max]);
+      y.domain([newYAxis.min, newYAxis.max]);
+
+      const newDrawing = { ...drawing };
+      newDrawing.x = x;
+      newDrawing.x = y;
+
+      clearSVG();
+      setDrawing(newDrawing);
+
+      const newCurvePoints = Regression.generateCurvePoints(
+        points,
+        order,
+        newXAxis.min,
+        newXAxis.max,
+        PRECISION_COEFFICIENT
+      );
+
+      setCurvePoints(newCurvePoints);
+      init(newXAxis, newYAxis, newCurvePoints);
+    }
+
     function dragstarted(d) {
       d3.select(this)
         .raise()
@@ -482,8 +523,8 @@ const CurveGenerator = props => {
       const newCurvePoints = Regression.generateCurvePoints(
         points,
         order,
-        X_AXIS.min,
-        X_AXIS.max,
+        xAxis.min,
+        xAxis.max,
         PRECISION_COEFFICIENT
       );
       setCurvePoints(newCurvePoints);
@@ -574,8 +615,8 @@ const CurveGenerator = props => {
     const newCurvePoints = Regression.generateCurvePoints(
       points,
       order,
-      X_AXIS.min,
-      X_AXIS.max,
+      xAxis.min,
+      xAxis.max,
       PRECISION_COEFFICIENT
     );
     setCurvePoints(newCurvePoints);
@@ -720,8 +761,8 @@ const CurveGenerator = props => {
                 <input
                   className="number"
                   type="number"
-                  min={X_AXIS.min}
-                  max={X_AXIS.max}
+                  min={xAxis.min}
+                  max={xAxis.max}
                   step={Math.pow(10, -(PRECISION_POINTS - 1))}
                   value={point[0]}
                   onChange={e => handlePointCoordinateChange(e, i, 0)}
@@ -730,8 +771,8 @@ const CurveGenerator = props => {
                 <input
                   className="number"
                   type="number"
-                  min={Y_AXIS.min}
-                  max={Y_AXIS.max}
+                  min={yAxis.min}
+                  max={yAxis.max}
                   step={Math.pow(10, -(PRECISION_POINTS - 1))}
                   value={point[1]}
                   onChange={e => handlePointCoordinateChange(e, i, 1)}
