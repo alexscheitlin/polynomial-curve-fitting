@@ -86,8 +86,9 @@ const CurveGenerator = props => {
 
   // draw both the x and y axes through 0/0 spanning the whole graph
   const drawAxesOnGraph = (graph, x, y, graphWidth, graphHeight) => {
+    // based on: http://bl.ocks.org/stepheneb/1182434
     const color = 'black';
-    const lineWidth = 0.3;
+    const lineWidth = 0.5;
 
     // x axis
     graph
@@ -128,6 +129,34 @@ const CurveGenerator = props => {
       .append('g')
       .attr('class', 'axis axis--y')
       .call(yAxis);
+  };
+
+  // draw the grid for both the x and y axes
+  const drawGrid = (d3, graph, x, y, graphWidth, graphHeight) => {
+    // based on: https://bl.ocks.org/d3noob/c506ac45617cf9ed39337f99f8511218
+
+    const color = 'lightgray';
+    const numberOfLines = 10;
+
+    const xGrid = d3.axisBottom(x).ticks(numberOfLines);
+    const yGrid = d3.axisLeft(y).ticks(numberOfLines);
+
+    // draw x grid lines
+    graph
+      .append('g')
+      .attr('class', 'grid')
+      .attr('transform', 'translate(0,' + graphHeight + ')')
+      .call(xGrid.tickSize(-graphHeight).tickFormat(''));
+
+    // draw x grid lines
+    graph
+      .append('g')
+      .attr('class', 'grid')
+      .call(yGrid.tickSize(-graphWidth).tickFormat(''));
+
+    d3.selectAll('g.grid g.tick')
+      .select('line')
+      .attr('stroke', color);
   };
 
   const drawCurvePoints = (d3, graph, x, y, curvePoints) => {
@@ -351,6 +380,7 @@ const CurveGenerator = props => {
     x.domain([X_AXIS.min, X_AXIS.max]);
     y.domain([Y_AXIS.min, Y_AXIS.max]);
 
+    drawGrid(d3, graph, x, y, graphWidth, graphHeight);
     drawAxesOnGraph(graph, x, y, graphWidth, graphHeight);
     drawAxesAroundGraph(d3, graph, x, y, graphWidth, graphHeight);
 
