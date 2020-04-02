@@ -95,9 +95,12 @@ const CurveGenerator = props => {
     const color = 'black';
     const lineWidth = 0.5;
 
+    const axes = graph.append('g').attr('id', 'axes-in');
+
     // x axis
-    graph
+    axes
       .append('g')
+      .attr('id', 'axis-in-x')
       .append('line')
       .attr('y1', 0)
       .attr('y2', graphHeight)
@@ -106,8 +109,9 @@ const CurveGenerator = props => {
       .attr('transform', 'translate(' + x(0) + ' , 0)');
 
     // y axis
-    graph
+    axes
       .append('g')
+      .attr('id', 'axis-in-y')
       .append('line')
       .attr('x1', 0)
       .attr('x2', graphWidth)
@@ -122,17 +126,19 @@ const CurveGenerator = props => {
     const xAxis = d3.axisBottom(x);
     const yAxis = d3.axisLeft(y);
 
+    const axes = graph.append('g').attr('id', 'axes-out');
+
     // draw x axis
-    graph
+    axes
       .append('g')
-      .attr('class', 'axis axis--x')
+      .attr('id', 'axis-out-x')
       .attr('transform', 'translate(0,' + graphHeight + ')')
       .call(xAxis);
 
     // draw y axis
-    graph
+    axes
       .append('g')
-      .attr('class', 'axis axis--y')
+      .attr('id', 'axis-out-y')
       .call(yAxis);
   };
 
@@ -146,19 +152,24 @@ const CurveGenerator = props => {
     const xGrid = d3.axisBottom(x).ticks(numberOfLines);
     const yGrid = d3.axisLeft(y).ticks(numberOfLines);
 
+    const grid = graph.append('g').attr('id', 'grid');
+
     // draw x grid lines
-    graph
+    grid
       .append('g')
+      .attr('id', 'grid-x')
       .attr('class', 'grid')
       .attr('transform', 'translate(0,' + graphHeight + ')')
       .call(xGrid.tickSize(-graphHeight).tickFormat(''));
 
-    // draw x grid lines
-    graph
+    // draw y grid lines
+    grid
       .append('g')
+      .attr('id', 'grid-y')
       .attr('class', 'grid')
       .call(yGrid.tickSize(-graphWidth).tickFormat(''));
 
+    // style grid
     d3.selectAll('g.grid g.tick')
       .select('line')
       .attr('stroke', color);
@@ -188,14 +199,16 @@ const CurveGenerator = props => {
     // remove old lines
     d3.select('svg')
       .select('g')
-      .selectAll('path#curve')
+      .select('#curve')
       .remove();
 
+    const curve = graph.append('g').attr('id', 'curve');
+
     // draw new lines
-    graph
+    curve
       .append('path')
       .datum(curvePoints)
-      .attr('id', 'curve')
+      .attr('id', 'curve-path')
       .attr('fill', 'none')
       .attr('stroke', CURVE_LINE_COLOR)
       .attr('stroke-linejoin', 'round')
@@ -204,14 +217,16 @@ const CurveGenerator = props => {
       .attr('d', line);
   };
 
-  const drawDraggablePoints = (graph, x, y, drag, points) => {
+  const drawDraggablePoints = (graph, x, y, line, points) => {
     // remove old points
     d3.select('svg')
       .select('g')
-      .selectAll('circle')
+      .select('g#draggable-points')
       .remove();
 
-    graph
+    const draggablePoints = graph.append('g').attr('id', 'draggable-points');
+
+    draggablePoints
       .selectAll('circle')
       .data(points)
       .enter()
@@ -221,18 +236,69 @@ const CurveGenerator = props => {
       .attr('cy', d => y(d[1]))
       .style('cursor', 'pointer');
 
+    // define drag events (methods are defined below)
+    const drag = d3
+      .drag()
+      .on('start', dragstarted)
+      .on('drag', dragged)
+      .on('end', dragended);
+
     // add drag behaviour to all draggable points
-    graph.selectAll('circle').call(drag);
+    draggablePoints.selectAll('circle').call(drag);
+
+    function dragstarted(d) {
+      d3.select(this)
+        .raise()
+        .classed('active', true);
+    }
+
+    function dragged(d) {
+      // change coordinate of points
+      d[0] = Utils.round(x.invert(d3.event.x), PRECISION_POINTS);
+      d[1] = Utils.round(y.invert(d3.event.y), PRECISION_POINTS);
+
+      // update location of point
+      d3.select(this)
+        .attr('cx', x(d[0]))
+        .attr('cy', y(d[1]));
+
+      updateRegressionState(points, order);
+
+      const newCurvePoints = Regression.generateCurvePoints(
+        points,
+        order,
+        xAxis.min,
+        xAxis.max,
+        PRECISION_COEFFICIENT
+      );
+      setCurvePoints(newCurvePoints);
+
+      // sort points to not have "invalid" functions
+      setPoints(Utils.sortPointsByX(points));
+
+      if (SHOW_DOTTED_CURVE) {
+        drawCurvePoints(d3, graph, x, y, newCurvePoints);
+      } else {
+        drawCurveLines(d3, graph, line, newCurvePoints);
+      }
+    }
+
+    function dragended(d) {
+      d3.select(this).classed('active', false);
+      drawDraggablePoints(graph, x, y, line, points);
+    }
   };
 
-  const addCrossHair = (d3, graph, x, y, width, height) => {
+  const addCrosshair = (d3, graph, x, y, width, height) => {
     // based on
     // https://stackoverflow.com/questions/38687588/add-horizontal-crosshair-to-d3-js-chart
     const color = 'lightgray';
     const lineWidth = 1.0;
     const dashes = '3 3'; // width of one dash and space between two dashes
 
-    const transpRect = graph
+    const crosshair = graph.append('g').attr('id', 'crosshair');
+
+    const transpRect = crosshair
       .append('rect')
       .attr('x', 0)
       .attr('y', 0)
@@ -241,31 +307,34 @@ const CurveGenerator = props => {
       .attr('fill', 'white')
       .attr('opacity', 0);
 
-    const verticalLine = graph
+    const verticalLine = crosshair
       .append('line')
-      .attr('opacity', 0)
+      .attr('id', 'crosshair-vertcal')
       .attr('y1', 0)
       .attr('y2', height)
+      .attr('opacity', 0)
       .attr('stroke', color)
       .attr('stroke-width', lineWidth)
       .attr('pointer-events', 'none')
       .style('stroke-dasharray', dashes);
 
-    const horizontalLine = graph
+    const horizontalLine = crosshair
       .append('line')
-      .attr('opacity', 0)
+      .attr('id', 'crosshair-horizontal')
       .attr('x1', 0)
       .attr('x2', width)
+      .attr('opacity', 0)
       .attr('stroke', color)
       .attr('stroke-width', lineWidth)
       .attr('pointer-events', 'none')
       .style('stroke-dasharray', dashes);
 
-    const text = graph
+    const text = crosshair
       .append('text')
-      .attr('opacity', 0)
+      .attr('id', 'crosshair-coordinates')
       .attr('x', 0)
       .attr('y', 0)
+      .attr('opacity', 0)
       .attr('dx', '1em')
       .attr('dy', '-1em')
       .attr('font-size', '0.75rem')
@@ -367,23 +436,6 @@ const CurveGenerator = props => {
       .x(d => x(d[0]))
       .y(d => y(d[1]));
 
-    // define drag events (methods are defined at the end)
-    const drag = d3
-      .drag()
-      .on('start', dragstarted)
-      .on('drag', dragged)
-      .on('end', dragended);
-
-    // // configure svg
-    // svg
-    //   .append('rect')
-    //   .attr('cursor', 'default')
-    //   .attr('fill', 'none')
-    //   .attr('pointer-events', 'all')
-    //   .attr('width', graphWidth)
-    //   .attr('height', graphHeight)
-    //   .attr('transform', 'translate(' + GRAPH_MARGIN.left + ',' + GRAPH_MARGIN.top + ')');
-
     // append graph as 'group' element to the svg and move it to the top left margin
     const graph = svg
       .append('g')
@@ -397,8 +449,6 @@ const CurveGenerator = props => {
     drawGrid(d3, graph, x, y, graphWidth, graphHeight);
     drawAxesOnGraph(graph, x, y, graphWidth, graphHeight);
     drawAxesAroundGraph(d3, graph, x, y, graphWidth, graphHeight);
-
-    addCrossHair(d3, graph, x, y, graphWidth, graphHeight);
 
     // draw initial curve
     graph
@@ -419,11 +469,8 @@ const CurveGenerator = props => {
       drawCurveLines(d3, graph, line, curvePoints);
     }
 
-    // 1. create draggable points that need to be of type 'circle' so that the
-    //    dragging events are correctly added
-    // 2. add drag behaviour to all draggable points
-    drawDraggablePoints(graph, x, y, drag, points);
-    graph.selectAll('circle').call(drag);
+    addCrosshair(d3, graph, x, y, graphWidth, graphHeight);
+    drawDraggablePoints(graph, x, y, line, points);
 
     // most likely, this is not best practice
     // (these variables are needed for methods like `handlePointCoordinateChange`)
@@ -433,7 +480,6 @@ const CurveGenerator = props => {
       graph: graph,
       x: x,
       y: y,
-      drag: drag,
       line: line,
     });
 
@@ -514,48 +560,6 @@ const CurveGenerator = props => {
 
       setCurvePoints(newCurvePoints);
       init(newXAxis, newYAxis, newCurvePoints);
-    }
-
-    function dragstarted(d) {
-      d3.select(this)
-        .raise()
-        .classed('active', true);
-    }
-
-    function dragged(d) {
-      // change coordinate of points
-      d[0] = Utils.round(x.invert(d3.event.x), PRECISION_POINTS);
-      d[1] = Utils.round(y.invert(d3.event.y), PRECISION_POINTS);
-
-      // update location of point
-      d3.select(this)
-        .attr('cx', x(d[0]))
-        .attr('cy', y(d[1]));
-
-      updateRegressionState(points, order);
-
-      const newCurvePoints = Regression.generateCurvePoints(
-        points,
-        order,
-        xAxis.min,
-        xAxis.max,
-        PRECISION_COEFFICIENT
-      );
-      setCurvePoints(newCurvePoints);
-
-      // sort points to not have "invalid" functions
-      setPoints(Utils.sortPointsByX(points));
-
-      if (SHOW_DOTTED_CURVE) {
-        drawCurvePoints(d3, graph, x, y, newCurvePoints);
-      } else {
-        drawCurveLines(d3, graph, line, newCurvePoints);
-      }
-    }
-
-    function dragended(d) {
-      d3.select(this).classed('active', false);
-      drawDraggablePoints(graph, x, y, drag, points);
     }
   };
 
@@ -641,7 +645,7 @@ const CurveGenerator = props => {
       drawCurveLines(drawing.d3, drawing.graph, drawing.line, newCurvePoints);
     }
 
-    drawDraggablePoints(drawing.graph, drawing.x, drawing.y, drawing.drag, points);
+    drawDraggablePoints(drawing.graph, drawing.x, drawing.y, drawing.line, points);
     updateRegressionState(points, order);
   };
 
