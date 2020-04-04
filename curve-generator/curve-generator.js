@@ -12,6 +12,8 @@ const CurveGenerator = props => {
   /***************************************************************************/
   /* Settings                                                                */
   /***************************************************************************/
+  // Adjust the following parameters to your needs
+
   // size of final SVG in pixel
   const SVG_SIZE = { width: 750, height: 450 };
 
@@ -27,10 +29,22 @@ const CurveGenerator = props => {
   // - polynomial's coefficients
   // - draggable points
   //
+  // TODO:
   // maybe this should be the same as the points of the regression have the
   // same precision as the polynomial's coefficients
   const PRECISION_COEFFICIENT = 4;
   const PRECISION_POINTS = 2;
+
+  /***************************************************************************/
+  /* Derived Settings                                                        */
+  /***************************************************************************/
+  // These parameters are derived from the previous settings and should not be
+  // changed
+
+  const GRAPH_SIZE = {
+    width: SVG_SIZE.width - GRAPH_MARGIN.left - GRAPH_MARGIN.right,
+    height: SVG_SIZE.height - GRAPH_MARGIN.top - GRAPH_MARGIN.bottom,
+  };
 
   /***************************************************************************/
   /* Default Values                                                          */
@@ -90,7 +104,7 @@ const CurveGenerator = props => {
   };
 
   // draw both the x and y axes through 0/0 spanning the whole graph
-  const drawAxesOnGraph = (graph, x, y, graphWidth, graphHeight) => {
+  const drawAxesOnGraph = (graph, x, y) => {
     // based on: http://bl.ocks.org/stepheneb/1182434
     const color = 'black';
     const lineWidth = 0.5;
@@ -103,7 +117,7 @@ const CurveGenerator = props => {
       .attr('id', 'axis-in-x')
       .append('line')
       .attr('y1', 0)
-      .attr('y2', graphHeight)
+      .attr('y2', GRAPH_SIZE.height)
       .attr('stroke', color)
       .attr('stroke-width', lineWidth)
       .attr('transform', 'translate(' + x(0) + ' , 0)');
@@ -114,14 +128,14 @@ const CurveGenerator = props => {
       .attr('id', 'axis-in-y')
       .append('line')
       .attr('x1', 0)
-      .attr('x2', graphWidth)
+      .attr('x2', GRAPH_SIZE.width)
       .attr('stroke', color)
       .attr('stroke-width', lineWidth)
       .attr('transform', 'translate(0, ' + y(0) + ')');
   };
 
   // draw both the x and y axes around the graph (not necessarily through 0/0))
-  const drawAxesAroundGraph = (d3, graph, x, y, graphWidth, graphHeight) => {
+  const drawAxesAroundGraph = (d3, graph, x, y) => {
     // set position of the axes
     const xAxis = d3.axisBottom(x);
     const yAxis = d3.axisLeft(y);
@@ -132,7 +146,7 @@ const CurveGenerator = props => {
     axes
       .append('g')
       .attr('id', 'axis-out-x')
-      .attr('transform', 'translate(0,' + graphHeight + ')')
+      .attr('transform', 'translate(0,' + GRAPH_SIZE.height + ')')
       .call(xAxis);
 
     // draw y axis
@@ -143,7 +157,7 @@ const CurveGenerator = props => {
   };
 
   // draw the grid for both the x and y axes
-  const drawGrid = (d3, graph, x, y, graphWidth, graphHeight) => {
+  const drawGrid = (d3, graph, x, y) => {
     // based on: https://bl.ocks.org/d3noob/c506ac45617cf9ed39337f99f8511218
 
     const color = 'lightgray';
@@ -159,15 +173,15 @@ const CurveGenerator = props => {
       .append('g')
       .attr('id', 'grid-x')
       .attr('class', 'grid')
-      .attr('transform', 'translate(0,' + graphHeight + ')')
-      .call(xGrid.tickSize(-graphHeight).tickFormat(''));
+      .attr('transform', 'translate(0,' + GRAPH_SIZE.height + ')')
+      .call(xGrid.tickSize(-GRAPH_SIZE.height).tickFormat(''));
 
     // draw y grid lines
     grid
       .append('g')
       .attr('id', 'grid-y')
       .attr('class', 'grid')
-      .call(yGrid.tickSize(-graphWidth).tickFormat(''));
+      .call(yGrid.tickSize(-GRAPH_SIZE.width).tickFormat(''));
 
     // style grid
     d3.selectAll('g.grid g.tick')
@@ -175,13 +189,17 @@ const CurveGenerator = props => {
       .attr('stroke', color);
   };
 
-  const drawGraphTitle = (svg, graphWidth) => {
+  const drawGraphTitle = svg => {
     svg
       .append('text')
       .attr('id', 'curve-name')
       .attr(
         'transform',
-        'translate(' + (graphWidth / 2 + GRAPH_MARGIN.left) + ', ' + GRAPH_MARGIN.top / 2 + ')'
+        'translate(' +
+          (GRAPH_SIZE.width / 2 + GRAPH_MARGIN.left) +
+          ', ' +
+          GRAPH_MARGIN.top / 2 +
+          ')'
       )
       .attr('font-size', '1rem')
       .attr('font-weight', 'bold')
@@ -190,7 +208,7 @@ const CurveGenerator = props => {
       .text(curveName);
   };
 
-  const drawAxisLables = (svg, graphWidth, graphHeight) => {
+  const drawAxisLables = svg => {
     // based on: https://bl.ocks.org/d3noob/23e42c8f67210ac6c678db2cd07a747e
     svg
       .append('text')
@@ -198,9 +216,9 @@ const CurveGenerator = props => {
       .attr(
         'transform',
         'translate(' +
-          (graphWidth / 2 + GRAPH_MARGIN.left) +
+          (GRAPH_SIZE.width / 2 + GRAPH_MARGIN.left) +
           ', ' +
-          (graphHeight + GRAPH_MARGIN.top + GRAPH_MARGIN.bottom) +
+          (GRAPH_SIZE.height + GRAPH_MARGIN.top + GRAPH_MARGIN.bottom) +
           ')'
       )
       .style('text-anchor', 'middle')
@@ -213,7 +231,7 @@ const CurveGenerator = props => {
       .attr(
         'transform',
         'rotate(-90), translate(' +
-          (-graphHeight / 2 - GRAPH_MARGIN.top) +
+          (-GRAPH_SIZE.height / 2 - GRAPH_MARGIN.top) +
           ', ' +
           GRAPH_MARGIN.left / 2 +
           ')'
@@ -354,7 +372,7 @@ const CurveGenerator = props => {
     };
   };
 
-  const addCrosshair = (d3, graph, x, y, width, height) => {
+  const addCrosshair = (d3, graph, x, y) => {
     // based on
     // https://stackoverflow.com/questions/38687588/add-horizontal-crosshair-to-d3-js-chart
     const color = 'lightgray';
@@ -367,8 +385,8 @@ const CurveGenerator = props => {
       .append('rect')
       .attr('x', 0)
       .attr('y', 0)
-      .attr('width', width)
-      .attr('height', height)
+      .attr('width', GRAPH_SIZE.width)
+      .attr('height', GRAPH_SIZE.height)
       .attr('fill', 'white')
       .attr('opacity', 0);
 
@@ -376,7 +394,7 @@ const CurveGenerator = props => {
       .append('line')
       .attr('id', 'crosshair-vertcal')
       .attr('y1', 0)
-      .attr('y2', height)
+      .attr('y2', GRAPH_SIZE.height)
       .attr('opacity', 0)
       .attr('stroke', color)
       .attr('stroke-width', lineWidth)
@@ -387,7 +405,7 @@ const CurveGenerator = props => {
       .append('line')
       .attr('id', 'crosshair-horizontal')
       .attr('x1', 0)
-      .attr('x2', width)
+      .attr('x2', GRAPH_SIZE.width)
       .attr('opacity', 0)
       .attr('stroke', color)
       .attr('stroke-width', lineWidth)
@@ -534,13 +552,9 @@ const CurveGenerator = props => {
     // define svg and link it with the dom element
     const svg = d3.select(SVG_REF.current);
 
-    // define size of graph
-    const graphWidth = +svg.attr('width') - GRAPH_MARGIN.left - GRAPH_MARGIN.right;
-    const graphHeight = +svg.attr('height') - GRAPH_MARGIN.top - GRAPH_MARGIN.bottom;
-
     // define range of x and y axis (in pixel)
-    const x = d3.scaleLinear().rangeRound([0, graphWidth]);
-    const y = d3.scaleLinear().rangeRound([graphHeight, 0]);
+    const x = d3.scaleLinear().rangeRound([0, GRAPH_SIZE.width]);
+    const y = d3.scaleLinear().rangeRound([GRAPH_SIZE.height, 0]);
 
     // define how lines should be drawn
     const line = d3
@@ -558,13 +572,13 @@ const CurveGenerator = props => {
     x.domain([xAxis.min, xAxis.max]);
     y.domain([yAxis.min, yAxis.max]);
 
-    drawGrid(d3, graph, x, y, graphWidth, graphHeight);
-    drawAxesOnGraph(graph, x, y, graphWidth, graphHeight);
-    drawAxesAroundGraph(d3, graph, x, y, graphWidth, graphHeight);
+    drawGrid(d3, graph, x, y);
+    drawAxesOnGraph(graph, x, y);
+    drawAxesAroundGraph(d3, graph, x, y);
     drawInitialCurve(graph, line, curvePoints);
 
-    drawGraphTitle(svg, graphWidth);
-    drawAxisLables(svg, graphWidth, graphHeight);
+    drawGraphTitle(svg);
+    drawAxisLables(svg);
 
     // draw curve points or lines
     if (SHOW_DOTTED_CURVE) {
@@ -573,7 +587,7 @@ const CurveGenerator = props => {
       drawCurveLines(d3, graph, line, curvePoints);
     }
 
-    addCrosshair(d3, graph, x, y, graphWidth, graphHeight);
+    addCrosshair(d3, graph, x, y);
     drawDraggablePoints(graph, x, y, line, points, xAxis, yAxis);
 
     // most likely, this is not best practice
@@ -592,7 +606,7 @@ const CurveGenerator = props => {
     // let the graph be "movable" (aka panning) with the mouse
     graph
       .on('mousedown.drag', () => mouseDown())
-      .on('mousemove.drag', () => mouseMove(graphWidth, graphHeight))
+      .on('mousemove.drag', () => mouseMove())
       .on('mouseup.drag', () => mouseUp())
       .on('mouseleave', () => mouseUp());
 
@@ -601,15 +615,15 @@ const CurveGenerator = props => {
       dragged = true;
     };
 
-    const mouseMove = (graphWidth, graphHeight) => {
+    const mouseMove = () => {
       if (dragged) {
         // get length of both axes
         const xAxisLength = xAxis.max - xAxis.min;
         const yAxisLength = yAxis.max - yAxis.min;
 
         // calculate differences of the coordinates during the mouse move
-        const diffX = (d3.event.movementX / graphWidth) * xAxisLength;
-        const diffY = (d3.event.movementY / graphHeight) * yAxisLength;
+        const diffX = (d3.event.movementX / GRAPH_SIZE.width) * xAxisLength;
+        const diffY = (d3.event.movementY / GRAPH_SIZE.height) * yAxisLength;
 
         // add these differences to the ones from the previous calls to this function
         diffDragged = [diffDragged[0] + diffX, diffDragged[1] + diffY];
