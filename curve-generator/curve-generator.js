@@ -175,6 +175,66 @@ const CurveGenerator = props => {
       .attr('stroke', color);
   };
 
+  const drawGraphTitle = (svg, graphWidth) => {
+    svg
+      .append('text')
+      .attr('id', 'curve-name')
+      .attr(
+        'transform',
+        'translate(' + (graphWidth / 2 + GRAPH_MARGIN.left) + ', ' + GRAPH_MARGIN.top / 2 + ')'
+      )
+      .attr('font-size', '1rem')
+      .attr('font-weight', 'bold')
+      .attr('fill', 'black')
+      .style('text-anchor', 'middle')
+      .text(curveName);
+  };
+
+  const drawAxisLables = (svg, graphWidth, graphHeight) => {
+    // based on: https://bl.ocks.org/d3noob/23e42c8f67210ac6c678db2cd07a747e
+    svg
+      .append('text')
+      .attr('id', 'x-axis-label')
+      .attr(
+        'transform',
+        'translate(' +
+          (graphWidth / 2 + GRAPH_MARGIN.left) +
+          ', ' +
+          (graphHeight + GRAPH_MARGIN.top + GRAPH_MARGIN.bottom) +
+          ')'
+      )
+      .style('text-anchor', 'middle')
+      .text(xAxisLabel);
+
+    // text label for the y axis
+    svg
+      .append('text')
+      .attr('id', 'y-axis-label')
+      .attr(
+        'transform',
+        'rotate(-90), translate(' +
+          (-graphHeight / 2 - GRAPH_MARGIN.top) +
+          ', ' +
+          GRAPH_MARGIN.left / 2 +
+          ')'
+      )
+      .style('text-anchor', 'middle')
+      .text(yAxisLabel);
+  };
+
+  const drawInitialCurve = (graph, line, curvePoints) => {
+    graph
+      .append('path')
+      .datum(curvePoints)
+      .attr('id', 'initial')
+      .attr('fill', 'none')
+      .attr('stroke', 'lightgray')
+      .attr('stroke-linejoin', 'round')
+      .attr('stroke-linecap', 'round')
+      .attr('stroke-width', 1)
+      .attr('d', line);
+  };
+
   const drawCurvePoints = (d3, graph, x, y, curvePoints) => {
     // remove old points
     d3.select('svg')
@@ -192,7 +252,7 @@ const CurveGenerator = props => {
       .attr('cy', d => y(d[1]))
       .attr('rx', 2.0)
       .attr('ry', 2.0)
-      .style('fill', 'red');
+      .style('fill', CURVE_DOTS_COLOR);
   };
 
   const drawCurveLines = (d3, graph, line, curvePoints) => {
@@ -381,6 +441,42 @@ const CurveGenerator = props => {
     };
   };
 
+  const addZooming = (d3, graph, x, y) => {
+    // based on: https://stackoverflow.com/questions/39387727/d3v4-zooming-equivalent-to-d3-zoom-x
+    const zoom = d3.zoom().on('zoom', () => zoomed());
+    graph.call(zoom).on('mousedown.zoom', null);
+
+    const zoomed = () => {
+      const newXDomain = d3.event.transform.rescaleX(x).domain();
+      const newYDomain = d3.event.transform.rescaleY(y).domain();
+      const newXAxis = { min: Utils.round(newXDomain[0], 0), max: Utils.round(newXDomain[1], 0) };
+      const newYAxis = { min: Utils.round(newYDomain[0], 0), max: Utils.round(newYDomain[1], 0) };
+      setXAxis(newXAxis);
+      setYAxis(newYAxis);
+
+      x.domain([newXAxis.min, newXAxis.max]);
+      y.domain([newYAxis.min, newYAxis.max]);
+
+      const newDrawing = { ...drawing };
+      newDrawing.x = x;
+      newDrawing.y = y;
+
+      clearSVG();
+      setDrawing(newDrawing);
+
+      const newCurvePoints = Regression.generateCurvePoints(
+        points,
+        order,
+        newXAxis.min,
+        newXAxis.max,
+        PRECISION_COEFFICIENT
+      );
+
+      setCurvePoints(newCurvePoints);
+      init(newXAxis, newYAxis, newCurvePoints);
+    };
+  };
+
   const drawCurveName = (svg, value) => svg.select('text#curve-name').text(value);
 
   const drawXAxisLabel = (svg, value) => svg.select('text#x-axis-label').text(value);
@@ -465,18 +561,10 @@ const CurveGenerator = props => {
     drawGrid(d3, graph, x, y, graphWidth, graphHeight);
     drawAxesOnGraph(graph, x, y, graphWidth, graphHeight);
     drawAxesAroundGraph(d3, graph, x, y, graphWidth, graphHeight);
+    drawInitialCurve(graph, line, curvePoints);
 
-    // draw initial curve
-    graph
-      .append('path')
-      .datum(curvePoints)
-      .attr('id', 'initial') // id is currently not used
-      .attr('fill', 'none')
-      .attr('stroke', 'lightgray')
-      .attr('stroke-linejoin', 'round')
-      .attr('stroke-linecap', 'round')
-      .attr('stroke-width', 1)
-      .attr('d', line);
+    drawGraphTitle(svg, graphWidth);
+    drawAxisLables(svg, graphWidth, graphHeight);
 
     // draw curve points or lines
     if (SHOW_DOTTED_CURVE) {
@@ -499,56 +587,9 @@ const CurveGenerator = props => {
       line: line,
     });
 
-    // draw curve name
-    svg
-      .append('text')
-      .attr('id', 'curve-name')
-      .attr(
-        'transform',
-        'translate(' + (graphWidth / 2 + GRAPH_MARGIN.left) + ', ' + GRAPH_MARGIN.top / 2 + ')'
-      )
-      .attr('font-size', '1rem')
-      .attr('font-weight', 'bold')
-      .attr('fill', 'black')
-      .style('text-anchor', 'middle')
-      .text(curveName);
+    addZooming(d3, graph, x, y);
 
-    // text label for the x axis
-    // https://bl.ocks.org/d3noob/23e42c8f67210ac6c678db2cd07a747e
-    svg
-      .append('text')
-      .attr('id', 'x-axis-label')
-      .attr(
-        'transform',
-        'translate(' +
-          (graphWidth / 2 + GRAPH_MARGIN.left) +
-          ', ' +
-          (graphHeight + GRAPH_MARGIN.top + GRAPH_MARGIN.bottom) +
-          ')'
-      )
-      .style('text-anchor', 'middle')
-      .text(xAxisLabel);
-
-    // text label for the y axis
-    svg
-      .append('text')
-      .attr('id', 'y-axis-label')
-      .attr(
-        'transform',
-        'rotate(-90), translate(' +
-          (-graphHeight / 2 - GRAPH_MARGIN.top) +
-          ', ' +
-          GRAPH_MARGIN.left / 2 +
-          ')'
-      )
-      .style('text-anchor', 'middle')
-      .text(yAxisLabel);
-
-    // based on: https://stackoverflow.com/questions/39387727/d3v4-zooming-equivalent-to-d3-zoom-x
-    const zoom = d3.zoom().on('zoom', () => zoomed());
-    graph.call(zoom).on('mousedown.zoom', null);
-
-    // let the graph be "movable" with the mouse
+    // let the graph be "movable" (aka panning) with the mouse
     graph
       .on('mousedown.drag', () => mouseDown())
       .on('mousemove.drag', () => mouseMove(graphWidth, graphHeight))
@@ -642,36 +683,6 @@ const CurveGenerator = props => {
       d3.select('body').style('cursor', 'auto');
       diffDragged = [0, 0];
       dragged = false;
-    };
-
-    const zoomed = () => {
-      const newXDomain = d3.event.transform.rescaleX(x).domain();
-      const newYDomain = d3.event.transform.rescaleY(y).domain();
-      const newXAxis = { min: Utils.round(newXDomain[0], 0), max: Utils.round(newXDomain[1], 0) };
-      const newYAxis = { min: Utils.round(newYDomain[0], 0), max: Utils.round(newYDomain[1], 0) };
-      setXAxis(newXAxis);
-      setYAxis(newYAxis);
-
-      x.domain([newXAxis.min, newXAxis.max]);
-      y.domain([newYAxis.min, newYAxis.max]);
-
-      const newDrawing = { ...drawing };
-      newDrawing.x = x;
-      newDrawing.y = y;
-
-      clearSVG();
-      setDrawing(newDrawing);
-
-      const newCurvePoints = Regression.generateCurvePoints(
-        points,
-        order,
-        newXAxis.min,
-        newXAxis.max,
-        PRECISION_COEFFICIENT
-      );
-
-      setCurvePoints(newCurvePoints);
-      init(newXAxis, newYAxis, newCurvePoints);
     };
   };
 
