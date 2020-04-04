@@ -46,6 +46,9 @@ const CurveGenerator = props => {
     height: SVG_SIZE.height - GRAPH_MARGIN.top - GRAPH_MARGIN.bottom,
   };
 
+  const X_SCALE = d3.scaleLinear().rangeRound([0, GRAPH_SIZE.width]);
+  const Y_SCALE = d3.scaleLinear().rangeRound([GRAPH_SIZE.height, 0]);
+
   /***************************************************************************/
   /* Default Values                                                          */
   /***************************************************************************/
@@ -104,7 +107,7 @@ const CurveGenerator = props => {
   };
 
   // draw both the x and y axes through 0/0 spanning the whole graph
-  const drawAxesOnGraph = (graph, x, y) => {
+  const drawAxesOnGraph = graph => {
     // based on: http://bl.ocks.org/stepheneb/1182434
     const color = 'black';
     const lineWidth = 0.5;
@@ -120,7 +123,7 @@ const CurveGenerator = props => {
       .attr('y2', GRAPH_SIZE.height)
       .attr('stroke', color)
       .attr('stroke-width', lineWidth)
-      .attr('transform', 'translate(' + x(0) + ' , 0)');
+      .attr('transform', 'translate(' + X_SCALE(0) + ' , 0)');
 
     // y axis
     axes
@@ -131,14 +134,14 @@ const CurveGenerator = props => {
       .attr('x2', GRAPH_SIZE.width)
       .attr('stroke', color)
       .attr('stroke-width', lineWidth)
-      .attr('transform', 'translate(0, ' + y(0) + ')');
+      .attr('transform', 'translate(0, ' + Y_SCALE(0) + ')');
   };
 
   // draw both the x and y axes around the graph (not necessarily through 0/0))
-  const drawAxesAroundGraph = (d3, graph, x, y) => {
+  const drawAxesAroundGraph = (d3, graph) => {
     // set position of the axes
-    const xAxis = d3.axisBottom(x);
-    const yAxis = d3.axisLeft(y);
+    const xAxis = d3.axisBottom(X_SCALE);
+    const yAxis = d3.axisLeft(Y_SCALE);
 
     const axes = graph.append('g').attr('id', 'axes-out');
 
@@ -157,14 +160,14 @@ const CurveGenerator = props => {
   };
 
   // draw the grid for both the x and y axes
-  const drawGrid = (d3, graph, x, y) => {
+  const drawGrid = (d3, graph) => {
     // based on: https://bl.ocks.org/d3noob/c506ac45617cf9ed39337f99f8511218
 
     const color = 'lightgray';
     const numberOfLines = 10;
 
-    const xGrid = d3.axisBottom(x).ticks(numberOfLines);
-    const yGrid = d3.axisLeft(y).ticks(numberOfLines);
+    const xGrid = d3.axisBottom(X_SCALE).ticks(numberOfLines);
+    const yGrid = d3.axisLeft(Y_SCALE).ticks(numberOfLines);
 
     const grid = graph.append('g').attr('id', 'grid');
 
@@ -253,7 +256,7 @@ const CurveGenerator = props => {
       .attr('d', line);
   };
 
-  const drawCurvePoints = (d3, graph, x, y, curvePoints) => {
+  const drawCurvePoints = (d3, graph, curvePoints) => {
     // remove old points
     d3.select('svg')
       .select('g')
@@ -266,8 +269,8 @@ const CurveGenerator = props => {
       .data(curvePoints)
       .enter()
       .append('ellipse')
-      .attr('cx', d => x(d[0]))
-      .attr('cy', d => y(d[1]))
+      .attr('cx', d => X_SCALE(d[0]))
+      .attr('cy', d => Y_SCALE(d[1]))
       .attr('rx', 2.0)
       .attr('ry', 2.0)
       .style('fill', CURVE_DOTS_COLOR);
@@ -359,7 +362,7 @@ const CurveGenerator = props => {
       setPoints(Utils.sortPointsByX(points));
 
       if (SHOW_DOTTED_CURVE) {
-        drawCurvePoints(d3, graph, x, y, newCurvePoints);
+        drawCurvePoints(d3, graph, newCurvePoints);
       } else {
         drawCurveLines(d3, graph, line, newCurvePoints);
       }
@@ -372,7 +375,7 @@ const CurveGenerator = props => {
     };
   };
 
-  const addCrosshair = (d3, graph, x, y) => {
+  const addCrosshair = (d3, graph) => {
     // based on
     // https://stackoverflow.com/questions/38687588/add-horizontal-crosshair-to-d3-js-chart
     const color = 'lightgray';
@@ -447,7 +450,11 @@ const CurveGenerator = props => {
         .attr('x', d => mouseX)
         .attr('y', d => mouseY)
         .text(
-          () => `x: ${Utils.round(x.invert(mouseX), 2)}, y: ${Utils.round(y.invert(mouseY), 2)}`
+          () =>
+            `x: ${Utils.round(X_SCALE.invert(mouseX), 2)}, y: ${Utils.round(
+              Y_SCALE.invert(mouseY),
+              2
+            )}`
         )
         .attr('opacity', 1);
     };
@@ -459,25 +466,25 @@ const CurveGenerator = props => {
     };
   };
 
-  const addZooming = (d3, graph, x, y) => {
+  const addZooming = (d3, graph) => {
     // based on: https://stackoverflow.com/questions/39387727/d3v4-zooming-equivalent-to-d3-zoom-x
     const zoom = d3.zoom().on('zoom', () => zoomed());
     graph.call(zoom).on('mousedown.zoom', null);
 
     const zoomed = () => {
-      const newXDomain = d3.event.transform.rescaleX(x).domain();
-      const newYDomain = d3.event.transform.rescaleY(y).domain();
+      const newXDomain = d3.event.transform.rescaleX(X_SCALE).domain();
+      const newYDomain = d3.event.transform.rescaleY(Y_SCALE).domain();
       const newXAxis = { min: Utils.round(newXDomain[0], 0), max: Utils.round(newXDomain[1], 0) };
       const newYAxis = { min: Utils.round(newYDomain[0], 0), max: Utils.round(newYDomain[1], 0) };
       setXAxis(newXAxis);
       setYAxis(newYAxis);
 
-      x.domain([newXAxis.min, newXAxis.max]);
-      y.domain([newYAxis.min, newYAxis.max]);
+      X_SCALE.domain([newXAxis.min, newXAxis.max]);
+      Y_SCALE.domain([newYAxis.min, newYAxis.max]);
 
       const newDrawing = { ...drawing };
-      newDrawing.x = x;
-      newDrawing.y = y;
+      newDrawing.x = X_SCALE;
+      newDrawing.y = Y_SCALE;
 
       clearSVG();
       setDrawing(newDrawing);
@@ -491,7 +498,7 @@ const CurveGenerator = props => {
       );
 
       setCurvePoints(newCurvePoints);
-      init(newXAxis, newYAxis, newCurvePoints);
+      draw(newXAxis, newYAxis, newCurvePoints);
     };
   };
 
@@ -535,7 +542,7 @@ const CurveGenerator = props => {
   const [xAxisLabel, setXAxisLabel] = React.useState(initialXAxisLabel);
   const [yAxisLabel, setYAxisLabel] = React.useState(initialYAxisLabel);
 
-  React.useEffect(() => init(xAxis, yAxis, curvePoints), [order]);
+  React.useEffect(() => draw(xAxis, yAxis, curvePoints), [order]);
 
   // needed for zooming and moving the coordinate system
   let dragged = false;
@@ -545,22 +552,18 @@ const CurveGenerator = props => {
   /* Main                                                                    */
   /***************************************************************************/
 
-  const init = (xAxis, yAxis, curvePoints) => {
+  const draw = (xAxis, yAxis, curvePoints) => {
     // implementation based on:
     // https://bl.ocks.org/denisemauldin/538bfab8378ac9c3a32187b4d7aed2c2
 
     // define svg and link it with the dom element
     const svg = d3.select(SVG_REF.current);
 
-    // define range of x and y axis (in pixel)
-    const x = d3.scaleLinear().rangeRound([0, GRAPH_SIZE.width]);
-    const y = d3.scaleLinear().rangeRound([GRAPH_SIZE.height, 0]);
-
     // define how lines should be drawn
     const line = d3
       .line()
-      .x(d => x(d[0]))
-      .y(d => y(d[1]));
+      .x(d => X_SCALE(d[0]))
+      .y(d => Y_SCALE(d[1]));
 
     // append graph as 'group' element to the svg and move it to the top left margin
     const graph = svg
@@ -569,12 +572,12 @@ const CurveGenerator = props => {
       .attr('transform', 'translate(' + GRAPH_MARGIN.left + ',' + GRAPH_MARGIN.top + ')');
 
     // set domains of x and y axis
-    x.domain([xAxis.min, xAxis.max]);
-    y.domain([yAxis.min, yAxis.max]);
+    X_SCALE.domain([xAxis.min, xAxis.max]);
+    Y_SCALE.domain([yAxis.min, yAxis.max]);
 
-    drawGrid(d3, graph, x, y);
-    drawAxesOnGraph(graph, x, y);
-    drawAxesAroundGraph(d3, graph, x, y);
+    drawGrid(d3, graph);
+    drawAxesOnGraph(graph);
+    drawAxesAroundGraph(d3, graph);
     drawInitialCurve(graph, line, curvePoints);
 
     drawGraphTitle(svg);
@@ -582,13 +585,13 @@ const CurveGenerator = props => {
 
     // draw curve points or lines
     if (SHOW_DOTTED_CURVE) {
-      drawCurvePoints(d3, graph, x, y, curvePoints);
+      drawCurvePoints(d3, graph, curvePoints);
     } else {
       drawCurveLines(d3, graph, line, curvePoints);
     }
 
-    addCrosshair(d3, graph, x, y);
-    drawDraggablePoints(graph, x, y, line, points, xAxis, yAxis);
+    addCrosshair(d3, graph);
+    drawDraggablePoints(graph, X_SCALE, Y_SCALE, line, points, xAxis, yAxis);
 
     // most likely, this is not best practice
     // (these variables are needed for methods like `handlePointCoordinateChange`)
@@ -596,12 +599,12 @@ const CurveGenerator = props => {
       d3: d3,
       svg: svg,
       graph: graph,
-      x: x,
-      y: y,
+      x: X_SCALE,
+      y: Y_SCALE,
       line: line,
     });
 
-    addZooming(d3, graph, x, y);
+    addZooming(d3, graph);
 
     // let the graph be "movable" (aka panning) with the mouse
     graph
@@ -649,8 +652,8 @@ const CurveGenerator = props => {
             setXAxis(newXAxis);
 
             // reset the domain of the global x axis object used to draw with d3
-            x.domain([newXAxis.min, newXAxis.max]);
-            newDrawing.x = x;
+            X_SCALE.domain([newXAxis.min, newXAxis.max]);
+            newDrawing.x = X_SCALE;
 
             // reset drag difference of the x coordinate
             diffDragged[0] = 0;
@@ -668,8 +671,8 @@ const CurveGenerator = props => {
             setYAxis(newYAxis);
 
             // reset the domain of the global y axis object used to draw with d3
-            y.domain([newYAxis.min, newYAxis.max]);
-            newDrawing.y = y;
+            Y_SCALE.domain([newYAxis.min, newYAxis.max]);
+            newDrawing.y = Y_SCALE;
 
             // reset drag difference of the x coordinate
             diffDragged[1] = 0;
@@ -688,7 +691,7 @@ const CurveGenerator = props => {
             PRECISION_COEFFICIENT
           );
           setCurvePoints(newCurvePoints);
-          init(newXAxis, newYAxis, newCurvePoints);
+          draw(newXAxis, newYAxis, newCurvePoints);
         }
       }
     };
@@ -777,7 +780,7 @@ const CurveGenerator = props => {
     setCurvePoints(newCurvePoints);
 
     if (SHOW_DOTTED_CURVE) {
-      drawCurvePoints(drawing.d3, drawing.graph, drawing.x, drawing.y, newCurvePoints);
+      drawCurvePoints(drawing.d3, drawing.graph, newCurvePoints);
     } else {
       drawCurveLines(drawing.d3, drawing.graph, drawing.line, newCurvePoints);
     }
