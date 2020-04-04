@@ -49,6 +49,11 @@ const CurveGenerator = props => {
   const X_SCALE = d3.scaleLinear().rangeRound([0, GRAPH_SIZE.width]);
   const Y_SCALE = d3.scaleLinear().rangeRound([GRAPH_SIZE.height, 0]);
 
+  const LINE = d3
+    .line()
+    .x(d => X_SCALE(d[0]))
+    .y(d => Y_SCALE(d[1]));
+
   /***************************************************************************/
   /* Default Values                                                          */
   /***************************************************************************/
@@ -138,7 +143,7 @@ const CurveGenerator = props => {
   };
 
   // draw both the x and y axes around the graph (not necessarily through 0/0))
-  const drawAxesAroundGraph = (d3, graph) => {
+  const drawAxesAroundGraph = graph => {
     // set position of the axes
     const xAxis = d3.axisBottom(X_SCALE);
     const yAxis = d3.axisLeft(Y_SCALE);
@@ -160,7 +165,7 @@ const CurveGenerator = props => {
   };
 
   // draw the grid for both the x and y axes
-  const drawGrid = (d3, graph) => {
+  const drawGrid = graph => {
     // based on: https://bl.ocks.org/d3noob/c506ac45617cf9ed39337f99f8511218
 
     const color = 'lightgray';
@@ -243,7 +248,7 @@ const CurveGenerator = props => {
       .text(yAxisLabel);
   };
 
-  const drawInitialCurve = (graph, line, curvePoints) => {
+  const drawInitialCurve = (graph, curvePoints) => {
     graph
       .append('path')
       .datum(curvePoints)
@@ -253,10 +258,10 @@ const CurveGenerator = props => {
       .attr('stroke-linejoin', 'round')
       .attr('stroke-linecap', 'round')
       .attr('stroke-width', 1)
-      .attr('d', line);
+      .attr('d', LINE);
   };
 
-  const drawCurvePoints = (d3, graph, curvePoints) => {
+  const drawCurvePoints = (graph, curvePoints) => {
     // remove old points
     d3.select('svg')
       .select('g')
@@ -276,7 +281,7 @@ const CurveGenerator = props => {
       .style('fill', CURVE_DOTS_COLOR);
   };
 
-  const drawCurveLines = (d3, graph, line, curvePoints) => {
+  const drawCurveLines = (graph, line, curvePoints) => {
     // remove old lines
     d3.select('svg')
       .select('g')
@@ -298,7 +303,7 @@ const CurveGenerator = props => {
       .attr('d', line);
   };
 
-  const drawDraggablePoints = (graph, x, y, line, points, xAxis, yAxis) => {
+  const drawDraggablePoints = (graph, x, y, points, xAxis, yAxis) => {
     // remove old points
     d3.select('svg')
       .select('g')
@@ -362,20 +367,20 @@ const CurveGenerator = props => {
       setPoints(Utils.sortPointsByX(points));
 
       if (SHOW_DOTTED_CURVE) {
-        drawCurvePoints(d3, graph, newCurvePoints);
+        drawCurvePoints(graph, newCurvePoints);
       } else {
-        drawCurveLines(d3, graph, line, newCurvePoints);
+        drawCurveLines(graph, LINE, newCurvePoints);
       }
     };
 
     const dragEnded = (datum, index, nodes) => {
       const node = nodes[index];
       d3.select(node).classed('active', false);
-      drawDraggablePoints(graph, x, y, line, points, xAxis, yAxis);
+      drawDraggablePoints(graph, x, y, points, xAxis, yAxis);
     };
   };
 
-  const addCrosshair = (d3, graph) => {
+  const addCrosshair = graph => {
     // based on
     // https://stackoverflow.com/questions/38687588/add-horizontal-crosshair-to-d3-js-chart
     const color = 'lightgray';
@@ -466,7 +471,7 @@ const CurveGenerator = props => {
     };
   };
 
-  const addZooming = (d3, graph) => {
+  const addZooming = graph => {
     // based on: https://stackoverflow.com/questions/39387727/d3v4-zooming-equivalent-to-d3-zoom-x
     const zoom = d3.zoom().on('zoom', () => zoomed());
     graph.call(zoom).on('mousedown.zoom', null);
@@ -559,12 +564,6 @@ const CurveGenerator = props => {
     // define svg and link it with the dom element
     const svg = d3.select(SVG_REF.current);
 
-    // define how lines should be drawn
-    const line = d3
-      .line()
-      .x(d => X_SCALE(d[0]))
-      .y(d => Y_SCALE(d[1]));
-
     // append graph as 'group' element to the svg and move it to the top left margin
     const graph = svg
       .append('g')
@@ -575,36 +574,35 @@ const CurveGenerator = props => {
     X_SCALE.domain([xAxis.min, xAxis.max]);
     Y_SCALE.domain([yAxis.min, yAxis.max]);
 
-    drawGrid(d3, graph);
+    drawGrid(graph);
     drawAxesOnGraph(graph);
-    drawAxesAroundGraph(d3, graph);
-    drawInitialCurve(graph, line, curvePoints);
+    drawAxesAroundGraph(graph);
+    drawInitialCurve(graph, curvePoints);
 
     drawGraphTitle(svg);
     drawAxisLables(svg);
 
     // draw curve points or lines
     if (SHOW_DOTTED_CURVE) {
-      drawCurvePoints(d3, graph, curvePoints);
+      drawCurvePoints(graph, curvePoints);
     } else {
-      drawCurveLines(d3, graph, line, curvePoints);
+      drawCurveLines(graph, LINE, curvePoints);
     }
 
-    addCrosshair(d3, graph);
-    drawDraggablePoints(graph, X_SCALE, Y_SCALE, line, points, xAxis, yAxis);
+    addCrosshair(graph);
+    drawDraggablePoints(graph, X_SCALE, Y_SCALE, points, xAxis, yAxis);
 
     // most likely, this is not best practice
     // (these variables are needed for methods like `handlePointCoordinateChange`)
     setDrawing({
-      d3: d3,
       svg: svg,
       graph: graph,
       x: X_SCALE,
       y: Y_SCALE,
-      line: line,
+      line: LINE,
     });
 
-    addZooming(d3, graph);
+    addZooming(graph);
 
     // let the graph be "movable" (aka panning) with the mouse
     graph
@@ -780,12 +778,12 @@ const CurveGenerator = props => {
     setCurvePoints(newCurvePoints);
 
     if (SHOW_DOTTED_CURVE) {
-      drawCurvePoints(drawing.d3, drawing.graph, newCurvePoints);
+      drawCurvePoints(drawing.graph, newCurvePoints);
     } else {
-      drawCurveLines(drawing.d3, drawing.graph, drawing.line, newCurvePoints);
+      drawCurveLines(drawing.graph, drawing.line, newCurvePoints);
     }
 
-    drawDraggablePoints(drawing.graph, drawing.x, drawing.y, drawing.line, points, xAxis, yAxis);
+    drawDraggablePoints(drawing.graph, drawing.x, drawing.y, points, xAxis, yAxis);
     updateRegressionState(points, order);
   };
 
