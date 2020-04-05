@@ -5,10 +5,15 @@ import * as Drawing from './drawing';
 import * as Utils from './utils';
 import * as Regression from './regression';
 
-const CurveGenerator = props => {
-  const changeCurveName = value => props.changeCurveName(value);
-  const changeCurveDescription = value => props.changeCurveDescription(value);
-  const changePolynomialOrder = value => props.changePolynomialOrder(value);
+interface Axis {
+  min: number;
+  max: number;
+}
+
+const CurveGenerator = (props: any) => {
+  const changeCurveName = (value: string) => props.changeCurveName(value);
+  // const changeCurveDescription = (value: string) => props.changeCurveDescription(value);
+  // const changePolynomialOrder = (value: string) => props.changePolynomialOrder(value);
 
   /***************************************************************************/
   /* Settings                                                                */
@@ -49,11 +54,6 @@ const CurveGenerator = props => {
 
   const X_SCALE = d3.scaleLinear().rangeRound([0, GRAPH_SIZE.width]);
   const Y_SCALE = d3.scaleLinear().rangeRound([GRAPH_SIZE.height, 0]);
-
-  const LINE = d3
-    .line()
-    .x(d => X_SCALE(d[0]))
-    .y(d => Y_SCALE(d[1]));
 
   /***************************************************************************/
   /* Default Values                                                          */
@@ -112,7 +112,14 @@ const CurveGenerator = props => {
     //.selectAll('*') // remove everything withing the svg tag (including the styling)
   };
 
-  const drawDraggablePoints = (graph, xScale, yScale, points, xAxis, yAxis) => {
+  const drawDraggablePoints = (
+    graph: d3.Selection<SVGGElement, any, HTMLElement, any>,
+    xScale: d3.ScaleLinear<number, number>,
+    yScale: d3.ScaleLinear<number, number>,
+    points: number[][],
+    xAxis: Axis,
+    yAxis: Axis
+  ) => {
     // remove old points
     d3.select('svg')
       .select('g')
@@ -127,21 +134,11 @@ const CurveGenerator = props => {
       .enter()
       .append('circle')
       .attr('r', 8.0)
-      .attr('cx', d => xScale(d[0]))
-      .attr('cy', d => yScale(d[1]))
+      .attr('cx', (d: number[]) => xScale(d[0]))
+      .attr('cy', (d: number[]) => yScale(d[1]))
       .style('cursor', 'pointer');
 
-    // define drag events (methods are defined below)
-    const drag = d3
-      .drag()
-      .on('start', (d, i, n) => dragStarted(d, i, n))
-      .on('drag', (d, i, n) => dragged(d, i, n))
-      .on('end', (d, i, n) => dragEnded(d, i, n));
-
-    // add drag behaviour to all draggable points
-    draggablePoints.selectAll('circle').call(drag);
-
-    const dragStarted = (datum, index, nodes) => {
+    const dragStarted = (_datum: any, index: number, nodes: Element[] | d3.ArrayLike<Element>) => {
       // https://stackoverflow.com/questions/45262172/retrieve-dom-target-from-drag-callback-when-this-is-not-available/45262284#45262284
       const node = nodes[index]; // regular function: this = nodes[index]
       d3.select(node)
@@ -149,7 +146,7 @@ const CurveGenerator = props => {
         .classed('active', true);
     };
 
-    const dragged = (datum, index, nodes) => {
+    const dragged = (datum: any, index: number, nodes: Element[] | d3.ArrayLike<Element>) => {
       const node = nodes[index];
 
       // change coordinate of points
@@ -182,17 +179,25 @@ const CurveGenerator = props => {
       }
     };
 
-    const dragEnded = (datum, index, nodes) => {
+    const dragEnded = (_datum: any, index: number, nodes: Element[] | d3.ArrayLike<Element>) => {
       const node = nodes[index];
       d3.select(node).classed('active', false);
       drawDraggablePoints(graph, xScale, yScale, points, xAxis, yAxis);
     };
+
+    // define drag events (methods are defined below)
+    const drag = d3
+      .drag()
+      .on('start', (d, i, n) => dragStarted(d, i, n))
+      .on('drag', (d, i, n) => dragged(d, i, n))
+      .on('end', (d, i, n) => dragEnded(d, i, n));
+
+    // add drag behaviour to all draggable points
+    draggablePoints.selectAll('circle').call(drag as any);
   };
 
-  const addZooming = graph => {
+  const addZooming = (graph: d3.Selection<SVGGElement, any, HTMLElement, any>) => {
     // based on: https://stackoverflow.com/questions/39387727/d3v4-zooming-equivalent-to-d3-zoom-x
-    const zoom = d3.zoom().on('zoom', () => zoomed());
-    graph.call(zoom).on('mousedown.zoom', null);
 
     const zoomed = () => {
       const newXDomain = d3.event.transform.rescaleX(X_SCALE).domain();
@@ -205,7 +210,7 @@ const CurveGenerator = props => {
       X_SCALE.domain([newXAxis.min, newXAxis.max]);
       Y_SCALE.domain([newYAxis.min, newYAxis.max]);
 
-      const newDrawing = { ...drawing };
+      const newDrawing = Object.assign({}, drawing);
       newDrawing.x = X_SCALE;
       newDrawing.y = Y_SCALE;
 
@@ -223,19 +228,25 @@ const CurveGenerator = props => {
       setCurvePoints(newCurvePoints);
       draw(newXAxis, newYAxis, newCurvePoints);
     };
+
+    const zoom = d3.zoom().on('zoom', () => zoomed());
+    graph.call(zoom as any).on('mousedown.zoom', null);
   };
 
-  const drawCurveName = (svg, value) => svg.select('text#curve-name').text(value);
+  const drawCurveName = (svg: d3.Selection<d3.BaseType, any, HTMLElement, any>, value: string) =>
+    svg.select('text#curve-name').text(value);
 
-  const drawXAxisLabel = (svg, value) => svg.select('text#x-axis-label').text(value);
+  const drawXAxisLabel = (svg: d3.Selection<d3.BaseType, any, HTMLElement, any>, value: string) =>
+    svg.select('text#x-axis-label').text(value);
 
-  const drawYAxisLabel = (svg, value) => svg.select('text#y-axis-label').text(value);
+  const drawYAxisLabel = (svg: d3.Selection<d3.BaseType, any, HTMLElement, any>, value: string) =>
+    svg.select('text#y-axis-label').text(value);
 
   /***************************************************************************/
   /* Variables                                                               */
   /***************************************************************************/
 
-  const SVG_REF = React.useRef();
+  const SVG_REF = React.useRef(null);
   const [order, setOrder] = React.useState(initialPolynomialOrder);
   const [points, setPoints] = React.useState(initialPoints);
   const [curvePoints, setCurvePoints] = React.useState(
@@ -256,9 +267,14 @@ const CurveGenerator = props => {
   const [r2, setR2] = React.useState(
     Regression.polynomialRegression(points, order, PRECISION_COEFFICIENT).r2
   );
-  const [drawing, setDrawing] = React.useState({}); // most likely, this is not best practice
-  const [xAxis, setXAxis] = React.useState(initialXAxis);
-  const [yAxis, setYAxis] = React.useState(initialYAxis);
+  const [drawing, setDrawing] = React.useState<{
+    svg: d3.Selection<d3.BaseType, any, HTMLElement, any>;
+    graph: d3.Selection<SVGGElement, any, HTMLElement, any>;
+    x: d3.ScaleLinear<number, number>;
+    y: d3.ScaleLinear<number, number>;
+  }>(); // most likely, this is not best practice
+  const [xAxis, setXAxis] = React.useState<Axis>(initialXAxis);
+  const [yAxis, setYAxis] = React.useState<Axis>(initialYAxis);
 
   const [curveName, setCurveName] = React.useState(initialCurveName);
   const [curveDescription, setCurveDescription] = React.useState(initialCurveDescription);
@@ -275,15 +291,15 @@ const CurveGenerator = props => {
   /* Main                                                                    */
   /***************************************************************************/
 
-  const draw = (xAxis, yAxis, curvePoints) => {
+  const draw = (xAxis: Axis, yAxis: Axis, curvePoints: number[][]) => {
     // implementation based on:
     // https://bl.ocks.org/denisemauldin/538bfab8378ac9c3a32187b4d7aed2c2
 
     // define svg and link it with the dom element
-    const svg = d3.select(SVG_REF.current);
+    const svg: d3.Selection<d3.BaseType, any, HTMLElement, any> = d3.select(SVG_REF.current);
 
     // append graph as 'group' element to the svg and move it to the top left margin
-    const graph = svg
+    const graph: d3.Selection<SVGGElement, any, HTMLElement, any> = svg
       .append('g')
       .attr('id', 'graph')
       .attr('transform', 'translate(' + GRAPH_MARGIN.left + ',' + GRAPH_MARGIN.top + ')');
@@ -317,18 +333,11 @@ const CurveGenerator = props => {
       graph: graph,
       x: X_SCALE,
       y: Y_SCALE,
-      line: LINE,
     });
 
     addZooming(graph);
 
     // let the graph be "movable" (aka panning) with the mouse
-    graph
-      .on('mousedown.drag', () => mouseDown())
-      .on('mousemove.drag', () => mouseMove())
-      .on('mouseup.drag', () => mouseUp())
-      .on('mouseleave', () => mouseUp());
-
     const mouseDown = () => {
       d3.select('body').style('cursor', 'move');
       dragged = true;
@@ -352,13 +361,13 @@ const CurveGenerator = props => {
         const isDiffXAbove = Math.abs(diffDragged[0]) >= threshold;
         const isDiffYAbove = Math.abs(diffDragged[1]) >= threshold;
         if (isDiffXAbove || isDiffYAbove) {
-          const newDrawing = { ...drawing };
+          const newDrawing = Object.assign({}, drawing);
           let newXAxis = xAxis;
           let newYAxis = yAxis;
 
           if (isDiffXAbove) {
             // shift x domain by drag difference
-            const newXDomain = [xAxis.min - diffDragged[0], [xAxis.max - diffDragged[0]]];
+            const newXDomain = [xAxis.min - diffDragged[0], xAxis.max - diffDragged[0]];
 
             // set new min and max values of the x axis
             newXAxis = {
@@ -377,7 +386,7 @@ const CurveGenerator = props => {
 
           if (isDiffYAbove) {
             // shift y domain by drag difference
-            const newYDomain = [yAxis.min + diffDragged[1], [yAxis.max + diffDragged[1]]];
+            const newYDomain = [yAxis.min + diffDragged[1], yAxis.max + diffDragged[1]];
 
             // set new min and max values of the y axis
             newYAxis = {
@@ -417,6 +426,12 @@ const CurveGenerator = props => {
       diffDragged = [0, 0];
       dragged = false;
     };
+
+    graph
+      .on('mousedown.drag', () => mouseDown())
+      .on('mousemove.drag', () => mouseMove())
+      .on('mouseup.drag', () => mouseUp())
+      .on('mouseleave', () => mouseUp());
   };
 
   /***************************************************************************/
@@ -425,29 +440,29 @@ const CurveGenerator = props => {
   // update the state and possibly other states if needed
   // re-draw some graphics if needed
 
-  const updateCurveNameState = newValue => {
+  const updateCurveNameState = (newValue: string) => {
     setCurveName(newValue);
     changeCurveName(newValue);
     drawCurveName(drawing.svg, newValue);
   };
 
-  const updateCurveDescriptionState = newValue => {
+  const updateCurveDescriptionState = (newValue: string) => {
     setCurveDescription(newValue);
   };
 
-  const updateXAxisLabelState = newValue => {
+  const updateXAxisLabelState = (newValue: string) => {
     setXAxisLabel(newValue);
     drawXAxisLabel(drawing.svg, newValue);
   };
 
-  const updateYAxisLabelState = newValue => {
+  const updateYAxisLabelState = (newValue: string) => {
     setYAxisLabel(newValue);
     drawYAxisLabel(drawing.svg, newValue);
   };
 
-  const updateOrderState = newValue => {
+  const updateOrderState = (newValue: number) => {
     // add or remove points until there is one more point than the new order
-    let cPoints = Utils.deepCopy(points);
+    const cPoints = Utils.deepCopy(points);
     while (cPoints.length - 1 != newValue) {
       cPoints.length - 1 < newValue &&
         Utils.addPoint(cPoints, PRECISION_COEFFICIENT, PRECISION_POINTS);
@@ -460,7 +475,7 @@ const CurveGenerator = props => {
     setOrder(newValue);
   };
 
-  const updateCoefficientState = (newValue, coefficientIndex) => {
+  const updateCoefficientState = (newValue: any, coefficientIndex: number) => {
     // update coefficient list (don't update state yet -> is done in updatePointsState)
     const newCoefficients = [...coefficients];
     newCoefficients[coefficientIndex] = parseFloat(newValue);
@@ -474,7 +489,11 @@ const CurveGenerator = props => {
     updatePointsState(newPoints, order);
   };
 
-  const updatePointCoordinateState = (newValue, pointIndex, coordinateIndex) => {
+  const updatePointCoordinateState = (
+    newValue: any,
+    pointIndex: number,
+    coordinateIndex: number
+  ) => {
     // update changed coordinate in points list
     const newPoints = [...points];
     newPoints[pointIndex][coordinateIndex] = parseFloat(newValue);
@@ -482,7 +501,7 @@ const CurveGenerator = props => {
     updatePointsState(newPoints, order);
   };
 
-  const updatePointsState = (points, order) => {
+  const updatePointsState = (points: number[][], order: number) => {
     setPoints(points);
 
     // generate new points on the curve and redraw the curve
@@ -511,7 +530,7 @@ const CurveGenerator = props => {
     updateRegressionState(points, order);
   };
 
-  const updateRegressionState = (points, order) => {
+  const updateRegressionState = (points: number[][], order: number) => {
     const regression = Regression.polynomialRegression(points, order, PRECISION_COEFFICIENT);
     setCoefficients(regression.equation);
     setEquation(regression.string);
@@ -523,29 +542,41 @@ const CurveGenerator = props => {
   /***************************************************************************/
   // extract and validate input and then update the state
 
-  const handleCurveNameChange = event => updateCurveNameState(event.target.value);
-  const handleCurveDescriptionChange = event => updateCurveDescriptionState(event.target.value);
-  const handleXAxisLabelChange = event => updateXAxisLabelState(event.target.value);
-  const handleYAxisLabelChange = event => updateYAxisLabelState(event.target.value);
-  const handleOrderChange = event => updateOrderState(parseInt(event.target.value));
+  const handleCurveNameChange = (event: React.ChangeEvent<HTMLInputElement>) =>
+    updateCurveNameState(event.target.value);
+  const handleCurveDescriptionChange = (event: React.ChangeEvent<HTMLTextAreaElement>) =>
+    updateCurveDescriptionState(event.target.value);
+  const handleXAxisLabelChange = (event: React.ChangeEvent<HTMLInputElement>) =>
+    updateXAxisLabelState(event.target.value);
+  const handleYAxisLabelChange = (event: React.ChangeEvent<HTMLInputElement>) =>
+    updateYAxisLabelState(event.target.value);
+  const handleOrderChange = (event: React.ChangeEvent<HTMLSelectElement>) =>
+    updateOrderState(parseInt(event.target.value));
 
-  const handleCurveCoefficientsChange = (event, coefficientIndex) => {
+  const handleCurveCoefficientsChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    coefficientIndex: number
+  ) => {
     let value = event.target.value;
 
     // handle invalid input
-    if (value === '' || parseFloat(value) === NaN) {
-      value = 0;
+    if (value === '' || isNaN(parseFloat(value))) {
+      value = '0';
     }
 
     updateCoefficientState(value, coefficientIndex);
   };
 
-  const handlePointCoordinateChange = (event, pointIndex, coordinateIndex) => {
+  const handlePointCoordinateChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    pointIndex: number,
+    coordinateIndex: number
+  ) => {
     let value = event.target.value;
 
     // handle invalid input
-    if (value === '' || parseFloat(value) === NaN) {
-      value = 0;
+    if (value === '' || isNaN(parseFloat(value))) {
+      value = '0';
     }
 
     updatePointCoordinateState(value, pointIndex, coordinateIndex);
@@ -560,7 +591,7 @@ const CurveGenerator = props => {
       <div>
         <div style={{ width: `${SVG_SIZE.width}px`, height: `${SVG_SIZE.height}px` }}>
           <svg
-            ref={SVG_REF}
+            ref={SVG_REF as any}
             width={SVG_SIZE.width}
             height={SVG_SIZE.height}
             style={{ float: 'left' }}
@@ -606,7 +637,7 @@ const CurveGenerator = props => {
         <div>
           <pre>
             <div>Polynomial: {`  y = ${Utils.generatePolynomialEquation(coefficients)}`}</div>
-            {/*<div>Equation: {equation}</div>*/}
+            <div>Equation: {equation}</div>
           </pre>
           <span>{'y = '}</span>
           {coefficients.map((coefficient, i) => {
@@ -726,8 +757,8 @@ const CurveGenerator = props => {
           <br></br>
 
           <textarea
-            rows="20"
-            cols="43"
+            rows={20}
+            cols={43}
             onChange={e => handleCurveDescriptionChange(e)}
             value={curveDescription}
           ></textarea>
