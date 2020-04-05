@@ -21,7 +21,7 @@ const CurveGenerator = props => {
   // margins of the graph (within the svg)
   const GRAPH_MARGIN = { top: 30, right: 20, bottom: 30, left: 50 };
 
-  const SHOW_DOTTED_CURVE = false;
+  const SHOW_DOTTED_CURVE = true;
   const CURVE_LINE_COLOR = 'steelblue'; // visible if SHOW_DOTTED_CURVE == true
   const CURVE_DOTS_COLOR = 'red'; // visible if SHOW_DOTTED_CURVE === false
   const DRAGGABLE_DOTS_COLOR = 'navy';
@@ -112,7 +112,7 @@ const CurveGenerator = props => {
     //.selectAll('*') // remove everything withing the svg tag (including the styling)
   };
 
-  const drawCurvePoints = (graph, curvePoints) => {
+  const drawCurvePoints = (graph, xScale, yScale, curvePoints) => {
     // remove old points
     d3.select('svg')
       .select('g')
@@ -125,8 +125,8 @@ const CurveGenerator = props => {
       .data(curvePoints)
       .enter()
       .append('ellipse')
-      .attr('cx', d => X_SCALE(d[0]))
-      .attr('cy', d => Y_SCALE(d[1]))
+      .attr('cx', d => xScale(d[0]))
+      .attr('cy', d => yScale(d[1]))
       .attr('rx', 2.0)
       .attr('ry', 2.0)
       .style('fill', CURVE_DOTS_COLOR);
@@ -223,7 +223,7 @@ const CurveGenerator = props => {
       setPoints(Utils.sortPointsByX(points));
 
       if (SHOW_DOTTED_CURVE) {
-        drawCurvePoints(graph, newCurvePoints);
+        drawCurvePoints(graph, xScale, yScale, newCurvePoints);
       } else {
         drawCurveLines(graph, xScale, yScale, newCurvePoints);
       }
@@ -349,7 +349,7 @@ const CurveGenerator = props => {
 
     // draw curve points or lines
     if (SHOW_DOTTED_CURVE) {
-      drawCurvePoints(graph, curvePoints);
+      drawCurvePoints(graph, X_SCALE, Y_SCALE, curvePoints);
     } else {
       drawCurveLines(graph, X_SCALE, Y_SCALE, curvePoints);
     }
@@ -543,7 +543,7 @@ const CurveGenerator = props => {
     setCurvePoints(newCurvePoints);
 
     if (SHOW_DOTTED_CURVE) {
-      drawCurvePoints(drawing.graph, newCurvePoints);
+      drawCurvePoints(drawing.graph, drawing.x, drawing.y, newCurvePoints);
     } else {
       drawCurveLines(drawing.graph, drawing.x, drawing.y, newCurvePoints);
     }
