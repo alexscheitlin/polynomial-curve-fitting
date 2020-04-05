@@ -202,8 +202,8 @@ export const drawInitialCurve = (
 
 export const drawCurvePoints = (
   graph: d3.Selection<SVGGElement, any, HTMLElement, any>,
-  xScale: () => d3.ScaleLinear<number, number>,
-  yScale: () => d3.ScaleLinear<number, number>,
+  xScale: d3.ScaleLinear<number, number>,
+  yScale: d3.ScaleLinear<number, number>,
   curvePoints: number[][],
   color: string
 ) => {
@@ -219,11 +219,44 @@ export const drawCurvePoints = (
     .data(curvePoints)
     .enter()
     .append('ellipse')
-    .attr('cx', d => xScale()(d[0]))
-    .attr('cy', d => yScale()(d[1]))
+    .attr('cx', d => xScale(d[0]))
+    .attr('cy', d => yScale(d[1]))
     .attr('rx', 2.0)
     .attr('ry', 2.0)
     .style('fill', color);
+};
+
+export const drawCurveLines = (
+  graph: d3.Selection<SVGGElement, any, HTMLElement, any>,
+  xScale: d3.ScaleLinear<number, number>,
+  yScale: d3.ScaleLinear<number, number>,
+  curvePoints: number[][],
+  color: string
+) => {
+  // remove old lines
+  d3.select('svg')
+    .select('g')
+    .select('#curve')
+    .remove();
+
+  const curve = graph.append('g').attr('id', 'curve');
+
+  const line = d3
+    .line<any>()
+    .x(d => xScale(d[0]))
+    .y(d => yScale(d[1]));
+
+  // draw new lines
+  curve
+    .append('path')
+    .datum(curvePoints)
+    .attr('id', 'curve-path')
+    .attr('fill', 'none')
+    .attr('stroke', color)
+    .attr('stroke-linejoin', 'round')
+    .attr('stroke-linecap', 'round')
+    .attr('stroke-width', 1.5)
+    .attr('d', line);
 };
 
 export const addCrosshair = (

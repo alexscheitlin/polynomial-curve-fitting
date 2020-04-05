@@ -21,7 +21,7 @@ const CurveGenerator = props => {
   // margins of the graph (within the svg)
   const GRAPH_MARGIN = { top: 30, right: 20, bottom: 30, left: 50 };
 
-  const SHOW_DOTTED_CURVE = true;
+  const SHOW_DOTTED_CURVE = false;
   const CURVE_LINE_COLOR = 'steelblue'; // visible if SHOW_DOTTED_CURVE == true
   const CURVE_DOTS_COLOR = 'red'; // visible if SHOW_DOTTED_CURVE === false
   const DRAGGABLE_DOTS_COLOR = 'navy';
@@ -112,53 +112,6 @@ const CurveGenerator = props => {
     //.selectAll('*') // remove everything withing the svg tag (including the styling)
   };
 
-  const drawCurvePoints = (graph, xScale, yScale, curvePoints) => {
-    // remove old points
-    d3.select('svg')
-      .select('g')
-      .selectAll('ellipse')
-      .remove();
-
-    // draw new points
-    graph
-      .selectAll('ellipse')
-      .data(curvePoints)
-      .enter()
-      .append('ellipse')
-      .attr('cx', d => xScale(d[0]))
-      .attr('cy', d => yScale(d[1]))
-      .attr('rx', 2.0)
-      .attr('ry', 2.0)
-      .style('fill', CURVE_DOTS_COLOR);
-  };
-
-  const drawCurveLines = (graph, xScale, yScale, curvePoints) => {
-    // remove old lines
-    d3.select('svg')
-      .select('g')
-      .select('#curve')
-      .remove();
-
-    const curve = graph.append('g').attr('id', 'curve');
-
-    const line = d3
-      .line()
-      .x(d => xScale(d[0]))
-      .y(d => yScale(d[1]));
-
-    // draw new lines
-    curve
-      .append('path')
-      .datum(curvePoints)
-      .attr('id', 'curve-path')
-      .attr('fill', 'none')
-      .attr('stroke', CURVE_LINE_COLOR)
-      .attr('stroke-linejoin', 'round')
-      .attr('stroke-linecap', 'round')
-      .attr('stroke-width', 1.5)
-      .attr('d', line);
-  };
-
   const drawDraggablePoints = (graph, xScale, yScale, points, xAxis, yAxis) => {
     // remove old points
     d3.select('svg')
@@ -223,9 +176,9 @@ const CurveGenerator = props => {
       setPoints(Utils.sortPointsByX(points));
 
       if (SHOW_DOTTED_CURVE) {
-        drawCurvePoints(graph, xScale, yScale, newCurvePoints);
+        Drawing.drawCurvePoints(graph, xScale, yScale, newCurvePoints, CURVE_DOTS_COLOR);
       } else {
-        drawCurveLines(graph, xScale, yScale, newCurvePoints);
+        Drawing.drawCurveLines(graph, xScale, yScale, newCurvePoints, CURVE_LINE_COLOR);
       }
     };
 
@@ -349,9 +302,9 @@ const CurveGenerator = props => {
 
     // draw curve points or lines
     if (SHOW_DOTTED_CURVE) {
-      drawCurvePoints(graph, X_SCALE, Y_SCALE, curvePoints);
+      Drawing.drawCurvePoints(graph, X_SCALE, Y_SCALE, curvePoints, CURVE_DOTS_COLOR);
     } else {
-      drawCurveLines(graph, X_SCALE, Y_SCALE, curvePoints);
+      Drawing.drawCurveLines(graph, X_SCALE, Y_SCALE, curvePoints, CURVE_LINE_COLOR);
     }
 
     Drawing.addCrosshair(graph, X_SCALE, Y_SCALE, GRAPH_SIZE);
@@ -543,9 +496,15 @@ const CurveGenerator = props => {
     setCurvePoints(newCurvePoints);
 
     if (SHOW_DOTTED_CURVE) {
-      drawCurvePoints(drawing.graph, drawing.x, drawing.y, newCurvePoints);
+      Drawing.drawCurvePoints(
+        drawing.graph,
+        drawing.x,
+        drawing.y,
+        newCurvePoints,
+        CURVE_DOTS_COLOR
+      );
     } else {
-      drawCurveLines(drawing.graph, drawing.x, drawing.y, newCurvePoints);
+      Drawing.drawCurveLines(drawing.graph, drawing.x, drawing.y, newCurvePoints, CURVE_LINE_COLOR);
     }
 
     drawDraggablePoints(drawing.graph, drawing.x, drawing.y, points, xAxis, yAxis);
