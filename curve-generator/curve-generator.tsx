@@ -475,10 +475,10 @@ const CurveGenerator = (props: any) => {
     setOrder(newValue);
   };
 
-  const updateCoefficientState = (newValue: any, coefficientIndex: number) => {
+  const updateCoefficientState = (newValue: number, coefficientIndex: number) => {
     // update coefficient list (don't update state yet -> is done in updatePointsState)
     const newCoefficients = [...coefficients];
-    newCoefficients[coefficientIndex] = parseFloat(newValue);
+    newCoefficients[coefficientIndex] = newValue;
 
     // calculate new y values for the x values
     const newPoints = [...points].map(point => {
@@ -490,13 +490,13 @@ const CurveGenerator = (props: any) => {
   };
 
   const updatePointCoordinateState = (
-    newValue: any,
+    newValue: number,
     pointIndex: number,
     coordinateIndex: number
   ) => {
     // update changed coordinate in points list
     const newPoints = [...points];
-    newPoints[pointIndex][coordinateIndex] = parseFloat(newValue);
+    newPoints[pointIndex][coordinateIndex] = newValue;
 
     updatePointsState(newPoints, order);
   };
@@ -564,7 +564,7 @@ const CurveGenerator = (props: any) => {
       value = '0';
     }
 
-    updateCoefficientState(value, coefficientIndex);
+    updateCoefficientState(parseFloat(value), coefficientIndex);
   };
 
   const handlePointCoordinateChange = (
@@ -579,7 +579,7 @@ const CurveGenerator = (props: any) => {
       value = '0';
     }
 
-    updatePointCoordinateState(value, pointIndex, coordinateIndex);
+    updatePointCoordinateState(parseFloat(value), pointIndex, coordinateIndex);
   };
 
   /***************************************************************************/
