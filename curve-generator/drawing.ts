@@ -179,7 +179,8 @@ export const drawInitialCurve = (
   graph: d3.Selection<SVGGElement, any, HTMLElement, any>,
   xScale: d3.ScaleLinear<number, number>,
   yScale: d3.ScaleLinear<number, number>,
-  curvePoints: number[][]
+  curvePoints: number[][],
+  color: string
 ) => {
   const line = d3
     .line<any>()
@@ -193,7 +194,7 @@ export const drawInitialCurve = (
     .datum(curvePoints)
     .attr('id', 'initial-curve-path')
     .attr('fill', 'none')
-    .attr('stroke', 'lightgray')
+    .attr('stroke', color)
     .attr('stroke-linejoin', 'round')
     .attr('stroke-linecap', 'round')
     .attr('stroke-width', 1)

@@ -2,79 +2,131 @@ import * as React from 'react';
 import * as d3 from 'd3';
 
 import * as Drawing from './drawing';
-import * as Utils from './utils';
 import * as Regression from './regression';
+import * as Utils from './utils';
+import { Axis, Curve, Settings, Size, Margin } from './types';
 
-interface Axis {
-  min: number;
-  max: number;
+interface Props {
+  curve?: Curve;
+  settings?: Settings;
 }
 
-const CurveGenerator = (props: any) => {
-  const changeCurveName = (value: string) => props.changeCurveName(value);
-  // const changeCurveDescription = (value: string) => props.changeCurveDescription(value);
-  // const changePolynomialOrder = (value: string) => props.changePolynomialOrder(value);
+const defaultProps: Props = {
+  curve: {
+    name: 'Random Polynomial',
+    description: 'This is some random polynomial.',
+    xAxis: { min: -5, max: 10, label: 'x Values' },
+    yAxis: { min: -5, max: 10, label: 'y Values' },
+
+    // the order of the polynomial to plot
+    polynomialOrder: 3,
+  },
+  settings: {
+    // size of the final SVG in pixel
+    svgSize: { width: 750, height: 450 },
+
+    // margin of the graph (within the svg) in pixel
+    graphMargin: { top: 30, right: 20, bottom: 30, left: 50 },
+
+    // whether the curve should be plotted as dots or not (= as a continuous line)
+    showDottedCurve: false,
+
+    // color of the curve if `showDottedCurve` === true
+    curveLineColor: 'steelblue',
+
+    // color of the curve if `showDottedCurve` === false
+    curveDotsColor: 'red',
+
+    // color of the initial curve (always a continuous line)
+    curveInitialColor: 'gray',
+
+    // color of the draggable points on the curve
+    draggableDotsColor: 'navy',
+  },
+};
+
+const CurveGenerator: React.FC<Props> = (props: Props) => {
+  // const changeCurveName = (value: string) => props.changeCurveName(value);
 
   /***************************************************************************/
   /* Settings                                                                */
   /***************************************************************************/
-  // Adjust the following parameters to your needs
+  // initialize settings with either the provided prop values or the defualt props
 
-  // size of final SVG in pixel
-  const SVG_SIZE = { width: 750, height: 450 };
+  const SVG_SIZE: Size = {
+    width: props?.settings?.svgSize?.width || defaultProps.settings.svgSize.width,
+    height: props?.settings?.svgSize?.height || defaultProps.settings.svgSize.height,
+  };
 
-  // margins of the graph (within the svg)
-  const GRAPH_MARGIN = { top: 30, right: 20, bottom: 30, left: 50 };
+  const GRAPH_MARGIN: Margin = {
+    top: props?.settings?.graphMargin?.top || defaultProps.settings.graphMargin.top,
+    right: props?.settings?.graphMargin?.right || defaultProps.settings.graphMargin.right,
+    bottom: props?.settings?.graphMargin?.bottom || defaultProps.settings.graphMargin.bottom,
+    left: props?.settings?.graphMargin?.left || defaultProps.settings.graphMargin.left,
+  };
 
-  const SHOW_DOTTED_CURVE = false;
-  const CURVE_LINE_COLOR = 'steelblue'; // visible if SHOW_DOTTED_CURVE == true
-  const CURVE_DOTS_COLOR = 'red'; // visible if SHOW_DOTTED_CURVE === false
-  const DRAGGABLE_DOTS_COLOR = 'navy';
+  const SHOW_DOTTED_CURVE: boolean =
+    props?.settings?.showDottedCurve || defaultProps.settings.showDottedCurve;
+  const CURVE_LINE_COLOR: string =
+    props?.settings?.curveLineColor || defaultProps.settings.curveLineColor;
+  const CURVE_DOTS_COLOR: string =
+    props?.settings?.curveDotsColor || defaultProps.settings.curveDotsColor;
+  const CURVE_INITIAL_COLOR: string =
+    props?.settings?.curveInitialColor || defaultProps.settings.curveInitialColor;
+  const DRAGGABLE_DOTS_COLOR: string =
+    props?.settings?.draggableDotsColor || defaultProps?.settings?.draggableDotsColor;
 
   // precision (i.e., number of considered decimal places) of the
   // - polynomial's coefficients
   // - draggable points
   //
-  // TODO:
-  // maybe this should be the same as the points of the regression have the
-  // same precision as the polynomial's coefficients
+  // TODO: maybe this should be the same as the points of the regression have the
+  //       same precision as the polynomial's coefficients
+  // TODO: this should maybe be a prop or adjusted dynamically (to fit best fit the
+  //       curve according to R^2)
   const PRECISION_COEFFICIENT = 4;
   const PRECISION_POINTS = 2;
 
   /***************************************************************************/
   /* Derived Settings                                                        */
   /***************************************************************************/
-  // These parameters are derived from the previous settings and should not be
-  // changed
+  // these parameters are derived from the previous settings
 
-  const GRAPH_SIZE = {
+  const GRAPH_SIZE: Size = {
     width: SVG_SIZE.width - GRAPH_MARGIN.left - GRAPH_MARGIN.right,
     height: SVG_SIZE.height - GRAPH_MARGIN.top - GRAPH_MARGIN.bottom,
   };
 
-  const X_SCALE = d3.scaleLinear().rangeRound([0, GRAPH_SIZE.width]);
-  const Y_SCALE = d3.scaleLinear().rangeRound([GRAPH_SIZE.height, 0]);
+  const X_SCALE: d3.ScaleLinear<number, number> = d3
+    .scaleLinear()
+    .rangeRound([0, GRAPH_SIZE.width]);
 
-  /***************************************************************************/
-  /* Default Values                                                          */
-  /***************************************************************************/
-  // The default values are used if no prop values are specified.
-
-  const DEFAULT_CURVE_NAME = `Random Polynomial`;
-  const DEFAULT_CURVE_DESCRIPTION = 'This is some random polynomial.';
-  const DEFAULT_POLYNOMIAL_ORDER = 3;
+  const Y_SCALE: d3.ScaleLinear<number, number> = d3
+    .scaleLinear()
+    .rangeRound([GRAPH_SIZE.height, 0]);
 
   /***************************************************************************/
   /* Initial Values                                                          */
   /***************************************************************************/
 
-  const initialCurveName = props.curveName || DEFAULT_CURVE_NAME;
-  const initialCurveDescription = props.curveDescription || DEFAULT_CURVE_DESCRIPTION;
-  const initialPolynomialOrder = props.polynomialOrder || DEFAULT_POLYNOMIAL_ORDER;
-  const initialXAxisLabel = 'x Values';
-  const initialYAxisLabel = 'y Values';
-  const initialXAxis = { min: -5, max: 10 };
-  const initialYAxis = { min: -5, max: 10 };
+  const initialCurveName = props?.curve?.name || defaultProps.curve.name;
+  const initialCurveDescription = props?.curve?.description || defaultProps?.curve?.description;
+  const initialXAxis = {
+    min: props?.curve?.xAxis.min || defaultProps?.curve?.xAxis.min,
+    max: props?.curve?.xAxis.max || defaultProps?.curve?.xAxis.max,
+    label: props?.curve?.xAxis.label || defaultProps?.curve?.xAxis.label,
+  };
+  const initialYAxis = {
+    min: props?.curve?.yAxis.min || defaultProps?.curve?.yAxis.min,
+    max: props?.curve?.yAxis.max || defaultProps?.curve?.yAxis.max,
+    label: props?.curve?.yAxis.label || defaultProps?.curve?.yAxis.label,
+  };
+  const initialPolynomialOrder =
+    props?.curve?.polynomialOrder || defaultProps.curve.polynomialOrder;
+
+  /***************************************************************************/
+  /* Derived Initial Values                                                  */
+  /***************************************************************************/
 
   // create random points based on the initial order
   const initialPoints = Utils.generateRandomPoints(
@@ -202,8 +254,16 @@ const CurveGenerator = (props: any) => {
     const zoomed = () => {
       const newXDomain = d3.event.transform.rescaleX(X_SCALE).domain();
       const newYDomain = d3.event.transform.rescaleY(Y_SCALE).domain();
-      const newXAxis = { min: Utils.round(newXDomain[0], 0), max: Utils.round(newXDomain[1], 0) };
-      const newYAxis = { min: Utils.round(newYDomain[0], 0), max: Utils.round(newYDomain[1], 0) };
+      const newXAxis = {
+        ...xAxis,
+        min: Utils.round(newXDomain[0], 0),
+        max: Utils.round(newXDomain[1], 0),
+      };
+      const newYAxis = {
+        ...yAxis,
+        min: Utils.round(newYDomain[0], 0),
+        max: Utils.round(newYDomain[1], 0),
+      };
       setXAxis(newXAxis);
       setYAxis(newYAxis);
 
@@ -273,13 +333,11 @@ const CurveGenerator = (props: any) => {
     x: d3.ScaleLinear<number, number>;
     y: d3.ScaleLinear<number, number>;
   }>(); // most likely, this is not best practice
-  const [xAxis, setXAxis] = React.useState<Axis>(initialXAxis);
-  const [yAxis, setYAxis] = React.useState<Axis>(initialYAxis);
 
   const [curveName, setCurveName] = React.useState(initialCurveName);
   const [curveDescription, setCurveDescription] = React.useState(initialCurveDescription);
-  const [xAxisLabel, setXAxisLabel] = React.useState(initialXAxisLabel);
-  const [yAxisLabel, setYAxisLabel] = React.useState(initialYAxisLabel);
+  const [xAxis, setXAxis] = React.useState<Axis>(initialXAxis);
+  const [yAxis, setYAxis] = React.useState<Axis>(initialYAxis);
 
   React.useEffect(() => draw(xAxis, yAxis, curvePoints), [order]);
 
@@ -311,10 +369,10 @@ const CurveGenerator = (props: any) => {
     Drawing.drawGrid(graph, X_SCALE, Y_SCALE, GRAPH_SIZE);
     Drawing.drawAxesOnGraph(graph, X_SCALE, Y_SCALE, GRAPH_SIZE);
     Drawing.drawAxesAroundGraph(graph, X_SCALE, Y_SCALE, GRAPH_SIZE);
-    Drawing.drawInitialCurve(graph, X_SCALE, Y_SCALE, curvePoints);
+    Drawing.drawInitialCurve(graph, X_SCALE, Y_SCALE, curvePoints, CURVE_INITIAL_COLOR);
 
     Drawing.drawGraphTitle(svg, GRAPH_MARGIN, GRAPH_SIZE, curveName);
-    Drawing.drawAxisLables(svg, GRAPH_MARGIN, GRAPH_SIZE, xAxisLabel, yAxisLabel);
+    Drawing.drawAxisLables(svg, GRAPH_MARGIN, GRAPH_SIZE, xAxis.label, yAxis.label);
 
     // draw curve points or lines
     if (SHOW_DOTTED_CURVE) {
@@ -371,6 +429,7 @@ const CurveGenerator = (props: any) => {
 
             // set new min and max values of the x axis
             newXAxis = {
+              ...xAxis,
               min: Utils.round(newXDomain[0], 0),
               max: Utils.round(newXDomain[1], 0),
             };
@@ -390,6 +449,7 @@ const CurveGenerator = (props: any) => {
 
             // set new min and max values of the y axis
             newYAxis = {
+              ...yAxis,
               min: Utils.round(newYDomain[0], 0),
               max: Utils.round(newYDomain[1], 0),
             };
@@ -442,7 +502,7 @@ const CurveGenerator = (props: any) => {
 
   const updateCurveNameState = (newValue: string) => {
     setCurveName(newValue);
-    changeCurveName(newValue);
+    // changeCurveName(newValue);
     drawCurveName(drawing.svg, newValue);
   };
 
@@ -451,12 +511,12 @@ const CurveGenerator = (props: any) => {
   };
 
   const updateXAxisLabelState = (newValue: string) => {
-    setXAxisLabel(newValue);
+    setXAxis({ ...xAxis, label: newValue });
     drawXAxisLabel(drawing.svg, newValue);
   };
 
   const updateYAxisLabelState = (newValue: string) => {
-    setYAxisLabel(newValue);
+    setYAxis({ ...yAxis, label: newValue });
     drawYAxisLabel(drawing.svg, newValue);
   };
 
@@ -723,7 +783,7 @@ const CurveGenerator = (props: any) => {
               <td>
                 <input
                   type="text"
-                  value={xAxisLabel}
+                  value={xAxis.label}
                   onChange={e => handleXAxisLabelChange(e)}
                   placeholder="X-Axis Label"
                 />
@@ -736,7 +796,7 @@ const CurveGenerator = (props: any) => {
               <td>
                 <input
                   type="text"
-                  value={yAxisLabel}
+                  value={yAxis.label}
                   onChange={e => handleYAxisLabelChange(e)}
                   placeholder="Y-Axis Label"
                 />
