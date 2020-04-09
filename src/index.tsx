@@ -152,14 +152,10 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   // remove all drawings from svg
   const clearSVG = () => {
     // remove graph
-    d3.select('svg')
-      .select('g')
-      .remove();
+    d3.select('svg').select('g').remove();
 
     // remove title and axis labels
-    d3.select('svg')
-      .selectAll('text')
-      .remove();
+    d3.select('svg').selectAll('text').remove();
 
     //.selectAll('*') // remove everything withing the svg tag (including the styling)
   };
@@ -173,10 +169,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
     yAxis: Axis
   ) => {
     // remove old points
-    d3.select('svg')
-      .select('g')
-      .select('g#draggable-points')
-      .remove();
+    d3.select('svg').select('g').select('g#draggable-points').remove();
 
     const draggablePoints = graph.append('g').attr('id', 'draggable-points');
 
@@ -193,9 +186,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
     const dragStarted = (_datum: any, index: number, nodes: Element[] | d3.ArrayLike<Element>) => {
       // https://stackoverflow.com/questions/45262172/retrieve-dom-target-from-drag-callback-when-this-is-not-available/45262284#45262284
       const node = nodes[index]; // regular function: this = nodes[index]
-      d3.select(node)
-        .raise()
-        .classed('active', true);
+      d3.select(node).raise().classed('active', true);
     };
 
     const dragged = (datum: any, index: number, nodes: Element[] | d3.ArrayLike<Element>) => {
@@ -206,9 +197,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       datum[1] = Utils.round(yScale.invert(d3.event.y), PRECISION_POINTS);
 
       // update location of point
-      d3.select(node)
-        .attr('cx', xScale(datum[0]))
-        .attr('cy', yScale(datum[1]));
+      d3.select(node).attr('cx', xScale(datum[0])).attr('cy', yScale(datum[1]));
 
       updateRegressionState(points, order);
 

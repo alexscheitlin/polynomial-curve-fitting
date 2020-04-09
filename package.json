@@ -6,7 +6,8 @@
   "types": "lib",
   "scripts": {
     "build": "tsc -p .",
-    "build:watch": "tsc -p . -w"
+    "build:watch": "tsc -p . -w",
+    "format": "prettier --write \"**/*.+(ts|tsx|json|md)\""
   },
   "keywords": [],
   "author": "Alex Scheitlin <alex.scheitli@bluewin.ch>",
@@ -27,6 +28,7 @@
     "@types/d3": "^5.7.2",
     "@types/react": "16.9.21",
     "@types/regression": "^2.0.0",
+    "prettier": "^2.0.4",
     "typescript": "^3.8.3"
   }
 }

@@ -107,9 +107,7 @@ export const drawGrid = (
     .call(yGrid.tickSize(-graphSize.width).tickFormat(() => ''));
 
   // style grid
-  d3.selectAll('g.grid g.tick')
-    .select('line')
-    .attr('stroke', color);
+  d3.selectAll('g.grid g.tick').select('line').attr('stroke', color);
 };
 
 // draw both the x and y axes through 0/0 spanning the whole graph
@@ -169,10 +167,7 @@ export const drawAxesAroundGraph = (
     .call(xAxis);
 
   // draw y axis
-  axes
-    .append('g')
-    .attr('id', 'axis-out-y')
-    .call(yAxis);
+  axes.append('g').attr('id', 'axis-out-y').call(yAxis);
 };
 
 export const drawInitialCurve = (
@@ -209,10 +204,7 @@ export const drawCurvePoints = (
   color: string
 ) => {
   // remove old points
-  d3.select('svg')
-    .select('g')
-    .selectAll('ellipse')
-    .remove();
+  d3.select('svg').select('g').selectAll('ellipse').remove();
 
   // draw new points
   graph
@@ -235,10 +227,7 @@ export const drawCurveLines = (
   color: string
 ) => {
   // remove old lines
-  d3.select('svg')
-    .select('g')
-    .select('#curve')
-    .remove();
+  d3.select('svg').select('g').select('#curve').remove();
 
   const curve = graph.append('g').attr('id', 'curve');
 
@@ -326,15 +315,9 @@ export const addCrosshair = (
     const mouseX = mouse[0];
     const mouseY = mouse[1];
 
-    verticalLine
-      .attr('x1', mouseX)
-      .attr('x2', mouseX)
-      .attr('opacity', 1);
+    verticalLine.attr('x1', mouseX).attr('x2', mouseX).attr('opacity', 1);
 
-    horizontalLine
-      .attr('y1', mouseY)
-      .attr('y2', mouseY)
-      .attr('opacity', 1);
+    horizontalLine.attr('y1', mouseY).attr('y2', mouseY).attr('opacity', 1);
 
     text
       .attr('x', () => mouseX)
