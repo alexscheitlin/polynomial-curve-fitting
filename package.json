@@ -7,7 +7,9 @@
   "scripts": {
     "build": "tsc -p .",
     "build:watch": "tsc -p . -w",
-    "format": "prettier --write \"**/*.+(ts|tsx|json|md)\""
+    "format": "prettier --write \"**/*.+(ts|tsx|json|md)\"",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix"
   },
   "keywords": [],
   "author": "Alex Scheitlin <alex.scheitli@bluewin.ch>",
@@ -28,6 +30,17 @@
     "@types/d3": "^5.7.2",
     "@types/react": "16.9.21",
     "@types/regression": "^2.0.0",
+    "@typescript-eslint/eslint-plugin": "^2.20.0",
+    "@typescript-eslint/parser": "^2.20.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb": "^18.0.1",
+    "eslint-config-prettier": "^6.10.0",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-jest": "^23.7.0",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-prettier": "^3.1.2",
+    "eslint-plugin-react": "^7.18.3",
+    "eslint-plugin-react-hooks": "^1.7.0",
     "husky": "^4.2.3",
     "lint-staged": "^10.1.2",
     "prettier": "^2.0.4",
@@ -35,6 +48,7 @@
   },
   "lint-staged": {
     "*.+(tsx|ts)": [
+      "eslint",
       "git add"
     ],
     "*.+(ts|tsx|json|md)": [
