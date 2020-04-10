@@ -185,24 +185,31 @@ export const generatePolynomialEquation = (coefficients: number[]): string =>
       const variable = 'x';
       const exponent = coefficients.length - index - 1;
 
+      // check whether there is any term before this one by ...
+      const anyTermShownBefore =
+        coefficients
+          // ... taking all coefficients before this one and
+          .slice(0, index)
+          // ... summing them up and if the sum is not 0, there is a term before this one
+          .reduce((a, b) => Math.abs(a) + Math.abs(b), 0) !== 0;
+
+      const isFirstTerm = index === 0;
+
       let sign = '';
       // - only use spaces if it is not the first term
       // - do not show a '+' if it is the first term
       // - do not show a '+' or spaces for a '-' if all terms before have a
       //   coefficient of value '0' and therefore are not shown
-      // TODO: This condition will always return 'true' since the types 'never[]' and 'number' have no overlap.ts(2367)
-      //const anyTermShownBefore = coefficients.slice(0, index).reduce((a, b) => Math.abs(a) + Math.abs(b), []) !== 0;
-      const anyTermShownBefore = true;
       if (coefficient >= 0) {
-        sign = index === 0 || !anyTermShownBefore ? '' : ' + ';
+        sign = isFirstTerm || !anyTermShownBefore ? '' : ' + ';
       } else {
-        sign = index === 0 || !anyTermShownBefore ? '-' : ' - ';
+        sign = isFirstTerm || !anyTermShownBefore ? '-' : ' - ';
       }
 
       let variablePart = ''; // x^0 => ''
       if (exponent > 1) {
         // x^2, x^3, x^4, ...
-        variablePart = `*${variable}^` + exponent.toString();
+        variablePart = `${variable}^${exponent}`;
       } else if (exponent === 1) {
         // x^1 => x
         variablePart = `${variable}`;
@@ -214,6 +221,10 @@ export const generatePolynomialEquation = (coefficients: number[]): string =>
         coefficientPart = '';
       }
 
-      return coefficientPart !== '0' ? `${sign}${coefficientPart}${variablePart}` : '';
+      const multiplication = variablePart && coefficientPart ? '*' : '';
+
+      return coefficientPart !== '0'
+        ? `${sign}${coefficientPart}${multiplication}${variablePart}`
+        : '';
     })
     .join('');
