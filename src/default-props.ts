@@ -11,25 +11,50 @@ export const defaultProps: DefaultProps = {
     polynomialOrder: 3,
   },
   settings: {
-    // size of the final SVG in pixel
-    svgSize: { width: 750, height: 450 },
-
-    // margin of the graph (within the svg) in pixel
-    graphMargin: { top: 30, right: 20, bottom: 30, left: 50 },
+    crosshairColor: 'gray',
 
     // whether the curve should be plotted as dots or not (= as a continuous line)
     showDottedCurve: false,
 
-    // color of the curve if `showDottedCurve` === true
-    curveLineColor: 'steelblue',
+    // curve resulting from the least squares regression through the draggable points
+    curve: {
+      color: 'steelblue',
+      strokeWidth: 1.5,
+    },
 
-    // color of the curve if `showDottedCurve` === false
-    curveDotsColor: 'red',
+    // curve (always a continuous line) throught the initial points
+    initialCurve: {
+      color: 'gray',
+      strokeWidth: 1,
+    },
 
-    // color of the initial curve (always a continuous line)
-    curveInitialColor: 'gray',
+    // points that can be dragged and are used for the least suqares regression to get the polynomial curve
+    draggablePoint: {
+      color: 'navy',
+      radius: 8.0,
+    },
 
-    // color of the draggable points on the curve
-    draggableDotsColor: 'navy',
+    // element within the svg that contains the coordinatesystem, curves, and draggable points
+    // title and axis labels are located relative to the graph but are directly drawn on the svg
+    graph: {
+      axisLabels: {
+        color: 'black',
+        fontFamily: 'sans-serif',
+        fontSize: 0.8, // rem
+      },
+
+      // margin of the graph (within the svg) in pixel
+      margin: { top: 30, right: 20, bottom: 30, left: 50 },
+      title: {
+        color: 'black',
+        fontFamily: 'sans-serif',
+        fontSize: 1.0, // rem
+      },
+    },
+
+    svg: {
+      // size of the final SVG in pixel
+      size: { width: 750, height: 450 },
+    },
   },
 };

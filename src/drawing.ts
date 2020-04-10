@@ -16,7 +16,10 @@ export const drawGraphTitle = (
   svg: d3.Selection<d3.BaseType, any, HTMLElement, any>,
   graphMargin: { top: number; right: number; bottom: number; left: number },
   graphSize: { width: number; height: number },
-  title: string
+  title: string,
+  color: string,
+  fontFamily: string,
+  fontSize: number
 ) => {
   svg
     .append('text')
@@ -25,9 +28,10 @@ export const drawGraphTitle = (
       'transform',
       'translate(' + (graphSize.width / 2 + graphMargin.left) + ', ' + graphMargin.top / 2 + ')'
     )
-    .attr('font-size', '1rem')
+    .attr('font-family', fontFamily)
+    .attr('font-size', `${fontSize}rem`)
     .attr('font-weight', 'bold')
-    .attr('fill', 'black')
+    .attr('fill', color)
     .style('text-anchor', 'middle')
     .text(title);
 };
@@ -37,7 +41,10 @@ export const drawAxisLables = (
   graphMargin: { top: number; right: number; bottom: number; left: number },
   graphSize: { width: number; height: number },
   xAxisLabel: string,
-  yAxisLabel: string
+  yAxisLabel: string,
+  color: string,
+  fontFamily: string,
+  fontSize: number
 ) => {
   // based on: https://bl.ocks.org/d3noob/23e42c8f67210ac6c678db2cd07a747e
   svg
@@ -51,6 +58,9 @@ export const drawAxisLables = (
         (graphSize.height + graphMargin.top + graphMargin.bottom) +
         ')'
     )
+    .attr('font-family', fontFamily)
+    .attr('font-size', `${fontSize}rem`)
+    .attr('fill', color)
     .style('text-anchor', 'middle')
     .text(xAxisLabel);
 
@@ -66,6 +76,9 @@ export const drawAxisLables = (
         graphMargin.left / 2 +
         ')'
     )
+    .attr('font-family', fontFamily)
+    .attr('font-size', `${fontSize}rem`)
+    .attr('fill', color)
     .style('text-anchor', 'middle')
     .text(yAxisLabel);
 };
@@ -175,7 +188,8 @@ export const drawInitialCurve = (
   xScale: d3.ScaleLinear<number, number>,
   yScale: d3.ScaleLinear<number, number>,
   curvePoints: number[][],
-  color: string
+  color: string,
+  strokeWidth: number
 ) => {
   const line = d3
     .line<any>()
@@ -192,7 +206,7 @@ export const drawInitialCurve = (
     .attr('stroke', color)
     .attr('stroke-linejoin', 'round')
     .attr('stroke-linecap', 'round')
-    .attr('stroke-width', 1)
+    .attr('stroke-width', strokeWidth)
     .attr('d', line);
 };
 
@@ -224,7 +238,8 @@ export const drawCurveLines = (
   xScale: d3.ScaleLinear<number, number>,
   yScale: d3.ScaleLinear<number, number>,
   curvePoints: number[][],
-  color: string
+  color: string,
+  strokeWidth: number
 ) => {
   // remove old lines
   d3.select('svg').select('g').select('#curve').remove();
@@ -245,7 +260,7 @@ export const drawCurveLines = (
     .attr('stroke', color)
     .attr('stroke-linejoin', 'round')
     .attr('stroke-linecap', 'round')
-    .attr('stroke-width', 1.5)
+    .attr('stroke-width', strokeWidth)
     .attr('d', line);
 };
 
@@ -253,11 +268,11 @@ export const addCrosshair = (
   graph: d3.Selection<SVGGElement, any, HTMLElement, any>,
   xScale: d3.ScaleLinear<number, number>,
   yScale: d3.ScaleLinear<number, number>,
-  graphSize: { width: number; height: number }
+  graphSize: { width: number; height: number },
+  color: string
 ) => {
   // based on
   // https://stackoverflow.com/questions/38687588/add-horizontal-crosshair-to-d3-js-chart
-  const color = 'lightgray';
   const lineWidth = 1.0;
   const dashes = '3 3'; // width of one dash and space between two dashes
 
