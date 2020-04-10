@@ -232,7 +232,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
 
     Drawing.drawGrid(graph, SETTINGS.xScale, SETTINGS.yScale, SETTINGS.graphSize);
     Drawing.drawAxesOnGraph(graph, SETTINGS.xScale, SETTINGS.yScale, SETTINGS.graphSize);
-    Drawing.drawAxesAroundGraph(graph, SETTINGS.xScale, SETTINGS.yScale, SETTINGS.graphSize);
+    //Drawing.drawAxesAroundGraph(graph, SETTINGS.xScale, SETTINGS.yScale, SETTINGS.graphSize);
     Drawing.drawInitialCurve(
       graph,
       SETTINGS.xScale,

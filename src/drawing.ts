@@ -98,9 +98,22 @@ export const drawGrid = (
 
   const color = 'lightgray';
   const numberOfLines = 10;
+  const tickPadding = 10;
 
-  const xGrid = d3.axisBottom(xScale).ticks(numberOfLines);
-  const yGrid = d3.axisLeft(yScale).ticks(numberOfLines);
+  const xGrid = d3
+    .axisBottom(xScale)
+    .ticks(numberOfLines)
+    .tickPadding(tickPadding)
+    .tickSizeInner(-graphSize.height)
+    .tickSizeOuter(0);
+  const yGrid = d3
+    .axisLeft(yScale)
+    .ticks(numberOfLines)
+    .tickPadding(tickPadding)
+    .tickSizeInner(-graphSize.width)
+    .tickSizeOuter(0);
+
+  // hide ticks with: .tickFormat(() => '')
 
   const grid = graph.append('g').attr('id', 'grid');
 
@@ -110,17 +123,25 @@ export const drawGrid = (
     .attr('id', 'grid-x')
     .attr('class', 'grid')
     .attr('transform', 'translate(0,' + graphSize.height + ')')
-    .call(xGrid.tickSize(-graphSize.height).tickFormat(() => ''));
+    .call(xGrid);
 
   // draw y grid lines
+  grid.append('g').attr('id', 'grid-y').attr('class', 'grid').call(yGrid);
+
+  // draw border around graph
   grid
-    .append('g')
-    .attr('id', 'grid-y')
-    .attr('class', 'grid')
-    .call(yGrid.tickSize(-graphSize.width).tickFormat(() => ''));
+    .append('rect')
+    .attr('x', 0)
+    .attr('y', 0)
+    .attr('width', graphSize.width)
+    .attr('height', graphSize.height)
+    .attr('fill', 'transparent')
+    .attr('stroke-width', 2)
+    .attr('stroke', '#cccccc');
 
   // style grid
   d3.selectAll('g.grid g.tick').select('line').attr('stroke', color);
+  d3.selectAll('g.grid').select('path').attr('stroke', color); // hide outer axis lines
 };
 
 // draw both the x and y axes through 0/0 spanning the whole graph
