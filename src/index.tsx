@@ -250,7 +250,14 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       SETTINGS.graphSize,
       SETTINGS.graph.grid.color
     );
-    Drawing.drawAxesOnGraph(graph, SETTINGS.xScale, SETTINGS.yScale, SETTINGS.graphSize);
+    Drawing.drawAxesOnGraph(
+      graph,
+      SETTINGS.xScale,
+      SETTINGS.yScale,
+      SETTINGS.graphSize,
+      SETTINGS.graph.axis.color,
+      SETTINGS.graph.axis.strokeWidth
+    );
     //Drawing.drawAxesAroundGraph(graph, SETTINGS.xScale, SETTINGS.yScale, SETTINGS.graphSize);
     Drawing.drawInitialCurve(
       graph,
@@ -276,9 +283,9 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       SETTINGS.graphSize,
       xAxis.label,
       yAxis.label,
-      SETTINGS.graph.axisLabels.color,
-      SETTINGS.graph.axisLabels.fontFamily,
-      SETTINGS.graph.axisLabels.fontSize
+      SETTINGS.graph.axis.labels.color,
+      SETTINGS.graph.axis.labels.fontFamily,
+      SETTINGS.graph.axis.labels.fontSize
     );
 
     // draw curve points or lines

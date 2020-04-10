@@ -74,6 +74,12 @@ export interface Settings extends Required<PropsSettings> {
 // These types should not have optional fields as they would become optional
 // for the default props too.
 
+export interface AxisSettings {
+  color: string;
+  labels: TextSettings;
+  strokeWidth: number;
+}
+
 export interface CurveSettings {
   color: string;
   strokeWidth: number;
@@ -85,7 +91,7 @@ export interface DraggablePointSettings {
 }
 
 export interface GraphSettings {
-  axisLabels: TextSettings;
+  axis: AxisSettings;
   grid: GridSettings;
   margin: Margin;
   title: TextSettings;

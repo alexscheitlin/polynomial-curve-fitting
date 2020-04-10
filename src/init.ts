@@ -46,12 +46,17 @@ export const generateSettings = (props: Props, defaultProps: DefaultProps): Sett
       radius: settings?.draggablePoint?.radius || defaultSettings.draggablePoint.radius,
     },
     graph: {
-      axisLabels: {
-        color: settings?.graph?.axisLabels?.color || defaultSettings.graph.axisLabels.color,
-        fontFamily:
-          settings?.graph?.axisLabels?.fontFamily || defaultSettings.graph.axisLabels.fontFamily,
-        fontSize:
-          settings?.graph?.axisLabels?.fontSize || defaultSettings.graph.axisLabels.fontSize,
+      axis: {
+        color: settings?.graph?.axis?.color || defaultSettings.graph.axis.color,
+        labels: {
+          color: settings?.graph?.axis?.labels?.color || defaultSettings.graph.axis.labels.color,
+          fontFamily:
+            settings?.graph?.axis?.labels?.fontFamily ||
+            defaultSettings.graph.axis.labels.fontFamily,
+          fontSize:
+            settings?.graph?.axis?.labels?.fontSize || defaultSettings.graph.axis.labels.fontSize,
+        },
+        strokeWidth: settings?.graph?.axis?.strokeWidth || defaultSettings.graph.axis.strokeWidth,
       },
       grid: {
         color: settings?.graph?.grid?.color || defaultSettings.graph.grid.color,

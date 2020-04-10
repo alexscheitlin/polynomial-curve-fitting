@@ -149,11 +149,11 @@ export const drawAxesOnGraph = (
   graph: d3.Selection<SVGGElement, any, HTMLElement, any>,
   xScale: d3.ScaleLinear<number, number>,
   yScale: d3.ScaleLinear<number, number>,
-  graphSize: { width: number; height: number }
+  graphSize: { width: number; height: number },
+  color: string,
+  strokeWidth: number
 ) => {
   // based on: http://bl.ocks.org/stepheneb/1182434
-  const color = 'black';
-  const lineWidth = 0.5;
 
   const axes = graph.append('g').attr('id', 'axes-in');
 
@@ -166,7 +166,7 @@ export const drawAxesOnGraph = (
       .attr('y1', 0)
       .attr('y2', graphSize.height)
       .attr('stroke', color)
-      .attr('stroke-width', lineWidth)
+      .attr('stroke-width', strokeWidth)
       .attr('transform', 'translate(' + xScale(0) + ' , 0)');
   }
 
@@ -179,7 +179,7 @@ export const drawAxesOnGraph = (
       .attr('x1', 0)
       .attr('x2', graphSize.width)
       .attr('stroke', color)
-      .attr('stroke-width', lineWidth)
+      .attr('stroke-width', strokeWidth)
       .attr('transform', 'translate(0, ' + yScale(0) + ')');
   }
 };

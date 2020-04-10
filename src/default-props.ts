@@ -37,10 +37,14 @@ export const defaultProps: DefaultProps = {
     // element within the svg that contains the coordinatesystem, curves, and draggable points
     // title and axis labels are located relative to the graph but are directly drawn on the svg
     graph: {
-      axisLabels: {
+      axis: {
         color: 'black',
-        fontFamily: 'sans-serif',
-        fontSize: 0.8, // rem
+        labels: {
+          color: 'black',
+          fontFamily: 'sans-serif',
+          fontSize: 0.8, // rem
+        },
+        strokeWidth: 2.0,
       },
 
       grid: {
