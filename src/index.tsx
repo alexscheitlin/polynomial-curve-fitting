@@ -42,6 +42,15 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
 
     const draggablePoints = graph.append('g').attr('id', 'draggable-points');
 
+    const width = xScale(xScale.domain()[1]);
+    const height = yScale(yScale.domain()[0]);
+
+    const isPointOnGraph = (point: number[]) =>
+      xScale(point[0]) >= 0 &&
+      xScale(point[0]) <= width &&
+      yScale(point[1]) >= 0 &&
+      yScale(point[1]) <= height;
+
     draggablePoints
       .selectAll('circle')
       .data(points)
@@ -50,7 +59,8 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       .attr('r', radius)
       .attr('cx', (d: number[]) => xScale(d[0]))
       .attr('cy', (d: number[]) => yScale(d[1]))
-      .style('cursor', 'pointer');
+      .style('cursor', 'pointer')
+      .attr('opacity', (d: number[]) => (isPointOnGraph(d) ? 1 : 0));
 
     const dragStarted = (_datum: any, index: number, nodes: Element[] | d3.ArrayLike<Element>) => {
       // https://stackoverflow.com/questions/45262172/retrieve-dom-target-from-drag-callback-when-this-is-not-available/45262284#45262284
@@ -66,7 +76,10 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       datum[1] = Utils.round(yScale.invert(d3.event.y), SETTINGS.precisionPoints);
 
       // update location of point
-      d3.select(node).attr('cx', xScale(datum[0])).attr('cy', yScale(datum[1]));
+      d3.select(node)
+        .attr('cx', xScale(datum[0]))
+        .attr('cy', yScale(datum[1]))
+        .attr('opacity', () => (isPointOnGraph(datum) ? 1 : 0));
 
       updateRegressionState(points, order);
 
