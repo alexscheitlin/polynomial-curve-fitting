@@ -15,22 +15,63 @@ npm i polynomial-curve-fitting
 
 ## Usage
 
+Use the react component generating a random curve:
+
 ```javascript
 import React from 'react';
 import CurveGenerator from 'polynomial-curve-fitting';
 
-const curve = {
-  name: 'Fancy Polynomial',
-  description:
-    'This polynomial is a regression through the provided points using the least-squares method.',
-  xAxis: { label: 'x Axis' },
-  yAxis: { label: 'y Axis' },
-  polynomialOrder: 3,
-};
-
-const App = () => <CurveGenerator curve={curve}></CurveGenerator>;
+const App = () => <CurveGenerator></CurveGenerator>;
 
 export default App;
+```
+
+### Specify a Curve
+
+To provide initial information about the curve, there are three options:
+
+1. Use `PropsBaseCurve` and specify the following fields (all optional):
+
+   ```javascript
+   const curve = {
+     name: 'Fancy Polynomial',
+     description: 'This polynomial is a random polynomial.',
+     xAxis: { label: 'x Axis', min: 0, max: 10 },
+     yAxis: { label: 'y Axis', min: 0, max: 10 },
+   };
+   ```
+
+2. Use `PropsCurvePoints` to specify points for the least squares regression. The order of the polynomial will be one less than the number of provided points. The fields of `PropsBaseCurve` are still optional, but the `points` field is required:
+
+   ```javascript
+   const curve = {
+     points: [
+       [0, 0],
+       [1, 1],
+     ],
+   };
+   ```
+
+3. Use `PropsCurveOrder` to specify the order of the polynomial. The points on the curve are randomly generated. The fields of `PropsBaseCurve` are still optional, but the `polynomialOrder` field is required:
+
+   ```javascript
+   const curve = {
+     polynomialOrder: 2,
+   };
+   ```
+
+Provide the information about the curve as follows:
+
+```javascript
+const App = () => <CurveGenerator curve={curve}></CurveGenerator>;
+```
+
+### Provide Settings
+
+In addition to the `curve` prop, there is also a `settings` prop that allows to set the style of the drawn graph (e.g, the size of the svg, font sizes, colors, and spacing). Have a look at the [default props](./src/default-props.ts) to see the default settings and what can be changed.
+
+```javascript
+const App = () => <CurveGenerator settings={settings}></CurveGenerator>;
 ```
 
 ## Development
