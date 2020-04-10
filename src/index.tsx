@@ -4,54 +4,14 @@ import * as d3 from 'd3';
 import * as Drawing from './drawing';
 import * as Regression from './regression';
 import * as Utils from './utils';
-import { Axis, Props, Settings } from './types';
+import { Axis, Curve, Props, Settings } from './types';
 import { defaultProps } from './default-props';
-import { generateSettings } from './init';
+import { initValues } from './init';
 
 const CurveGenerator: React.FC<Props> = (props: Props) => {
   // const changeCurveName = (value: string) => props.changeCurveName(value);
 
-  const SETTINGS: Settings = generateSettings(props, defaultProps);
-
-  /***************************************************************************/
-  /* Initial Values                                                          */
-  /***************************************************************************/
-
-  const initialCurveName = props?.curve?.name || defaultProps.curve.name;
-  const initialCurveDescription = props?.curve?.description || defaultProps.curve.description;
-  const initialXAxis = {
-    min: props?.curve?.xAxis?.min || defaultProps.curve.xAxis.min,
-    max: props?.curve?.xAxis?.max || defaultProps.curve.xAxis.max,
-    label: props?.curve?.xAxis?.label || defaultProps.curve.xAxis.label,
-  };
-  const initialYAxis = {
-    min: props?.curve?.yAxis?.min || defaultProps.curve.yAxis.min,
-    max: props?.curve?.yAxis?.max || defaultProps.curve.yAxis.max,
-    label: props?.curve?.yAxis?.label || defaultProps.curve.yAxis.label,
-  };
-  const initialPolynomialOrder =
-    props?.curve?.polynomialOrder || defaultProps.curve.polynomialOrder;
-
-  /***************************************************************************/
-  /* Derived Initial Values                                                  */
-  /***************************************************************************/
-
-  // create random points based on the initial order
-  const initialPoints = Utils.generateRandomPoints(
-    initialPolynomialOrder + 1,
-    SETTINGS.precisionPoints,
-    initialXAxis.min,
-    initialXAxis.max,
-    initialYAxis.min,
-    initialYAxis.max
-  );
-
-  // use predefined points (needs to be one more than the specified order of the polynomial)
-  // const initialPoints = [
-  //   [0, 0],
-  //   [5, 8],
-  //   [10, 2],
-  // ];
+  const [SETTINGS, INITIAL_CURVE]: [Settings, Curve] = initValues(props, defaultProps);
 
   /***************************************************************************/
   /* Drawing Methods                                                         */
@@ -219,38 +179,26 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   /* Variables                                                               */
   /***************************************************************************/
 
-  const SVG_REF = React.useRef(null);
-  const [order, setOrder] = React.useState(initialPolynomialOrder);
-  const [points, setPoints] = React.useState(initialPoints);
-  const [curvePoints, setCurvePoints] = React.useState(
-    Regression.generateCurvePoints(
-      points,
-      order,
-      initialXAxis.min,
-      initialXAxis.max,
-      SETTINGS.precisionCoefficient
-    )
-  );
-  const [coefficients, setCoefficients] = React.useState(
-    Regression.polynomialRegression(points, order, SETTINGS.precisionCoefficient).equation
-  );
-  const [equation, setEquation] = React.useState(
-    Regression.polynomialRegression(points, order, SETTINGS.precisionCoefficient).string
-  );
-  const [r2, setR2] = React.useState(
-    Regression.polynomialRegression(points, order, SETTINGS.precisionCoefficient).r2
-  );
-  const [drawing, setDrawing] = React.useState<{
+  interface Drawing {
     svg: d3.Selection<d3.BaseType, any, HTMLElement, any>;
     graph: d3.Selection<SVGGElement, any, HTMLElement, any>;
     x: d3.ScaleLinear<number, number>;
     y: d3.ScaleLinear<number, number>;
-  }>(); // most likely, this is not best practice
+  }
 
-  const [curveName, setCurveName] = React.useState(initialCurveName);
-  const [curveDescription, setCurveDescription] = React.useState(initialCurveDescription);
-  const [xAxis, setXAxis] = React.useState<Axis>(initialXAxis);
-  const [yAxis, setYAxis] = React.useState<Axis>(initialYAxis);
+  const SVG_REF = React.useRef(null);
+  const [order, setOrder] = React.useState(INITIAL_CURVE.polynomialOrder);
+  const [points, setPoints] = React.useState(INITIAL_CURVE.points);
+  const [curvePoints, setCurvePoints] = React.useState(INITIAL_CURVE.curvePoints);
+  const [coefficients, setCoefficients] = React.useState(INITIAL_CURVE.coefficients);
+  const [equation, setEquation] = React.useState(INITIAL_CURVE.equation);
+  const [r2, setR2] = React.useState(INITIAL_CURVE.r2);
+  const [drawing, setDrawing] = React.useState<Drawing>(); // most likely, this is not best practice
+
+  const [curveName, setCurveName] = React.useState(INITIAL_CURVE.name);
+  const [curveDescription, setCurveDescription] = React.useState(INITIAL_CURVE.description);
+  const [xAxis, setXAxis] = React.useState<Axis>(INITIAL_CURVE.xAxis);
+  const [yAxis, setYAxis] = React.useState<Axis>(INITIAL_CURVE.yAxis);
 
   React.useEffect(() => draw(xAxis, yAxis, curvePoints), [order]);
 

@@ -2,30 +2,38 @@
 /* Properties                                                                */
 /*****************************************************************************/
 
+// Both the curve and settings are optional.
+// A curve can be specified in three different ways:
+// 1. only provide base information and get a random polynomial
+// 2. additionally specify curve points to get a regression through these points
+// 3. instead of points, specify the order of the polynomial and points are
+//    randomly chosen
 export interface Props {
-  curve?: Curve;
+  curve?: PropsBaseCurve | PropsCurvePoints | PropsCurveOrder;
   settings?: PropsSettings;
 }
 
-// Mirrors the `Props` from above but requires all fields to be present.
+// Mirror the `Props` from above but require all fields to be present.
 export interface DefaultProps {
-  curve: Required<Curve>;
+  curve: Required<PropsCurveOrder>;
   settings: Required<PropsSettings>;
 }
 
-/*****************************************************************************/
-/* Main Types                                                                */
-/*****************************************************************************/
-
-export interface Curve {
+export interface PropsBaseCurve {
   name?: string;
   description?: string;
   xAxis?: Axis;
   yAxis?: Axis;
-  polynomialOrder?: number;
 }
 
-// Settings that can be provided via props.
+export interface PropsCurvePoints extends PropsBaseCurve {
+  points: number[][];
+}
+
+export interface PropsCurveOrder extends PropsBaseCurve {
+  polynomialOrder: number;
+}
+
 export interface PropsSettings {
   crosshairColor?: string;
   showDottedCurve?: boolean;
@@ -37,8 +45,21 @@ export interface PropsSettings {
   svg?: SvgSettings;
 }
 
-// Extended `PropsSettings` that require all fields to be set and contain some
-// additional fields based on the provided settings.
+/*****************************************************************************/
+/* Main Types                                                                */
+/*****************************************************************************/
+// All prop fields are required and some additional fields are available.
+
+export interface Curve extends Required<PropsBaseCurve> {
+  points: number[][];
+  polynomialOrder: number;
+
+  curvePoints: number[][];
+  coefficients: number[];
+  equation: string;
+  r2: number;
+}
+
 export interface Settings extends Required<PropsSettings> {
   graphSize: Size;
   precisionCoefficient: number;
