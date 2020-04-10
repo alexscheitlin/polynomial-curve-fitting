@@ -55,7 +55,7 @@ export const drawAxisLables = (
       'translate(' +
         (graphSize.width / 2 + graphMargin.left) +
         ', ' +
-        (graphSize.height + graphMargin.top + graphMargin.bottom) +
+        (graphSize.height + graphMargin.top + graphMargin.bottom - 10) +
         ')'
     )
     .attr('font-family', fontFamily)
@@ -70,11 +70,7 @@ export const drawAxisLables = (
     .attr('id', 'y-axis-label')
     .attr(
       'transform',
-      'rotate(-90), translate(' +
-        (-graphSize.height / 2 - graphMargin.top) +
-        ', ' +
-        graphMargin.left / 2 +
-        ')'
+      'rotate(-90), translate(' + (-graphSize.height / 2 - graphMargin.top) + ', ' + 20 + ')'
     )
     .attr('font-family', fontFamily)
     .attr('font-size', `${fontSize}rem`)

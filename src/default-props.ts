@@ -52,7 +52,7 @@ export const defaultProps: DefaultProps = {
       },
 
       // margin of the graph (within the svg) in pixel
-      margin: { top: 30, right: 20, bottom: 30, left: 50 },
+      margin: { top: 30, right: 20, bottom: 50, left: 50 },
       title: {
         color: 'black',
         fontFamily: 'sans-serif',
