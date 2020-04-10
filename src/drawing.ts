@@ -158,26 +158,30 @@ export const drawAxesOnGraph = (
   const axes = graph.append('g').attr('id', 'axes-in');
 
   // x axis
-  axes
-    .append('g')
-    .attr('id', 'axis-in-x')
-    .append('line')
-    .attr('y1', 0)
-    .attr('y2', graphSize.height)
-    .attr('stroke', color)
-    .attr('stroke-width', lineWidth)
-    .attr('transform', 'translate(' + xScale(0) + ' , 0)');
+  if (xScale(0) >= 0 && xScale(0) <= graphSize.width) {
+    axes
+      .append('g')
+      .attr('id', 'axis-in-x')
+      .append('line')
+      .attr('y1', 0)
+      .attr('y2', graphSize.height)
+      .attr('stroke', color)
+      .attr('stroke-width', lineWidth)
+      .attr('transform', 'translate(' + xScale(0) + ' , 0)');
+  }
 
   // y axis
-  axes
-    .append('g')
-    .attr('id', 'axis-in-y')
-    .append('line')
-    .attr('x1', 0)
-    .attr('x2', graphSize.width)
-    .attr('stroke', color)
-    .attr('stroke-width', lineWidth)
-    .attr('transform', 'translate(0, ' + yScale(0) + ')');
+  if (yScale(0) >= 0 && yScale(0) <= graphSize.height) {
+    axes
+      .append('g')
+      .attr('id', 'axis-in-y')
+      .append('line')
+      .attr('x1', 0)
+      .attr('x2', graphSize.width)
+      .attr('stroke', color)
+      .attr('stroke-width', lineWidth)
+      .attr('transform', 'translate(0, ' + yScale(0) + ')');
+  }
 };
 
 // draw both the x and y axes around the graph (not necessarily through 0/0))
