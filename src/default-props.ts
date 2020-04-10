@@ -43,6 +43,10 @@ export const defaultProps: DefaultProps = {
         fontSize: 0.8, // rem
       },
 
+      grid: {
+        color: 'lightgray',
+      },
+
       // margin of the graph (within the svg) in pixel
       margin: { top: 30, right: 20, bottom: 30, left: 50 },
       title: {

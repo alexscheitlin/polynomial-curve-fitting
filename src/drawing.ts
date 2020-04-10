@@ -92,11 +92,11 @@ export const drawGrid = (
   graph: d3.Selection<SVGGElement, any, HTMLElement, any>,
   xScale: d3.ScaleLinear<number, number>,
   yScale: d3.ScaleLinear<number, number>,
-  graphSize: { width: number; height: number }
+  graphSize: { width: number; height: number },
+  color: string
 ) => {
   // based on: https://bl.ocks.org/d3noob/c506ac45617cf9ed39337f99f8511218
 
-  const color = 'lightgray';
   const numberOfLines = 10;
   const tickPadding = 10;
 
@@ -137,7 +137,7 @@ export const drawGrid = (
     .attr('height', graphSize.height)
     .attr('fill', 'transparent')
     .attr('stroke-width', 2)
-    .attr('stroke', '#cccccc');
+    .attr('stroke', color);
 
   // style grid
   d3.selectAll('g.grid g.tick').select('line').attr('stroke', color);

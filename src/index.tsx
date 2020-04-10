@@ -243,7 +243,13 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
     SETTINGS.xScale.domain([xAxis.min, xAxis.max]);
     SETTINGS.yScale.domain([yAxis.min, yAxis.max]);
 
-    Drawing.drawGrid(graph, SETTINGS.xScale, SETTINGS.yScale, SETTINGS.graphSize);
+    Drawing.drawGrid(
+      graph,
+      SETTINGS.xScale,
+      SETTINGS.yScale,
+      SETTINGS.graphSize,
+      SETTINGS.graph.grid.color
+    );
     Drawing.drawAxesOnGraph(graph, SETTINGS.xScale, SETTINGS.yScale, SETTINGS.graphSize);
     //Drawing.drawAxesAroundGraph(graph, SETTINGS.xScale, SETTINGS.yScale, SETTINGS.graphSize);
     Drawing.drawInitialCurve(

@@ -86,8 +86,13 @@ export interface DraggablePointSettings {
 
 export interface GraphSettings {
   axisLabels: TextSettings;
+  grid: GridSettings;
   margin: Margin;
   title: TextSettings;
+}
+
+export interface GridSettings {
+  color: string;
 }
 
 export interface SvgSettings {

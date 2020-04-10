@@ -53,6 +53,9 @@ export const generateSettings = (props: Props, defaultProps: DefaultProps): Sett
         fontSize:
           settings?.graph?.axisLabels?.fontSize || defaultSettings.graph.axisLabels.fontSize,
       },
+      grid: {
+        color: settings?.graph?.grid?.color || defaultSettings.graph.grid.color,
+      },
       margin: {
         top: settings?.graph?.margin?.top || defaultSettings.graph.margin.top,
         right: settings?.graph?.margin?.right || defaultSettings.graph.margin.right,
