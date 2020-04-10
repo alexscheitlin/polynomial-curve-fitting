@@ -4,46 +4,8 @@ import * as d3 from 'd3';
 import * as Drawing from './drawing';
 import * as Regression from './regression';
 import * as Utils from './utils';
-import { Axis, Curve, Settings, Size, Margin } from './types';
-
-interface Props {
-  curve?: Curve;
-  settings?: Settings;
-}
-
-const defaultProps: Props = {
-  curve: {
-    name: 'Random Polynomial',
-    description: 'This is some random polynomial.',
-    xAxis: { min: -5, max: 10, label: 'x Values' },
-    yAxis: { min: -5, max: 10, label: 'y Values' },
-
-    // the order of the polynomial to plot
-    polynomialOrder: 3,
-  },
-  settings: {
-    // size of the final SVG in pixel
-    svgSize: { width: 750, height: 450 },
-
-    // margin of the graph (within the svg) in pixel
-    graphMargin: { top: 30, right: 20, bottom: 30, left: 50 },
-
-    // whether the curve should be plotted as dots or not (= as a continuous line)
-    showDottedCurve: false,
-
-    // color of the curve if `showDottedCurve` === true
-    curveLineColor: 'steelblue',
-
-    // color of the curve if `showDottedCurve` === false
-    curveDotsColor: 'red',
-
-    // color of the initial curve (always a continuous line)
-    curveInitialColor: 'gray',
-
-    // color of the draggable points on the curve
-    draggableDotsColor: 'navy',
-  },
-};
+import { Axis, Props, Size, Margin } from './types';
+import { defaultProps } from './default-props';
 
 const CurveGenerator: React.FC<Props> = (props: Props) => {
   // const changeCurveName = (value: string) => props.changeCurveName(value);
@@ -110,16 +72,16 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   /***************************************************************************/
 
   const initialCurveName = props?.curve?.name || defaultProps.curve.name;
-  const initialCurveDescription = props?.curve?.description || defaultProps?.curve?.description;
+  const initialCurveDescription = props?.curve?.description || defaultProps.curve.description;
   const initialXAxis = {
-    min: props?.curve?.xAxis.min || defaultProps?.curve?.xAxis.min,
-    max: props?.curve?.xAxis.max || defaultProps?.curve?.xAxis.max,
-    label: props?.curve?.xAxis.label || defaultProps?.curve?.xAxis.label,
+    min: props?.curve?.xAxis?.min || defaultProps.curve.xAxis.min,
+    max: props?.curve?.xAxis?.max || defaultProps.curve.xAxis.max,
+    label: props?.curve?.xAxis?.label || defaultProps.curve.xAxis.label,
   };
   const initialYAxis = {
-    min: props?.curve?.yAxis.min || defaultProps?.curve?.yAxis.min,
-    max: props?.curve?.yAxis.max || defaultProps?.curve?.yAxis.max,
-    label: props?.curve?.yAxis.label || defaultProps?.curve?.yAxis.label,
+    min: props?.curve?.yAxis?.min || defaultProps.curve.yAxis.min,
+    max: props?.curve?.yAxis?.max || defaultProps.curve.yAxis.max,
+    label: props?.curve?.yAxis?.label || defaultProps.curve.yAxis.label,
   };
   const initialPolynomialOrder =
     props?.curve?.polynomialOrder || defaultProps.curve.polynomialOrder;
