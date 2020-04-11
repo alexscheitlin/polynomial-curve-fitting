@@ -1,0 +1,9 @@
+node_modules/
+test/
+
+.eslintignore
+.eslintrc.json
+.prettierignore
+.prettierrc.json
+jest.config.js
+tsconfig.json
