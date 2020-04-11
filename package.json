@@ -10,6 +10,7 @@
     "format": "prettier --write \"**/*.+(ts|tsx|json|md)\"",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "prepublishOnly": "npm run test && npm run build",
     "test": "jest",
     "test:watch": "jest --watch"
   },
