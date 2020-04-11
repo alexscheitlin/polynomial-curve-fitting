@@ -1,6 +1,6 @@
 {
   "name": "polynomial-curve-fitting",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "A React component to interactively compile polyomial curves with D3 using least squares regression",
   "main": "lib/index.js",
   "types": "lib",
