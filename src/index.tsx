@@ -605,6 +605,17 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
     updatePointCoordinateState(parseFloat(value), pointIndex, coordinateIndex);
   };
 
+  const handleResetZoomClick = () => {
+    const newXAxis = INITIAL_CURVE.xAxis;
+    const newYAxis = INITIAL_CURVE.yAxis;
+
+    setXAxis(newXAxis);
+    setYAxis(newYAxis);
+
+    clearSVG();
+    draw(newXAxis, newYAxis, curvePoints);
+  };
+
   /***************************************************************************/
   /* Render                                                                  */
   /***************************************************************************/
@@ -788,6 +799,10 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
             value={curveDescription}
           ></textarea>
         </div>
+
+        <br></br>
+
+        <button onClick={() => handleResetZoomClick()}>Reset Zoom</button>
       </div>
     </div>
   );
