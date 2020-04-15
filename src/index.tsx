@@ -171,8 +171,17 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
         SETTINGS.precisionCoefficient
       );
 
+      const newCurvePointsInitialCurve = Regression.generateCurvePoints(
+        initialCurve.points,
+        initialCurve.polynomialOrder,
+        newXAxis.min,
+        newXAxis.max,
+        SETTINGS.precisionCoefficient
+      );
+
       setCurvePoints(newCurvePoints);
-      draw(newXAxis, newYAxis, newCurvePoints);
+      setInitialCurve({ ...initialCurve, curvePoints: newCurvePointsInitialCurve });
+      draw(newXAxis, newYAxis, newCurvePoints, newCurvePointsInitialCurve);
     };
 
     const zoom = d3.zoom().on('zoom', () => zoomed());
@@ -200,20 +209,23 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   }
 
   const SVG_REF = React.useRef(null);
-  const [order, setOrder] = React.useState(INITIAL_CURVE.polynomialOrder);
-  const [points, setPoints] = React.useState(INITIAL_CURVE.points);
-  const [curvePoints, setCurvePoints] = React.useState(INITIAL_CURVE.curvePoints);
-  const [coefficients, setCoefficients] = React.useState(INITIAL_CURVE.coefficients);
-  const [equation, setEquation] = React.useState(INITIAL_CURVE.equation);
-  const [r2, setR2] = React.useState(INITIAL_CURVE.r2);
+  const curve = Utils.deepCopy(INITIAL_CURVE);
+
+  const [initialCurve, setInitialCurve] = React.useState<Curve>(INITIAL_CURVE);
+  const [order, setOrder] = React.useState(curve.polynomialOrder);
+  const [points, setPoints] = React.useState(curve.points);
+  const [curvePoints, setCurvePoints] = React.useState(curve.curvePoints);
+  const [coefficients, setCoefficients] = React.useState(curve.coefficients);
+  const [equation, setEquation] = React.useState(curve.equation);
+  const [r2, setR2] = React.useState(curve.r2);
   const [drawing, setDrawing] = React.useState<Drawing>(); // most likely, this is not best practice
 
-  const [curveName, setCurveName] = React.useState(INITIAL_CURVE.name);
-  const [curveDescription, setCurveDescription] = React.useState(INITIAL_CURVE.description);
-  const [xAxis, setXAxis] = React.useState<Axis>(INITIAL_CURVE.xAxis);
-  const [yAxis, setYAxis] = React.useState<Axis>(INITIAL_CURVE.yAxis);
+  const [curveName, setCurveName] = React.useState(curve.name);
+  const [curveDescription, setCurveDescription] = React.useState(curve.description);
+  const [xAxis, setXAxis] = React.useState<Axis>(curve.xAxis);
+  const [yAxis, setYAxis] = React.useState<Axis>(curve.yAxis);
 
-  React.useEffect(() => draw(xAxis, yAxis, curvePoints), [order]);
+  React.useEffect(() => draw(xAxis, yAxis, curvePoints, initialCurve.curvePoints), [order]);
 
   // needed for zooming and moving the coordinate system
   let dragged = false;
@@ -223,7 +235,12 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   /* Main                                                                    */
   /***************************************************************************/
 
-  const draw = (xAxis: Axis, yAxis: Axis, curvePoints: number[][]) => {
+  const draw = (
+    xAxis: Axis,
+    yAxis: Axis,
+    curvePoints: number[][],
+    initialCurvePoints: number[][]
+  ) => {
     // implementation based on:
     // https://bl.ocks.org/denisemauldin/538bfab8378ac9c3a32187b4d7aed2c2
 
@@ -263,7 +280,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       graph,
       SETTINGS.xScale,
       SETTINGS.yScale,
-      curvePoints,
+      initialCurvePoints,
       SETTINGS.initialCurve.color,
       SETTINGS.initialCurve.strokeWidth
     );
@@ -416,8 +433,19 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
             newXAxis.max,
             SETTINGS.precisionCoefficient
           );
+
+          const newCurvePointsInitialCurve = Regression.generateCurvePoints(
+            initialCurve.points,
+            initialCurve.polynomialOrder,
+            newXAxis.min,
+            newXAxis.max,
+            SETTINGS.precisionCoefficient
+          );
+
           setCurvePoints(newCurvePoints);
-          draw(newXAxis, newYAxis, newCurvePoints);
+          setInitialCurve({ ...initialCurve, curvePoints: newCurvePointsInitialCurve });
+
+          draw(newXAxis, newYAxis, newCurvePoints, newCurvePointsInitialCurve);
         }
       }
     };
@@ -606,14 +634,14 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   };
 
   const handleResetZoomClick = () => {
-    const newXAxis = INITIAL_CURVE.xAxis;
-    const newYAxis = INITIAL_CURVE.yAxis;
+    const newXAxis = initialCurve.xAxis;
+    const newYAxis = initialCurve.yAxis;
 
     setXAxis(newXAxis);
     setYAxis(newYAxis);
 
     clearSVG();
-    draw(newXAxis, newYAxis, curvePoints);
+    draw(newXAxis, newYAxis, curvePoints, initialCurve.curvePoints);
   };
 
   /***************************************************************************/
