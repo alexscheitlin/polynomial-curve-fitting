@@ -11,8 +11,6 @@ import { initValues } from './init';
 const CurveGenerator: React.FC<Props> = (props: Props) => {
   // const changeCurveName = (value: string) => props.changeCurveName(value);
 
-  const [SETTINGS, INITIAL_CURVE]: [Settings, Curve] = initValues(props, defaultProps);
-
   /***************************************************************************/
   /* Drawing Methods                                                         */
   /***************************************************************************/
@@ -81,19 +79,28 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
         .attr('cy', yScale(datum[1]))
         .attr('opacity', () => (isPointOnGraph(datum) ? 1 : 0));
 
-      updateRegressionState(points, order);
-
       const newCurvePoints = Regression.generateCurvePoints(
         points,
-        order,
+        curve.polynomialOrder,
         xAxis.min,
         xAxis.max,
         SETTINGS.precisionCoefficient
       );
-      setCurvePoints(newCurvePoints);
 
-      // sort points to not have "invalid" functions
-      setPoints(Utils.sortPointsByX(points));
+      const regression = Regression.polynomialRegression(
+        points,
+        curve.polynomialOrder,
+        SETTINGS.precisionCoefficient
+      );
+
+      setCurve({
+        ...curve,
+        coefficients: regression.equation,
+        curvePoints: newCurvePoints,
+        equation: regression.string,
+        points: Utils.sortPointsByX(points), // sort points to not have "invalid" functions
+        r2: regression.r2,
+      });
 
       if (SETTINGS.showDottedCurve) {
         Drawing.drawCurvePoints(graph, xScale, yScale, newCurvePoints, SETTINGS.curve.color);
@@ -141,17 +148,15 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       const newXDomain = d3.event.transform.rescaleX(SETTINGS.xScale).domain();
       const newYDomain = d3.event.transform.rescaleY(SETTINGS.yScale).domain();
       const newXAxis = {
-        ...xAxis,
+        ...curve.xAxis,
         min: Utils.round(newXDomain[0], 0),
         max: Utils.round(newXDomain[1], 0),
       };
       const newYAxis = {
-        ...yAxis,
+        ...curve.yAxis,
         min: Utils.round(newYDomain[0], 0),
         max: Utils.round(newYDomain[1], 0),
       };
-      setXAxis(newXAxis);
-      setYAxis(newYAxis);
 
       SETTINGS.xScale.domain([newXAxis.min, newXAxis.max]);
       SETTINGS.yScale.domain([newYAxis.min, newYAxis.max]);
@@ -164,8 +169,8 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       setDrawing(newDrawing);
 
       const newCurvePoints = Regression.generateCurvePoints(
-        points,
-        order,
+        curve.points,
+        curve.polynomialOrder,
         newXAxis.min,
         newXAxis.max,
         SETTINGS.precisionCoefficient
@@ -179,7 +184,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
         SETTINGS.precisionCoefficient
       );
 
-      setCurvePoints(newCurvePoints);
+      setCurve({ ...curve, curvePoints: newCurvePoints, xAxis: newXAxis, yAxis: newYAxis });
       setInitialCurve({ ...initialCurve, curvePoints: newCurvePointsInitialCurve });
       draw(newXAxis, newYAxis, newCurvePoints, newCurvePointsInitialCurve);
     };
@@ -201,31 +206,24 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   /* Variables                                                               */
   /***************************************************************************/
 
+  const [SETTINGS, INITIAL_CURVE]: [Settings, Curve] = initValues(props, defaultProps);
+
   interface Drawing {
     svg: d3.Selection<d3.BaseType, any, HTMLElement, any>;
     graph: d3.Selection<SVGGElement, any, HTMLElement, any>;
     x: d3.ScaleLinear<number, number>;
     y: d3.ScaleLinear<number, number>;
   }
-
-  const SVG_REF = React.useRef(null);
-  const curve = Utils.deepCopy(INITIAL_CURVE);
-
-  const [initialCurve, setInitialCurve] = React.useState<Curve>(INITIAL_CURVE);
-  const [order, setOrder] = React.useState(curve.polynomialOrder);
-  const [points, setPoints] = React.useState(curve.points);
-  const [curvePoints, setCurvePoints] = React.useState(curve.curvePoints);
-  const [coefficients, setCoefficients] = React.useState(curve.coefficients);
-  const [equation, setEquation] = React.useState(curve.equation);
-  const [r2, setR2] = React.useState(curve.r2);
   const [drawing, setDrawing] = React.useState<Drawing>(); // most likely, this is not best practice
 
-  const [curveName, setCurveName] = React.useState(curve.name);
-  const [curveDescription, setCurveDescription] = React.useState(curve.description);
-  const [xAxis, setXAxis] = React.useState<Axis>(curve.xAxis);
-  const [yAxis, setYAxis] = React.useState<Axis>(curve.yAxis);
+  const SVG_REF = React.useRef(null);
+  const [curve, setCurve] = React.useState<Curve>(Utils.deepCopy(INITIAL_CURVE));
+  const [initialCurve, setInitialCurve] = React.useState<Curve>(INITIAL_CURVE);
 
-  React.useEffect(() => draw(xAxis, yAxis, curvePoints, initialCurve.curvePoints), [order]);
+  React.useEffect(
+    () => draw(curve.xAxis, curve.yAxis, curve.curvePoints, initialCurve.curvePoints),
+    [curve.polynomialOrder]
+  );
 
   // needed for zooming and moving the coordinate system
   let dragged = false;
@@ -289,7 +287,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       svg,
       SETTINGS.graph.margin,
       SETTINGS.graphSize,
-      curveName,
+      curve.name,
       SETTINGS.graph.title.color,
       SETTINGS.graph.title.fontFamily,
       SETTINGS.graph.title.fontSize
@@ -336,7 +334,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       graph,
       SETTINGS.xScale,
       SETTINGS.yScale,
-      points,
+      curve.points,
       xAxis,
       yAxis,
       SETTINGS.draggablePoint.radius
@@ -391,7 +389,6 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
               min: Utils.round(newXDomain[0], 0),
               max: Utils.round(newXDomain[1], 0),
             };
-            setXAxis(newXAxis);
 
             // reset the domain of the global x axis object used to draw with d3
             SETTINGS.xScale.domain([newXAxis.min, newXAxis.max]);
@@ -411,7 +408,6 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
               min: Utils.round(newYDomain[0], 0),
               max: Utils.round(newYDomain[1], 0),
             };
-            setYAxis(newYAxis);
 
             // reset the domain of the global y axis object used to draw with d3
             SETTINGS.yScale.domain([newYAxis.min, newYAxis.max]);
@@ -427,8 +423,8 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
 
           // generate new curve points and redraw everything
           const newCurvePoints = Regression.generateCurvePoints(
-            points,
-            order,
+            curve.points,
+            curve.polynomialOrder,
             newXAxis.min,
             newXAxis.max,
             SETTINGS.precisionCoefficient
@@ -442,7 +438,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
             SETTINGS.precisionCoefficient
           );
 
-          setCurvePoints(newCurvePoints);
+          setCurve({ ...curve, curvePoints: newCurvePoints, xAxis: newXAxis, yAxis: newYAxis });
           setInitialCurve({ ...initialCurve, curvePoints: newCurvePointsInitialCurve });
 
           draw(newXAxis, newYAxis, newCurvePoints, newCurvePointsInitialCurve);
@@ -470,28 +466,28 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   // re-draw some graphics if needed
 
   const updateCurveNameState = (newValue: string) => {
-    setCurveName(newValue);
+    setCurve({ ...curve, name: newValue });
     // changeCurveName(newValue);
     drawCurveName(drawing.svg, newValue);
   };
 
   const updateCurveDescriptionState = (newValue: string) => {
-    setCurveDescription(newValue);
+    setCurve({ ...curve, description: newValue });
   };
 
   const updateXAxisLabelState = (newValue: string) => {
-    setXAxis({ ...xAxis, label: newValue });
+    setCurve({ ...curve, xAxis: { ...curve.xAxis, label: newValue } });
     drawXAxisLabel(drawing.svg, newValue);
   };
 
   const updateYAxisLabelState = (newValue: string) => {
-    setYAxis({ ...yAxis, label: newValue });
+    setCurve({ ...curve, yAxis: { ...curve.yAxis, label: newValue } });
     drawYAxisLabel(drawing.svg, newValue);
   };
 
   const updateOrderState = (newValue: number) => {
     // add or remove points until there is one more point than the new order
-    const cPoints = Utils.deepCopy(points);
+    const cPoints = Utils.deepCopy(curve.points);
     while (cPoints.length - 1 != newValue) {
       cPoints.length - 1 < newValue &&
         Utils.addPoint(cPoints, SETTINGS.precisionCoefficient, SETTINGS.precisionPoints);
@@ -500,17 +496,16 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
 
     clearSVG();
 
-    setPoints(Utils.sortPointsByX(cPoints));
-    setOrder(newValue);
+    setCurve({ ...curve, points: Utils.sortPointsByX(cPoints), polynomialOrder: newValue });
   };
 
   const updateCoefficientState = (newValue: number, coefficientIndex: number) => {
     // update coefficient list (don't update state yet -> is done in updatePointsState)
-    const newCoefficients = [...coefficients];
+    const newCoefficients = [...curve.coefficients];
     newCoefficients[coefficientIndex] = newValue;
 
     // calculate new y values for the x values
-    const newPoints = [...points].map(point => {
+    const newPoints = [...curve.points].map(point => {
       point[1] = Utils.round(
         Utils.polynomialValue(point[0], newCoefficients),
         SETTINGS.precisionPoints
@@ -518,7 +513,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       return point;
     });
 
-    updatePointsState(newPoints, order);
+    updatePointsState(newPoints, curve.polynomialOrder);
   };
 
   const updatePointCoordinateState = (
@@ -527,24 +522,27 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
     coordinateIndex: number
   ) => {
     // update changed coordinate in points list
-    const newPoints = [...points];
+    const newPoints = [...curve.points];
     newPoints[pointIndex][coordinateIndex] = newValue;
 
-    updatePointsState(newPoints, order);
+    updatePointsState(newPoints, curve.polynomialOrder);
   };
 
   const updatePointsState = (points: number[][], order: number) => {
-    setPoints(points);
-
     // generate new points on the curve and redraw the curve
     const newCurvePoints = Regression.generateCurvePoints(
       points,
       order,
-      xAxis.min,
-      xAxis.max,
+      curve.xAxis.min,
+      curve.xAxis.max,
       SETTINGS.precisionCoefficient
     );
-    setCurvePoints(newCurvePoints);
+
+    setCurve({
+      ...curve,
+      curvePoints: newCurvePoints,
+      points: points,
+    });
 
     if (SETTINGS.showDottedCurve) {
       Drawing.drawCurvePoints(
@@ -570,8 +568,8 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       drawing.x,
       drawing.y,
       points,
-      xAxis,
-      yAxis,
+      curve.xAxis,
+      curve.yAxis,
       SETTINGS.draggablePoint.radius
     );
     updateRegressionState(points, order);
@@ -583,9 +581,12 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       order,
       SETTINGS.precisionCoefficient
     );
-    setCoefficients(regression.equation);
-    setEquation(regression.string);
-    setR2(regression.r2);
+    setCurve({
+      ...curve,
+      coefficients: regression.equation,
+      equation: regression.string,
+      r2: regression.r2,
+    });
   };
 
   /***************************************************************************/
@@ -637,11 +638,10 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
     const newXAxis = initialCurve.xAxis;
     const newYAxis = initialCurve.yAxis;
 
-    setXAxis(newXAxis);
-    setYAxis(newYAxis);
+    setCurve({ ...curve, xAxis: newXAxis, yAxis: newYAxis });
 
     clearSVG();
-    draw(newXAxis, newYAxis, curvePoints, initialCurve.curvePoints);
+    draw(newXAxis, newYAxis, curve.curvePoints, initialCurve.curvePoints);
   };
 
   /***************************************************************************/
@@ -674,13 +674,13 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
           </svg>
         </div>
         <p style={{ width: `${SETTINGS.svg.size.width}px`, padding: '5px', textAlign: 'center' }}>
-          {curveDescription}
+          {curve.description}
         </p>
       </div>
 
       <div style={{ marginLeft: '1rem' }}>
         <div>
-          <select onChange={e => handleOrderChange(e)} value={order}>
+          <select onChange={e => handleOrderChange(e)} value={curve.polynomialOrder}>
             <option value="1">1</option>
             <option value="2">2</option>
             <option value="3">3</option>
@@ -692,19 +692,19 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
 
         <hr></hr>
 
-        <pre style={{ color: r2 === 1 ? 'green' : 'red' }}>
-          Coefficient of Determination (R^2): {JSON.stringify(r2)}
+        <pre style={{ color: curve.r2 === 1 ? 'green' : 'red' }}>
+          Coefficient of Determination (R^2): {JSON.stringify(curve.r2)}
         </pre>
 
         <hr></hr>
 
         <div>
           <pre>
-            <div>Polynomial: {`  y = ${Utils.generatePolynomialEquation(coefficients)}`}</div>
-            <div>Equation: {equation}</div>
+            <div>Polynomial: {`  y = ${Utils.generatePolynomialEquation(curve.coefficients)}`}</div>
+            <div>Equation: {curve.equation}</div>
           </pre>
           <span>{'y = '}</span>
-          {coefficients.map((coefficient, i) => {
+          {curve.coefficients.map((coefficient, i) => {
             return (
               <span key={i}>
                 {
@@ -716,11 +716,12 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
                     onChange={e => handleCurveCoefficientsChange(e, i)}
                   />
                 }
-                {coefficients.length - i - 1 > 1
-                  ? ' * x^' + (coefficients.length - i - 1).toString()
+                {/* TODO: move me to a function */}
+                {curve.coefficients.length - i - 1 > 1
+                  ? ' * x^' + (curve.coefficients.length - i - 1).toString()
                   : ''}
-                {coefficients.length - i - 1 === 1 ? ' * x' : ''}
-                {i < coefficients.length - 1 ? ' + ' : ''}
+                {curve.coefficients.length - i - 1 === 1 ? ' * x' : ''}
+                {i < curve.coefficients.length - 1 ? ' + ' : ''}
               </span>
             );
           })}
@@ -729,15 +730,15 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
         <hr></hr>
 
         <div>
-          {points.map((point, i) => {
+          {curve.points.map((point, i) => {
             return (
               <div key={i}>
                 P{i + 1} - x:{' '}
                 <input
                   className="number"
                   type="number"
-                  min={xAxis.min}
-                  max={xAxis.max}
+                  min={curve.xAxis.min}
+                  max={curve.xAxis.max}
                   step={Math.pow(10, -(SETTINGS.precisionPoints - 1))}
                   value={point[0]}
                   onChange={e => handlePointCoordinateChange(e, i, 0)}
@@ -746,8 +747,8 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
                 <input
                   className="number"
                   type="number"
-                  min={yAxis.min}
-                  max={yAxis.max}
+                  min={curve.yAxis.min}
+                  max={curve.yAxis.max}
                   step={Math.pow(10, -(SETTINGS.precisionPoints - 1))}
                   value={point[1]}
                   onChange={e => handlePointCoordinateChange(e, i, 1)}
@@ -774,7 +775,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
               <td>
                 <input
                   type="text"
-                  value={curveName}
+                  value={curve.name}
                   onChange={e => handleCurveNameChange(e)}
                   placeholder="Curve Name"
                 />
@@ -787,7 +788,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
               <td>
                 <input
                   type="text"
-                  value={xAxis.label}
+                  value={curve.xAxis.label}
                   onChange={e => handleXAxisLabelChange(e)}
                   placeholder="X-Axis Label"
                 />
@@ -800,7 +801,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
               <td>
                 <input
                   type="text"
-                  value={yAxis.label}
+                  value={curve.yAxis.label}
                   onChange={e => handleYAxisLabelChange(e)}
                   placeholder="Y-Axis Label"
                 />
@@ -824,7 +825,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
             rows={20}
             cols={43}
             onChange={e => handleCurveDescriptionChange(e)}
-            value={curveDescription}
+            value={curve.description}
           ></textarea>
         </div>
 
