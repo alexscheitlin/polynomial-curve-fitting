@@ -17,7 +17,7 @@ npm i polynomial-curve-fitting
 
 Use the react component generating a random curve:
 
-```javascript
+```jsx
 import React from 'react';
 import CurveGenerator from 'polynomial-curve-fitting';
 
@@ -68,7 +68,7 @@ To provide initial information about the curve, there are three options:
 
 Provide the information about the curve as follows:
 
-```javascript
+```jsx
 const App = () => <CurveGenerator curve={curve}></CurveGenerator>;
 ```
 
@@ -76,7 +76,7 @@ const App = () => <CurveGenerator curve={curve}></CurveGenerator>;
 
 In addition to the `curve` prop, there is also a `settings` prop that allows to set the style of the drawn graph (e.g, the size of the svg, font sizes, colors, and spacing). Have a look at the [default props](./src/default-props.ts) to see the default settings and what can be changed.
 
-```javascript
+```jsx
 const App = () => <CurveGenerator settings={settings}></CurveGenerator>;
 ```
 
@@ -84,7 +84,7 @@ const App = () => <CurveGenerator settings={settings}></CurveGenerator>;
 
 To get updates on the curve while changing it within the component, use a callback function as shown in the following example:
 
-```javascript
+```jsx
 const App = () => {
   const [curve, setCurve] = React.useState();
   return (
