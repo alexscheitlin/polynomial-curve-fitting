@@ -4,7 +4,7 @@ import * as d3 from 'd3';
 import * as Drawing from './drawing';
 import * as Regression from './regression';
 import * as Utils from './utils';
-import { Axis, Curve, Props, Settings } from './types';
+import { Curve, Props, Settings } from './types';
 import { defaultProps } from './default-props';
 import { initValues } from './init';
 
@@ -28,11 +28,9 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
 
   const drawDraggablePoints = (
     graph: d3.Selection<SVGGElement, any, HTMLElement, any>,
+    curve: Curve,
     xScale: d3.ScaleLinear<number, number>,
     yScale: d3.ScaleLinear<number, number>,
-    points: number[][],
-    xAxis: Axis,
-    yAxis: Axis,
     radius: number
   ) => {
     // remove old points
@@ -51,7 +49,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
 
     draggablePoints
       .selectAll('circle')
-      .data(points)
+      .data(curve.points)
       .enter()
       .append('circle')
       .attr('r', radius)
@@ -80,15 +78,15 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
         .attr('opacity', () => (isPointOnGraph(datum) ? 1 : 0));
 
       const newCurvePoints = Regression.generateCurvePoints(
-        points,
+        curve.points,
         curve.polynomialOrder,
-        xAxis.min,
-        xAxis.max,
+        curve.xAxis.min,
+        curve.xAxis.max,
         SETTINGS.precisionCoefficient
       );
 
       const regression = Regression.polynomialRegression(
-        points,
+        curve.points,
         curve.polynomialOrder,
         SETTINGS.precisionCoefficient
       );
@@ -98,7 +96,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
         coefficients: regression.equation,
         curvePoints: newCurvePoints,
         equation: regression.string,
-        points: Utils.sortPointsByX(points), // sort points to not have "invalid" functions
+        points: Utils.sortPointsByX(curve.points), // sort points to not have "invalid" functions
         r2: regression.r2,
       });
 
@@ -119,15 +117,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
     const dragEnded = (_datum: any, index: number, nodes: Element[] | d3.ArrayLike<Element>) => {
       const node = nodes[index];
       d3.select(node).classed('active', false);
-      drawDraggablePoints(
-        graph,
-        xScale,
-        yScale,
-        points,
-        xAxis,
-        yAxis,
-        SETTINGS.draggablePoint.radius
-      );
+      drawDraggablePoints(graph, curve, xScale, yScale, SETTINGS.draggablePoint.radius);
     };
 
     // define drag events (methods are defined below)
@@ -141,7 +131,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
     draggablePoints.selectAll('circle').call(drag as any);
   };
 
-  const addZooming = (graph: d3.Selection<SVGGElement, any, HTMLElement, any>) => {
+  const addZooming = (graph: d3.Selection<SVGGElement, any, HTMLElement, any>, curve: Curve) => {
     // based on: https://stackoverflow.com/questions/39387727/d3v4-zooming-equivalent-to-d3-zoom-x
 
     const zoomed = () => {
@@ -184,9 +174,13 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
         SETTINGS.precisionCoefficient
       );
 
-      setCurve({ ...curve, curvePoints: newCurvePoints, xAxis: newXAxis, yAxis: newYAxis });
-      setInitialCurve({ ...initialCurve, curvePoints: newCurvePointsInitialCurve });
-      draw(newXAxis, newYAxis, newCurvePoints, newCurvePointsInitialCurve);
+      const newCurve = { ...curve, curvePoints: newCurvePoints, xAxis: newXAxis, yAxis: newYAxis };
+      setCurve(newCurve);
+
+      const newInitialCurve = { ...initialCurve, curvePoints: newCurvePointsInitialCurve };
+      setInitialCurve(newInitialCurve);
+
+      draw(newInitialCurve, newCurve);
     };
 
     const zoom = d3.zoom().on('zoom', () => zoomed());
@@ -220,10 +214,8 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   const [curve, setCurve] = React.useState<Curve>(Utils.deepCopy(INITIAL_CURVE));
   const [initialCurve, setInitialCurve] = React.useState<Curve>(INITIAL_CURVE);
 
-  React.useEffect(
-    () => draw(curve.xAxis, curve.yAxis, curve.curvePoints, initialCurve.curvePoints),
-    [curve.polynomialOrder]
-  );
+  // initially draw the graph
+  React.useEffect(() => draw(initialCurve, curve), []);
 
   // needed for zooming and moving the coordinate system
   let dragged = false;
@@ -233,12 +225,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   /* Main                                                                    */
   /***************************************************************************/
 
-  const draw = (
-    xAxis: Axis,
-    yAxis: Axis,
-    curvePoints: number[][],
-    initialCurvePoints: number[][]
-  ) => {
+  const draw = (initialCurve: Curve, curve: Curve) => {
     // implementation based on:
     // https://bl.ocks.org/denisemauldin/538bfab8378ac9c3a32187b4d7aed2c2
 
@@ -255,8 +242,8 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       );
 
     // set domains of x and y axis
-    SETTINGS.xScale.domain([xAxis.min, xAxis.max]);
-    SETTINGS.yScale.domain([yAxis.min, yAxis.max]);
+    SETTINGS.xScale.domain([curve.xAxis.min, curve.xAxis.max]);
+    SETTINGS.yScale.domain([curve.yAxis.min, curve.yAxis.max]);
 
     Drawing.drawGrid(
       graph,
@@ -278,7 +265,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       graph,
       SETTINGS.xScale,
       SETTINGS.yScale,
-      initialCurvePoints,
+      initialCurve.curvePoints,
       SETTINGS.initialCurve.color,
       SETTINGS.initialCurve.strokeWidth
     );
@@ -296,8 +283,8 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       svg,
       SETTINGS.graph.margin,
       SETTINGS.graphSize,
-      xAxis.label,
-      yAxis.label,
+      curve.xAxis.label,
+      curve.yAxis.label,
       SETTINGS.graph.axis.labels.color,
       SETTINGS.graph.axis.labels.fontFamily,
       SETTINGS.graph.axis.labels.fontSize
@@ -309,7 +296,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
         graph,
         SETTINGS.xScale,
         SETTINGS.yScale,
-        curvePoints,
+        curve.curvePoints,
         SETTINGS.curve.color
       );
     } else {
@@ -317,7 +304,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
         graph,
         SETTINGS.xScale,
         SETTINGS.yScale,
-        curvePoints,
+        curve.curvePoints,
         SETTINGS.curve.color,
         SETTINGS.curve.strokeWidth
       );
@@ -332,11 +319,9 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
     );
     drawDraggablePoints(
       graph,
+      curve,
       SETTINGS.xScale,
       SETTINGS.yScale,
-      curve.points,
-      xAxis,
-      yAxis,
       SETTINGS.draggablePoint.radius
     );
 
@@ -349,7 +334,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       y: SETTINGS.yScale,
     });
 
-    addZooming(graph);
+    addZooming(graph, curve);
 
     // let the graph be "movable" (aka panning) with the mouse
     const mouseDown = () => {
@@ -360,8 +345,8 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
     const mouseMove = () => {
       if (dragged) {
         // get length of both axes
-        const xAxisLength = xAxis.max - xAxis.min;
-        const yAxisLength = yAxis.max - yAxis.min;
+        const xAxisLength = curve.xAxis.max - curve.xAxis.min;
+        const yAxisLength = curve.yAxis.max - curve.yAxis.min;
 
         // calculate differences of the coordinates during the mouse move
         const diffX = (d3.event.movementX / SETTINGS.graphSize.width) * xAxisLength;
@@ -376,16 +361,16 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
         const isDiffYAbove = Math.abs(diffDragged[1]) >= threshold;
         if (isDiffXAbove || isDiffYAbove) {
           const newDrawing = Object.assign({}, drawing);
-          let newXAxis = xAxis;
-          let newYAxis = yAxis;
+          let newXAxis = curve.xAxis;
+          let newYAxis = curve.yAxis;
 
           if (isDiffXAbove) {
             // shift x domain by drag difference
-            const newXDomain = [xAxis.min - diffDragged[0], xAxis.max - diffDragged[0]];
+            const newXDomain = [curve.xAxis.min - diffDragged[0], curve.xAxis.max - diffDragged[0]];
 
             // set new min and max values of the x axis
             newXAxis = {
-              ...xAxis,
+              ...curve.xAxis,
               min: Utils.round(newXDomain[0], 0),
               max: Utils.round(newXDomain[1], 0),
             };
@@ -400,11 +385,11 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
 
           if (isDiffYAbove) {
             // shift y domain by drag difference
-            const newYDomain = [yAxis.min + diffDragged[1], yAxis.max + diffDragged[1]];
+            const newYDomain = [curve.yAxis.min + diffDragged[1], curve.yAxis.max + diffDragged[1]];
 
             // set new min and max values of the y axis
             newYAxis = {
-              ...yAxis,
+              ...curve.yAxis,
               min: Utils.round(newYDomain[0], 0),
               max: Utils.round(newYDomain[1], 0),
             };
@@ -438,10 +423,18 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
             SETTINGS.precisionCoefficient
           );
 
-          setCurve({ ...curve, curvePoints: newCurvePoints, xAxis: newXAxis, yAxis: newYAxis });
-          setInitialCurve({ ...initialCurve, curvePoints: newCurvePointsInitialCurve });
+          const newCurve = {
+            ...curve,
+            curvePoints: newCurvePoints,
+            xAxis: newXAxis,
+            yAxis: newYAxis,
+          };
+          setCurve(newCurve);
 
-          draw(newXAxis, newYAxis, newCurvePoints, newCurvePointsInitialCurve);
+          const newInitialCurve = { ...initialCurve, curvePoints: newCurvePointsInitialCurve };
+          setInitialCurve(newInitialCurve);
+
+          draw(newInitialCurve, newCurve);
         }
       }
     };
@@ -494,9 +487,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       cPoints.length - 1 > newValue && Utils.removePoint(cPoints);
     }
 
-    clearSVG();
-
-    setCurve({ ...curve, points: Utils.sortPointsByX(cPoints), polynomialOrder: newValue });
+    updatePointsState(Utils.sortPointsByX(cPoints), newValue);
   };
 
   const updateCoefficientState = (newValue: number, coefficientIndex: number) => {
@@ -538,55 +529,26 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       SETTINGS.precisionCoefficient
     );
 
-    setCurve({
-      ...curve,
-      curvePoints: newCurvePoints,
-      points: points,
-    });
-
-    if (SETTINGS.showDottedCurve) {
-      Drawing.drawCurvePoints(
-        drawing.graph,
-        drawing.x,
-        drawing.y,
-        newCurvePoints,
-        SETTINGS.curve.color
-      );
-    } else {
-      Drawing.drawCurveLines(
-        drawing.graph,
-        drawing.x,
-        drawing.y,
-        newCurvePoints,
-        SETTINGS.curve.color,
-        SETTINGS.curve.strokeWidth
-      );
-    }
-
-    drawDraggablePoints(
-      drawing.graph,
-      drawing.x,
-      drawing.y,
-      points,
-      curve.xAxis,
-      curve.yAxis,
-      SETTINGS.draggablePoint.radius
-    );
-    updateRegressionState(points, order);
-  };
-
-  const updateRegressionState = (points: number[][], order: number) => {
     const regression = Regression.polynomialRegression(
       points,
       order,
       SETTINGS.precisionCoefficient
     );
-    setCurve({
+
+    const newCurve = {
       ...curve,
+      curvePoints: newCurvePoints,
       coefficients: regression.equation,
       equation: regression.string,
       r2: regression.r2,
-    });
+      points: points,
+      polynomialOrder: order,
+    };
+
+    setCurve(newCurve);
+
+    clearSVG();
+    draw(initialCurve, newCurve);
   };
 
   /***************************************************************************/
@@ -635,13 +597,12 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   };
 
   const handleResetZoomClick = () => {
-    const newXAxis = initialCurve.xAxis;
-    const newYAxis = initialCurve.yAxis;
-
-    setCurve({ ...curve, xAxis: newXAxis, yAxis: newYAxis });
+    const newCurve = { ...curve, xAxis: initialCurve.xAxis, yAxis: initialCurve.yAxis };
+    // TODO: calculate initial curve points
+    setCurve(newCurve);
 
     clearSVG();
-    draw(newXAxis, newYAxis, curve.curvePoints, initialCurve.curvePoints);
+    draw(initialCurve, newCurve);
   };
 
   /***************************************************************************/
