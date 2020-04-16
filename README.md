@@ -76,27 +76,43 @@ const App = () => <CurveGenerator settings={settings}></CurveGenerator>;
 
 ## Development
 
-The following steps show how to make changes to `polynomial-curve-fitting` and use the component in an `example` react app. The commands used below assume that the two projects are sibling directories.
+The following steps show how to make changes to `polynomial-curve-fitting` and use the component in an `pcf-example` react app. The commands used below assume that the two projects are sibling directories.
 
-- Clone and build the `polynomial-curve-fitting`
+### Clone and Build `polynomial-curve-fitting`
+
+Within the terminal, execute the following commands:
 
 ```bash
 # clone the repository
-git clone https://github.com/alexscheitlin/polynomial-curve-fitting.git && cd polynomial-curve-fitting
+git clone https://github.com/alexscheitlin/polynomial-curve-fitting.git
 
 # install the dependencies
+cd polynomial-curve-fitting
 npm install
 
-# build the component
-npm run build
+# continuously build the library
+npm run build:watch
 ```
 
-- Add the component as a dependency to your `example` react app using the relative path: `"polynomial-curve-fitting": "file:../polynomial-curve-fitting"`
+### Create new React App `pcf-example`
 
-- Within your `example` react app, install the dependencies using: `npm install`
+Open a new terminal tab and execute the following commands:
 
-- Within `polynomial-curve-fitting`, link react with the one of your `example` react app using: `npm link ../example/node_modules/react`
+```bash
+# create new react app with typescript
+npx create-react-app pcf-example --template typescript
 
-- Within `example`, start the app using: `npm run start`
+# install this library as a dependency
+cd pcf-example
+npm install ../polynomial-curve-fitting
 
-- Within `polynomial-curve-fitting`, continuously build the component to see changes in your `example` react app: `npm run build:watch`
+# link react of the library with the one of the example react app
+cd ../polynomial-curve-fitting/
+npm link ../pcf-example/node_modules/react
+
+# start the example react app
+cd ../pcf-example/
+npm run start
+```
+
+Add the react component to the `App.tsx` file (see Usage)
