@@ -187,15 +187,6 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
     graph.call(zoom as any).on('mousedown.zoom', null);
   };
 
-  const drawCurveName = (svg: d3.Selection<d3.BaseType, any, HTMLElement, any>, value: string) =>
-    svg.select('text#curve-name').text(value);
-
-  const drawXAxisLabel = (svg: d3.Selection<d3.BaseType, any, HTMLElement, any>, value: string) =>
-    svg.select('text#x-axis-label').text(value);
-
-  const drawYAxisLabel = (svg: d3.Selection<d3.BaseType, any, HTMLElement, any>, value: string) =>
-    svg.select('text#y-axis-label').text(value);
-
   /***************************************************************************/
   /* Variables                                                               */
   /***************************************************************************/
@@ -459,23 +450,36 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   // re-draw some graphics if needed
 
   const updateCurveNameState = (newValue: string) => {
-    setCurve({ ...curve, name: newValue });
+    const newCurve = { ...curve, name: newValue };
+    setCurve(newCurve);
     // changeCurveName(newValue);
-    drawCurveName(drawing.svg, newValue);
+
+    clearSVG();
+    draw(initialCurve, newCurve);
   };
 
   const updateCurveDescriptionState = (newValue: string) => {
-    setCurve({ ...curve, description: newValue });
+    const newCurve = { ...curve, description: newValue };
+    setCurve(newCurve);
+
+    clearSVG();
+    draw(initialCurve, newCurve);
   };
 
   const updateXAxisLabelState = (newValue: string) => {
-    setCurve({ ...curve, xAxis: { ...curve.xAxis, label: newValue } });
-    drawXAxisLabel(drawing.svg, newValue);
+    const newCurve = { ...curve, xAxis: { ...curve.xAxis, label: newValue } };
+    setCurve(newCurve);
+
+    clearSVG();
+    draw(initialCurve, newCurve);
   };
 
   const updateYAxisLabelState = (newValue: string) => {
-    setCurve({ ...curve, yAxis: { ...curve.yAxis, label: newValue } });
-    drawYAxisLabel(drawing.svg, newValue);
+    const newCurve = { ...curve, yAxis: { ...curve.yAxis, label: newValue } };
+    setCurve(newCurve);
+
+    clearSVG();
+    draw(initialCurve, newCurve);
   };
 
   const updateOrderState = (newValue: number) => {
