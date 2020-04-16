@@ -9,8 +9,6 @@ import { defaultProps } from './default-props';
 import { initValues } from './init';
 
 const CurveGenerator: React.FC<Props> = (props: Props) => {
-  // const changeCurveName = (value: string) => props.changeCurveName(value);
-
   /***************************************************************************/
   /* Drawing Methods                                                         */
   /***************************************************************************/
@@ -207,6 +205,23 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
 
   // initially draw the graph
   React.useEffect(() => draw(initialCurve, curve), []);
+
+  // expose curve on every change
+  React.useEffect(() => {
+    if (props.curveChange) {
+      const _curve = Utils.deepCopy(curve);
+      props.curveChange({
+        name: _curve.name,
+        description: _curve.description,
+        xAxis: _curve.xAxis,
+        yAxis: curve.yAxis,
+        polynomialEquation: Utils.generatePolynomialEquation(_curve.coefficients),
+        polynomialOrder: _curve.polynomialOrder,
+        coefficients: _curve.coefficients,
+        points: _curve.points,
+      });
+    }
+  }, [curve]);
 
   // needed for zooming and moving the coordinate system
   let dragged = false;
@@ -452,7 +467,6 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   const updateCurveNameState = (newValue: string) => {
     const newCurve = { ...curve, name: newValue };
     setCurve(newCurve);
-    // changeCurveName(newValue);
 
     clearSVG();
     draw(initialCurve, newCurve);

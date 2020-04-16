@@ -26,6 +26,12 @@ const App = () => <CurveGenerator></CurveGenerator>;
 export default App;
 ```
 
+The following sections show:
+
+1. how to specify a curve
+2. how to provide graph settings
+3. how to get the curve as output
+
 ### Specify a Curve
 
 To provide initial information about the curve, there are three options:
@@ -72,6 +78,24 @@ In addition to the `curve` prop, there is also a `settings` prop that allows to 
 
 ```javascript
 const App = () => <CurveGenerator settings={settings}></CurveGenerator>;
+```
+
+### Get Curve
+
+To get updates on the curve while changing it within the component, use a callback function as shown in the following example:
+
+```javascript
+const App = () => {
+  const [curve, setCurve] = React.useState();
+  return (
+    <div>
+      <CurveGenerator curveChange={value => setCurve(value)}></CurveGenerator>
+      <pre>
+        {JSON.stringify(curve, (k, c) => (v instanceof Array ? JSON.stringify(v, null) : v), 3)}
+      </pre>
+    </div>
+  );
+};
 ```
 
 ## Development

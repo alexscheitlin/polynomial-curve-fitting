@@ -148,9 +148,9 @@ export const generateCurve = (
       max: curve?.xAxis?.max || defaultCurve.xAxis.max,
     },
     yAxis: {
+      label: curve?.yAxis?.label || defaultCurve.yAxis.label,
       min: curve?.yAxis?.min || defaultCurve.yAxis.min,
       max: curve?.yAxis?.max || defaultCurve.yAxis.max,
-      label: curve?.yAxis?.label || defaultCurve.yAxis.label,
     },
   };
 

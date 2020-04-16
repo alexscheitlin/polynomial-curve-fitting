@@ -11,9 +11,10 @@
 export interface Props {
   curve?: PropsBaseCurve | PropsCurvePoints | PropsCurveOrder;
   settings?: PropsSettings;
+  curveChange?: (value: CurveOut) => void;
 }
 
-// Mirror the `Props` from above but require all fields to be present.
+// Mirror the `Props` from above but require all fields to be present (except the 'output callback').
 export interface DefaultProps {
   curve: Required<PropsCurveOrder>;
   settings: Required<PropsSettings>;
@@ -58,6 +59,13 @@ export interface Curve extends Required<PropsBaseCurve> {
   coefficients: number[];
   equation: string;
   r2: number;
+}
+
+export interface CurveOut extends Required<PropsBaseCurve> {
+  polynomialEquation: string;
+  polynomialOrder: number;
+  coefficients: number[];
+  points: number[][];
 }
 
 export interface Settings extends Required<PropsSettings> {
