@@ -615,8 +615,20 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   };
 
   const handleResetZoomClick = () => {
-    const newCurve = { ...curve, xAxis: initialCurve.xAxis, yAxis: initialCurve.yAxis };
-    // TODO: calculate initial curve points
+    const initialCurve = Utils.deepCopy(INITIAL_CURVE);
+    const newCurvePoints = Regression.generateCurvePoints(
+      curve.points,
+      curve.polynomialOrder,
+      initialCurve.xAxis.min,
+      initialCurve.xAxis.max,
+      SETTINGS.precisionCoefficient
+    );
+    const newCurve = {
+      ...curve,
+      curvePoints: newCurvePoints,
+      xAxis: initialCurve.xAxis,
+      yAxis: initialCurve.yAxis,
+    };
     setCurve(newCurve);
 
     clearSVG();
