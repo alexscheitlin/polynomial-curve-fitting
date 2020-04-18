@@ -232,6 +232,7 @@ export const drawInitialCurve = (
 };
 
 export const drawCurvePoints = (
+  svg: d3.Selection<d3.BaseType, any, HTMLElement, any>,
   graph: d3.Selection<SVGGElement, any, HTMLElement, any>,
   xScale: d3.ScaleLinear<number, number>,
   yScale: d3.ScaleLinear<number, number>,
@@ -239,7 +240,7 @@ export const drawCurvePoints = (
   color: string
 ) => {
   // remove old points
-  d3.select('svg').select('g').selectAll('ellipse').remove();
+  svg.select('g').selectAll('ellipse').remove();
 
   // draw new points
   graph
@@ -255,6 +256,7 @@ export const drawCurvePoints = (
 };
 
 export const drawCurveLines = (
+  svg: d3.Selection<d3.BaseType, any, HTMLElement, any>,
   graph: d3.Selection<SVGGElement, any, HTMLElement, any>,
   xScale: d3.ScaleLinear<number, number>,
   yScale: d3.ScaleLinear<number, number>,
@@ -263,7 +265,7 @@ export const drawCurveLines = (
   strokeWidth: number
 ) => {
   // remove old lines
-  d3.select('svg').select('g').select('#curve').remove();
+  svg.select('g').select('#curve').remove();
 
   const curve = graph.append('g').attr('id', 'curve');
 

@@ -15,16 +15,19 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
 
   // remove all drawings from svg
   const clearSVG = () => {
+    const svg = d3.select(SVG_REF.current);
+
     // remove graph
-    d3.select('svg').select('g').remove();
+    svg.select('g').remove();
 
     // remove title and axis labels
-    d3.select('svg').selectAll('text').remove();
+    svg.selectAll('text').remove();
 
     //.selectAll('*') // remove everything withing the svg tag (including the styling)
   };
 
   const drawDraggablePoints = (
+    svg: d3.Selection<d3.BaseType, any, HTMLElement, any>,
     graph: d3.Selection<SVGGElement, any, HTMLElement, any>,
     curve: Curve,
     xScale: d3.ScaleLinear<number, number>,
@@ -32,7 +35,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
     radius: number
   ) => {
     // remove old points
-    d3.select('svg').select('g').select('g#draggable-points').remove();
+    svg.select('g').select('g#draggable-points').remove();
 
     const draggablePoints = graph.append('g').attr('id', 'draggable-points');
 
@@ -99,9 +102,10 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       });
 
       if (SETTINGS.showDottedCurve) {
-        Drawing.drawCurvePoints(graph, xScale, yScale, newCurvePoints, SETTINGS.curve.color);
+        Drawing.drawCurvePoints(svg, graph, xScale, yScale, newCurvePoints, SETTINGS.curve.color);
       } else {
         Drawing.drawCurveLines(
+          svg,
           graph,
           xScale,
           yScale,
@@ -115,7 +119,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
     const dragEnded = (_datum: any, index: number, nodes: Element[] | d3.ArrayLike<Element>) => {
       const node = nodes[index];
       d3.select(node).classed('active', false);
-      drawDraggablePoints(graph, curve, xScale, yScale, SETTINGS.draggablePoint.radius);
+      drawDraggablePoints(svg, graph, curve, xScale, yScale, SETTINGS.draggablePoint.radius);
     };
 
     // define drag events (methods are defined below)
@@ -299,6 +303,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
     // draw curve points or lines
     if (SETTINGS.showDottedCurve) {
       Drawing.drawCurvePoints(
+        svg,
         graph,
         SETTINGS.xScale,
         SETTINGS.yScale,
@@ -307,6 +312,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       );
     } else {
       Drawing.drawCurveLines(
+        svg,
         graph,
         SETTINGS.xScale,
         SETTINGS.yScale,
@@ -324,6 +330,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       SETTINGS.crosshairColor
     );
     drawDraggablePoints(
+      svg,
       graph,
       curve,
       SETTINGS.xScale,
