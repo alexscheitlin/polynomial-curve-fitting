@@ -1,5 +1,18 @@
 import * as React from 'react';
 import * as d3 from 'd3';
+import {
+  Button,
+  Card,
+  ExpansionPanel,
+  ExpansionPanelDetails,
+  ExpansionPanelSummary,
+  MenuItem,
+  StepConnector,
+  TextField,
+  Typography,
+} from '@material-ui/core';
+import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
 import * as Drawing from './drawing';
 import * as Regression from './regression';
@@ -581,19 +594,23 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   /***************************************************************************/
   // extract and validate input and then update the state
 
-  const handleCurveNameChange = (event: React.ChangeEvent<HTMLInputElement>) =>
-    updateCurveNameState(event.target.value);
-  const handleCurveDescriptionChange = (event: React.ChangeEvent<HTMLTextAreaElement>) =>
-    updateCurveDescriptionState(event.target.value);
-  const handleXAxisLabelChange = (event: React.ChangeEvent<HTMLInputElement>) =>
-    updateXAxisLabelState(event.target.value);
-  const handleYAxisLabelChange = (event: React.ChangeEvent<HTMLInputElement>) =>
-    updateYAxisLabelState(event.target.value);
-  const handleOrderChange = (event: React.ChangeEvent<HTMLSelectElement>) =>
+  const handleCurveNameChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => updateCurveNameState(event.target.value);
+  const handleCurveDescriptionChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => updateCurveDescriptionState(event.target.value);
+  const handleXAxisLabelChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => updateXAxisLabelState(event.target.value);
+  const handleYAxisLabelChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => updateYAxisLabelState(event.target.value);
+  const handleOrderChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     updateOrderState(parseInt(event.target.value));
 
   const handleCurveCoefficientsChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     coefficientIndex: number
   ) => {
     let value = event.target.value;
@@ -607,7 +624,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   };
 
   const handlePointCoordinateChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     pointIndex: number,
     coordinateIndex: number
   ) => {
@@ -646,12 +663,69 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   /* Render                                                                  */
   /***************************************************************************/
 
+  const orders = [1, 2, 3, 4, 5, 6];
+
+  const [expanded, setExpanded] = React.useState<string | false>('panel1');
+
+  const handlePanelChange = (panel: string) => (
+    event: React.ChangeEvent<{}>,
+    isExpanded: boolean
+  ) => {
+    setExpanded(isExpanded ? panel : false);
+  };
+
+  const useStyles = makeStyles((theme: Theme) =>
+    createStyles({
+      /******************/
+      /* components     */
+      /******************/
+      root: {
+        '& .MuiTextField-root': {
+          margin: theme.spacing(1),
+          // width: '25ch',
+        },
+      },
+      heading: {
+        fontSize: theme.typography.pxToRem(15),
+        // flexBasis: '33.33%',
+        flexShrink: 0,
+      },
+      svg: {
+        width: `${SETTINGS.svg.size.width}px`,
+        height: `${SETTINGS.svg.size.height}px`,
+      },
+      numberInput: {
+        width: '120px',
+      },
+      description: {
+        width: `${SETTINGS.svg.size.width}px`,
+        padding: '5px',
+        textAlign: 'center',
+      },
+      stepConnector: {
+        margin: '15px 0',
+      },
+      /******************/
+      /* single styles  */
+      /******************/
+      alignSelfCenter: {
+        alignSelf: 'center',
+      },
+      flex: {
+        display: 'flex',
+      },
+      flexColumn: {
+        flexDirection: 'column',
+      },
+    })
+  );
+
+  const classes = useStyles();
+
   return (
-    <div style={{ display: 'flex' }}>
-      <div>
-        <div
-          style={{ width: `${SETTINGS.svg.size.width}px`, height: `${SETTINGS.svg.size.height}px` }}
-        >
+    <div className={classes.flex}>
+      <Card style={{ padding: '0.5rem', marginRight: '2rem' }}>
+        <div className={classes.svg}>
           <svg
             ref={SVG_REF as any}
             width={SETTINGS.svg.size.width}
@@ -659,172 +733,182 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
             style={{ float: 'left' }}
           >
             <defs>
-              <style type="text/css">{`
-            circle {
-              fill: ${SETTINGS.draggablePoint.color};
-            }
-            circle.active {
-              fill: gray;
-              stroke: black;
-            }
-          `}</style>
+              <style type="text/css">
+                {`
+                  circle {
+                    fill: ${SETTINGS.draggablePoint.color};
+                  }
+                  circle.active {
+                    fill: gray;
+                    stroke: black;
+                  }
+                `}
+              </style>
             </defs>
           </svg>
         </div>
-        <p style={{ width: `${SETTINGS.svg.size.width}px`, padding: '5px', textAlign: 'center' }}>
-          {curve.description}
-        </p>
-      </div>
+        <Button variant="contained" onClick={() => handleResetZoomClick()}>
+          Reset Zoom
+        </Button>
+        <Typography className={classes.description}>{curve.description}</Typography>
+      </Card>
 
-      <div style={{ marginLeft: '1rem' }}>
-        <div>
-          <select onChange={e => handleOrderChange(e)} value={curve.polynomialOrder}>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-          </select>
-        </div>
+      <div className={classes.root}>
+        <ExpansionPanel expanded={expanded === 'panel1'} onChange={handlePanelChange('panel1')}>
+          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography className={classes.heading}>Polynomial Equation and Points</Typography>
+          </ExpansionPanelSummary>
+          <ExpansionPanelDetails>
+            <div style={{ marginLeft: '1rem' }}>
+              <TextField
+                select
+                label="Select"
+                value={curve.polynomialOrder}
+                onChange={e => handleOrderChange(e)}
+                variant="outlined"
+              >
+                {orders.map(option => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </TextField>
 
-        <hr></hr>
+              <StepConnector className={classes.stepConnector}></StepConnector>
 
-        <pre style={{ color: curve.r2 === 1 ? 'green' : 'red' }}>
-          Coefficient of Determination (R^2): {JSON.stringify(curve.r2)}
-        </pre>
+              <Typography style={{ color: curve.r2 === 1 ? 'green' : 'red' }}>
+                Coefficient of Determination (R^2): {JSON.stringify(curve.r2)}
+              </Typography>
 
-        <hr></hr>
+              <StepConnector className={classes.stepConnector}></StepConnector>
 
-        <div>
-          <pre>
-            <div>Polynomial: {`  y = ${Utils.generatePolynomialEquation(curve.coefficients)}`}</div>
-            <div>Equation: {curve.equation}</div>
-          </pre>
-          <span>{'y = '}</span>
-          {curve.coefficients.map((coefficient, i) => {
-            return (
-              <span key={i}>
-                {
-                  <input
-                    className="number"
-                    type="number"
-                    step={Utils.precisionToStepSize(SETTINGS.precisionCoefficient)}
-                    value={coefficient}
-                    onChange={e => handleCurveCoefficientsChange(e, i)}
-                  />
-                }
-                {Utils.generatePolynomialTerm(curve.coefficients.length, i, 'x')}
-              </span>
-            );
-          })}
-        </div>
-
-        <hr></hr>
-
-        <div>
-          {curve.points.map((point, i) => {
-            return (
-              <div key={i}>
-                P{i + 1} - x:{' '}
-                <input
-                  className="number"
-                  type="number"
-                  min={curve.xAxis.min}
-                  max={curve.xAxis.max}
-                  step={Utils.precisionToStepSize(SETTINGS.precisionPoints)}
-                  value={point[0]}
-                  onChange={e => handlePointCoordinateChange(e, i, 0)}
-                />{' '}
-                y:{' '}
-                <input
-                  className="number"
-                  type="number"
-                  min={curve.yAxis.min}
-                  max={curve.yAxis.max}
-                  step={Utils.precisionToStepSize(SETTINGS.precisionPoints)}
-                  value={point[1]}
-                  onChange={e => handlePointCoordinateChange(e, i, 1)}
-                />
-                <style>{`
-                  .number {
-                    width: 80px;
-                    height: 35px;
-                  }
-                `}</style>
+              <div>
+                <div>
+                  <Typography>
+                    Polynomial: {`y = ${Utils.generatePolynomialEquation(curve.coefficients)}`}
+                  </Typography>
+                  <Typography>Equation: {curve.equation}</Typography>
+                </div>
+                <div className={classes.flex}>
+                  <Typography className={classes.alignSelfCenter}>y =</Typography>
+                  {curve.coefficients.map((coefficient, i) => {
+                    return (
+                      <div key={i} className={classes.flex}>
+                        <TextField
+                          type="number"
+                          value={coefficient}
+                          onChange={e => handleCurveCoefficientsChange(e, i)}
+                          inputProps={{
+                            step: Utils.precisionToStepSize(SETTINGS.precisionCoefficient),
+                          }}
+                          InputLabelProps={{
+                            shrink: true,
+                          }}
+                          variant="outlined"
+                          className={classes.numberInput}
+                        />
+                        <Typography className={classes.alignSelfCenter}>
+                          {Utils.generatePolynomialTerm(curve.coefficients.length, i, 'x')}
+                        </Typography>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
 
-      <div style={{ marginLeft: '2rem' }}>
-        <table>
-          <tbody>
-            <tr>
-              <td>
-                <label>Name:</label>
-              </td>
-              <td>
-                <input
-                  type="text"
-                  value={curve.name}
-                  onChange={e => handleCurveNameChange(e)}
-                  placeholder="Curve Name"
-                />
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <label>X-Axis:</label>
-              </td>
-              <td>
-                <input
-                  type="text"
-                  value={curve.xAxis.label}
-                  onChange={e => handleXAxisLabelChange(e)}
-                  placeholder="X-Axis Label"
-                />
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <label>Y-Axis:</label>
-              </td>
-              <td>
-                <input
-                  type="text"
-                  value={curve.yAxis.label}
-                  onChange={e => handleYAxisLabelChange(e)}
-                  placeholder="Y-Axis Label"
-                />
-              </td>
-            </tr>
-          </tbody>
-          <style>{`
-              table input {
-                width: 300px;
-              }
-            `}</style>
-        </table>
+              <StepConnector className={classes.stepConnector}></StepConnector>
 
-        <br></br>
+              <div>
+                {curve.points.map((point, i) => {
+                  return (
+                    <div key={i} className={classes.flex}>
+                      <Typography className={classes.alignSelfCenter}>P{i + 1}</Typography>
+                      <TextField
+                        label="X-Coordinate"
+                        type="number"
+                        value={point[0]}
+                        onChange={e => handlePointCoordinateChange(e, i, 0)}
+                        inputProps={{
+                          min: curve.xAxis.min,
+                          max: curve.xAxis.max,
+                          step: Utils.precisionToStepSize(SETTINGS.precisionPoints),
+                        }}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                        variant="outlined"
+                        className={classes.numberInput}
+                      />
+                      <TextField
+                        label="Y-Coordinate"
+                        type="number"
+                        value={point[1]}
+                        onChange={e => handlePointCoordinateChange(e, i, 1)}
+                        inputProps={{
+                          min: curve.yAxis.min,
+                          max: curve.yAxis.max,
+                          step: Utils.precisionToStepSize(SETTINGS.precisionPoints),
+                        }}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                        variant="outlined"
+                        className={classes.numberInput}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </ExpansionPanelDetails>
+        </ExpansionPanel>
 
-        <div>
-          <label>Description:</label>
-          <br></br>
-
-          <textarea
-            rows={20}
-            cols={43}
-            onChange={e => handleCurveDescriptionChange(e)}
-            value={curve.description}
-          ></textarea>
-        </div>
-
-        <br></br>
-
-        <button onClick={() => handleResetZoomClick()}>Reset Zoom</button>
+        <ExpansionPanel expanded={expanded === 'panel2'} onChange={handlePanelChange('panel2')}>
+          <ExpansionPanelSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="panel2bh-content"
+            id="panel2bh-header"
+          >
+            <Typography className={classes.heading}>Text Settings</Typography>
+          </ExpansionPanelSummary>
+          <ExpansionPanelDetails className={classes.flexColumn}>
+            <TextField
+              label="Name"
+              variant="outlined"
+              type="text"
+              value={curve.name}
+              onChange={e => handleCurveNameChange(e)}
+              placeholder="Curve Name"
+            />
+            <br></br>
+            <TextField
+              label="X-Axis"
+              variant="outlined"
+              type="text"
+              value={curve.xAxis.label}
+              onChange={e => handleXAxisLabelChange(e)}
+              placeholder="X-Axis Label"
+            />
+            <br></br>
+            <TextField
+              label="Y-Axis"
+              variant="outlined"
+              type="text"
+              value={curve.yAxis.label}
+              onChange={e => handleYAxisLabelChange(e)}
+              placeholder="Y-Axis Label"
+            />
+            <br></br>
+            <TextField
+              label="Description"
+              multiline
+              rows={5}
+              variant="outlined"
+              onChange={e => handleCurveDescriptionChange(e)}
+              value={curve.description}
+            />
+          </ExpansionPanelDetails>
+        </ExpansionPanel>
       </div>
     </div>
   );
