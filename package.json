@@ -23,6 +23,8 @@
     "url": "https://github.com/alexscheitlin/polynomial-curve-fitting.git"
   },
   "peerDependencies": {
+    "@material-ui/core": ">=4.9.0",
+    "@material-ui/icons": ">=4.9.0",
     "react": ">=16.8.0"
   },
   "dependencies": {
