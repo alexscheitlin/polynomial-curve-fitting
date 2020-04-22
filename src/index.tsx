@@ -720,7 +720,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
     })
   );
 
-  const classes = useStyles();
+  const classes = useStyles(props.theme);
 
   return (
     <div className={classes.flex}>

@@ -1,3 +1,5 @@
+import { Theme } from '@material-ui/core/styles';
+
 /*****************************************************************************/
 /* Properties                                                                */
 /*****************************************************************************/
@@ -12,9 +14,11 @@ export interface Props {
   curve?: PropsBaseCurve | PropsCurvePoints | PropsCurveOrder;
   settings?: PropsSettings;
   curveChange?: (value: CurveOut) => void;
+  theme?: Theme;
 }
 
-// Mirror the `Props` from above but require all fields to be present (except the 'output callback').
+// Mirror the `Props` from above but require all fields to be present
+// (except the 'output callback' and material ui theme).
 export interface DefaultProps {
   curve: Required<PropsCurveOrder>;
   settings: Required<PropsSettings>;

@@ -134,6 +134,10 @@ npm install ../polynomial-curve-fitting
 cd ../polynomial-curve-fitting/
 npm link ../pcf-example/node_modules/react
 
+# only do this if the example react app uses material ui
+# link material ui of the library with the one of the example react app
+npm link ../pcf-example/node_modules/@material-ui/core
+
 # start the example react app
 cd ../pcf-example/
 npm run start
