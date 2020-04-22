@@ -714,12 +714,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
                     onChange={e => handleCurveCoefficientsChange(e, i)}
                   />
                 }
-                {/* TODO: move me to a function */}
-                {curve.coefficients.length - i - 1 > 1
-                  ? ' * x^' + (curve.coefficients.length - i - 1).toString()
-                  : ''}
-                {curve.coefficients.length - i - 1 === 1 ? ' * x' : ''}
-                {i < curve.coefficients.length - 1 ? ' + ' : ''}
+                {Utils.generatePolynomialTerm(curve.coefficients.length, i, 'x')}
               </span>
             );
           })}

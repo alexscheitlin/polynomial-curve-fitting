@@ -240,3 +240,32 @@ export const generatePolynomialEquation = (coefficients: number[]): string =>
  * @returns {number}
  */
 export const precisionToStepSize = (precision: number): number => Math.pow(10, -precision);
+
+/**
+ * For a polynomial equation (e.g., -7 * x^3 + 3 * x^2 + x + 5), construct the 'terms'
+ * (e.g., '* x^3 +', '* x^2 +' and '+').
+ *
+ * @param n the total number of coefficients of the polynomial
+ * @param i the index of the coefficient to get the 'term' (starting with 0)
+ * @param variable the variable of the polynomial (e.g., 'x')
+ */
+export const generatePolynomialTerm = (n: number, i: number, variable: string): string => {
+  let result = '';
+
+  if (n - i - 1 > 1) {
+    // exponent is larger than 1
+    result += ` * ${variable}^` + (n - i - 1).toString();
+  }
+
+  if (n - i - 1 === 1) {
+    // exponent is equal to 1
+    result += ` * ${variable}`;
+  }
+
+  if (i < n - 1) {
+    // this is not the last 'term' of the equation
+    result += ' + ';
+  }
+
+  return result;
+};

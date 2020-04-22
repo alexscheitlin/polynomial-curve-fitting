@@ -95,3 +95,35 @@ test('compute step size of 0.01', () => {
 test('compute step size of 0.001', () => {
   expect(Utils.precisionToStepSize(3)).toBe(0.001);
 });
+
+/*****************************************************************************/
+/* generatePolynomialTerm                                                       */
+/*****************************************************************************/
+
+test("generate term '' (no coefficients)", () => {
+  expect(Utils.generatePolynomialTerm(0, 0, 'x')).toBe('');
+});
+
+test("generate term '' (first out of one coefficient)", () => {
+  expect(Utils.generatePolynomialTerm(1, 0, 'x')).toBe('');
+});
+
+test("generate term '* x + ' (first out of two coefficient)", () => {
+  expect(Utils.generatePolynomialTerm(2, 0, 'x')).toBe(' * x + ');
+});
+
+test("generate term '' (second out of two coefficient)", () => {
+  expect(Utils.generatePolynomialTerm(2, 1, 'x')).toBe('');
+});
+
+test("generate term '* y^2 + ' (first out of three coefficient)", () => {
+  expect(Utils.generatePolynomialTerm(3, 0, 'y')).toBe(' * y^2 + ');
+});
+
+test("generate term '* y + ' (second out of three coefficient)", () => {
+  expect(Utils.generatePolynomialTerm(3, 1, 'y')).toBe(' * y + ');
+});
+
+test("generate term '' (third out of three coefficient)", () => {
+  expect(Utils.generatePolynomialTerm(3, 2, 'y')).toBe('');
+});
