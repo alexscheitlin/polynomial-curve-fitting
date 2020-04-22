@@ -753,7 +753,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
                 />
                 <style>{`
                   .number {
-                    width: 75px;
+                    width: 80px;
                     height: 35px;
                   }
                 `}</style>

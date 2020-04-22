@@ -97,12 +97,10 @@ export const generateSettings = (props: Props, defaultProps: DefaultProps): Sett
   // - polynomial's coefficients
   // - draggable points
   //
-  // TODO: maybe this should be the same as the points of the regression have the
-  //       same precision as the polynomial's coefficients
-  // TODO: this should maybe be a prop or adjusted dynamically (to fit best fit the
-  //       curve according to R^2)
-  const PRECISION_COEFFICIENT = 4;
-  const PRECISION_POINTS = 2;
+  // NOTE: should be the same as the points of the regression have the same precision
+  //       as the polynomial's coefficients
+  const PRECISION_COEFFICIENT = 5;
+  const PRECISION_POINTS = 5;
 
   return {
     ...propsSettings,
