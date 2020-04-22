@@ -228,3 +228,15 @@ export const generatePolynomialEquation = (coefficients: number[]): string =>
         : '';
     })
     .join('');
+
+/**
+ * Given the `precision` (i.e., the number of decimal places), compute the
+ * step size for an input element of type number.
+ *
+ * Example:
+ * `3` => `0.001`
+ *
+ * @param {number} precision
+ * @returns {number}
+ */
+export const precisionToStepSize = (precision: number): number => Math.pow(10, -precision);

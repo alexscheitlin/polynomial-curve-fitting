@@ -709,7 +709,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
                   <input
                     className="number"
                     type="number"
-                    step={Math.pow(10, -(SETTINGS.precisionCoefficient - 1))}
+                    step={Utils.precisionToStepSize(SETTINGS.precisionCoefficient)}
                     value={coefficient}
                     onChange={e => handleCurveCoefficientsChange(e, i)}
                   />
@@ -737,7 +737,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
                   type="number"
                   min={curve.xAxis.min}
                   max={curve.xAxis.max}
-                  step={Math.pow(10, -(SETTINGS.precisionPoints - 1))}
+                  step={Utils.precisionToStepSize(SETTINGS.precisionPoints)}
                   value={point[0]}
                   onChange={e => handlePointCoordinateChange(e, i, 0)}
                 />{' '}
@@ -747,7 +747,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
                   type="number"
                   min={curve.yAxis.min}
                   max={curve.yAxis.max}
-                  step={Math.pow(10, -(SETTINGS.precisionPoints - 1))}
+                  step={Utils.precisionToStepSize(SETTINGS.precisionPoints)}
                   value={point[1]}
                   onChange={e => handlePointCoordinateChange(e, i, 1)}
                 />

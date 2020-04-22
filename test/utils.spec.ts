@@ -63,3 +63,35 @@ test('generate equation "2*x^2 + x"', () => {
 test('generate equation "-6*x^2 + 3*x - 1"', () => {
   expect(Utils.generatePolynomialEquation([-6, 3, -1])).toBe('-6*x^2 + 3*x - 1');
 });
+
+/*****************************************************************************/
+/* precisionToStepSize                                                       */
+/*****************************************************************************/
+
+test('compute step size of 1000', () => {
+  expect(Utils.precisionToStepSize(-3)).toBe(1000);
+});
+
+test('compute step size of 100', () => {
+  expect(Utils.precisionToStepSize(-2)).toBe(100);
+});
+
+test('compute step size of 10', () => {
+  expect(Utils.precisionToStepSize(-1)).toBe(10);
+});
+
+test('compute step size of 1', () => {
+  expect(Utils.precisionToStepSize(0)).toBe(1);
+});
+
+test('compute step size of 0.1', () => {
+  expect(Utils.precisionToStepSize(1)).toBe(0.1);
+});
+
+test('compute step size of 0.01', () => {
+  expect(Utils.precisionToStepSize(2)).toBe(0.01);
+});
+
+test('compute step size of 0.001', () => {
+  expect(Utils.precisionToStepSize(3)).toBe(0.001);
+});
