@@ -696,7 +696,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
         height: `${SETTINGS.svg.size.height}px`,
       },
       numberInput: {
-        width: '120px',
+        width: '110px',
       },
       description: {
         width: `${SETTINGS.svg.size.width}px`,
@@ -722,6 +722,8 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   );
 
   const classes = useStyles();
+
+  const textFiledMargin = 'dense';
 
   return (
     <div className={classes.flex}>
@@ -767,6 +769,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
                 value={curve.polynomialOrder}
                 onChange={e => handleOrderChange(e)}
                 variant="outlined"
+                margin={textFiledMargin}
               >
                 {orders.map(option => (
                   <MenuItem key={option} value={option}>
@@ -806,6 +809,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
                             shrink: true,
                           }}
                           variant="outlined"
+                          margin={textFiledMargin}
                           className={classes.numberInput}
                         />
                         <Typography className={classes.alignSelfCenter}>
@@ -838,6 +842,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
                           shrink: true,
                         }}
                         variant="outlined"
+                        margin={textFiledMargin}
                         className={classes.numberInput}
                       />
                       <TextField
@@ -854,6 +859,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
                           shrink: true,
                         }}
                         variant="outlined"
+                        margin={textFiledMargin}
                         className={classes.numberInput}
                       />
                     </div>
