@@ -701,7 +701,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       description: {
         width: `${SETTINGS.svg.size.width}px`,
         padding: '5px',
-        textAlign: 'center',
+        marginTop: '10px',
       },
       stepConnector: {
         margin: '15px 0',
@@ -717,6 +717,9 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       },
       flexColumn: {
         flexDirection: 'column',
+      },
+      textAlignCenter: {
+        textAlign: 'center',
       },
     })
   );
@@ -750,10 +753,13 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
             </defs>
           </svg>
         </div>
-        <Button variant="contained" onClick={() => handleResetZoomClick()}>
-          Reset Zoom
-        </Button>
-        <Typography className={classes.description}>{curve.description}</Typography>
+        <div className={classes.textAlignCenter}>
+          <Typography>{`y = ${Utils.generatePolynomialEquation(curve.coefficients)}`}</Typography>
+          <Button variant="contained" onClick={() => handleResetZoomClick()}>
+            Reset Zoom
+          </Button>
+          <Typography className={classes.description}>{curve.description}</Typography>
+        </div>
       </Card>
 
       <div className={classes.root}>
@@ -780,19 +786,13 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
 
               <StepConnector className={classes.stepConnector}></StepConnector>
 
-              <Typography style={{ color: curve.r2 === 1 ? 'green' : 'red' }}>
-                Coefficient of Determination (R^2): {JSON.stringify(curve.r2)}
-              </Typography>
-
-              <StepConnector className={classes.stepConnector}></StepConnector>
-
               <div>
-                <div>
+                {/* <div>
                   <Typography>
                     Polynomial: {`y = ${Utils.generatePolynomialEquation(curve.coefficients)}`}
                   </Typography>
                   <Typography>Equation: {curve.equation}</Typography>
-                </div>
+                </div> */}
                 <div className={classes.flex}>
                   <Typography className={classes.alignSelfCenter}>y =</Typography>
                   {curve.coefficients.map((coefficient, i) => {
@@ -819,6 +819,10 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
                     );
                   })}
                 </div>
+
+                <Typography style={{ color: curve.r2 === 1 ? 'green' : 'red' }}>
+                  Coefficient of Determination (R^2): {JSON.stringify(curve.r2)}
+                </Typography>
               </div>
 
               <StepConnector className={classes.stepConnector}></StepConnector>
