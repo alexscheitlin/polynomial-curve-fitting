@@ -687,6 +687,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       },
       heading: {
         fontSize: theme.typography.pxToRem(15),
+        fontWeight: 'bold',
         // flexBasis: '33.33%',
         flexShrink: 0,
       },
