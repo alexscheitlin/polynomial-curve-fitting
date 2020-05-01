@@ -269,3 +269,17 @@ export const generatePolynomialTerm = (n: number, i: number, variable: string): 
 
   return result;
 };
+
+/**
+ * Serialize the svg from the DOM given by its id to a string.
+ *
+ * @param svgId the id of the svg on the DOM
+ */
+export const serializeToString = (svgId: string) => {
+  const svg = document.getElementById(svgId);
+  const serializer = new XMLSerializer();
+  let str = serializer.serializeToString(svg);
+  str = str.replace(/\n/g, ''); // remove all new lines
+  str = str.replace(/  +/g, ' '); // replace multiple spaces with just one space
+  return str;
+};
