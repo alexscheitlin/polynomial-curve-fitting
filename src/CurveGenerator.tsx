@@ -206,7 +206,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   /* Variables                                                               */
   /***************************************************************************/
 
-  const [SETTINGS, INITIAL_CURVE]: [Settings, Curve] = initValues(props, defaultProps);
+  let [SETTINGS, INITIAL_CURVE]: [Settings, Curve] = initValues(props, defaultProps);
 
   interface Drawing {
     svg: d3.Selection<d3.BaseType, any, HTMLElement, any>;
@@ -220,8 +220,18 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   const [curve, setCurve] = React.useState<Curve>(Utils.deepCopy(INITIAL_CURVE));
   const [initialCurve, setInitialCurve] = React.useState<Curve>(INITIAL_CURVE);
 
-  // initially draw the graph
-  React.useEffect(() => draw(initialCurve, curve), []);
+  React.useEffect(() => {
+    [SETTINGS, INITIAL_CURVE] = initValues(props, defaultProps);
+
+    const newCurve = Utils.deepCopy(INITIAL_CURVE);
+    setCurve(newCurve);
+
+    const newInitialCurve = INITIAL_CURVE;
+    setInitialCurve(newInitialCurve);
+
+    clearSVG();
+    draw(newInitialCurve, newCurve);
+  }, [props.curve]);
 
   // expose curve on every change
   React.useEffect(() => {
