@@ -71,5 +71,7 @@ export const defaultProps: DefaultProps = {
     drawGrid: true,
     drawAxisLabels: true,
     drawDraggablePoints: true,
+
+    graphOnly: false,
   },
 };

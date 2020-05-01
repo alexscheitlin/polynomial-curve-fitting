@@ -91,6 +91,8 @@ export const generateSettings = (props: Props, defaultProps: DefaultProps): Sett
       settings?.drawDraggablePoints !== undefined
         ? settings?.drawDraggablePoints
         : defaultSettings.drawDraggablePoints,
+
+    graphOnly: settings?.graphOnly !== undefined ? settings?.graphOnly : defaultSettings.graphOnly,
   };
 
   // additional fields for the `Settings` type

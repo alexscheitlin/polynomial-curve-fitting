@@ -759,57 +759,97 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
             </defs>
           </svg>
         </div>
-        <div className={classes.textAlignCenter}>
-          <Typography>{`y = ${Utils.generatePolynomialEquation(curve.coefficients)}`}</Typography>
-          <Button variant="contained" onClick={() => handleResetZoomClick()}>
-            Reset Zoom
-          </Button>
-          <Typography className={classes.description}>{curve.description}</Typography>
-        </div>
+        {!SETTINGS.graphOnly && (
+          <div className={classes.textAlignCenter}>
+            <Typography>{`y = ${Utils.generatePolynomialEquation(curve.coefficients)}`}</Typography>
+            <Button variant="contained" onClick={() => handleResetZoomClick()}>
+              Reset Zoom
+            </Button>
+            <Typography className={classes.description}>{curve.description}</Typography>
+          </div>
+        )}
       </Card>
 
-      <div className={classes.root}>
-        <ExpansionPanel expanded={expanded === 'panel1'} onChange={handlePanelChange('panel1')}>
-          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography className={classes.heading}>Polynomial Equation and Points</Typography>
-          </ExpansionPanelSummary>
-          <ExpansionPanelDetails>
-            <div style={{ marginLeft: '1rem' }}>
-              <TextField
-                select
-                label="Select"
-                value={curve.polynomialOrder}
-                onChange={e => handleOrderChange(e)}
-                variant="outlined"
-                margin={textFiledMargin}
-              >
-                {orders.map(option => (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </TextField>
+      {!SETTINGS.graphOnly && (
+        <div className={classes.root}>
+          <ExpansionPanel expanded={expanded === 'panel1'} onChange={handlePanelChange('panel1')}>
+            <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography className={classes.heading}>Polynomial Equation and Points</Typography>
+            </ExpansionPanelSummary>
+            <ExpansionPanelDetails>
+              <div style={{ marginLeft: '1rem' }}>
+                <TextField
+                  select
+                  label="Select"
+                  value={curve.polynomialOrder}
+                  onChange={e => handleOrderChange(e)}
+                  variant="outlined"
+                  margin={textFiledMargin}
+                >
+                  {orders.map(option => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </TextField>
 
-              <StepConnector className={classes.stepConnector}></StepConnector>
+                <StepConnector className={classes.stepConnector}></StepConnector>
 
-              <div>
-                {/* <div>
+                <div>
+                  {/* <div>
                   <Typography>
                     Polynomial: {`y = ${Utils.generatePolynomialEquation(curve.coefficients)}`}
                   </Typography>
                   <Typography>Equation: {curve.equation}</Typography>
                 </div> */}
-                <div className={classes.flex}>
-                  <Typography className={classes.alignSelfCenter}>y =</Typography>
-                  {curve.coefficients.map((coefficient, i) => {
+                  <div className={classes.flex}>
+                    <Typography className={classes.alignSelfCenter}>y =</Typography>
+                    {curve.coefficients.map((coefficient, i) => {
+                      return (
+                        <div key={i} className={classes.flex}>
+                          <TextField
+                            type="number"
+                            value={coefficient}
+                            onChange={e => handleCurveCoefficientsChange(e, i)}
+                            inputProps={{
+                              step: Utils.precisionToStepSize(SETTINGS.precisionCoefficient),
+                            }}
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                            variant="outlined"
+                            margin={textFiledMargin}
+                            className={classes.numberInput}
+                          />
+                          <Typography className={classes.alignSelfCenter}>
+                            {Utils.generatePolynomialTerm(curve.coefficients.length, i, 'x')}
+                          </Typography>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <Typography style={{ color: curve.r2 === 1 ? 'green' : 'red' }}>
+                    Coefficient of Determination (R^2): {JSON.stringify(curve.r2)}
+                  </Typography>
+                </div>
+
+                <StepConnector className={classes.stepConnector}></StepConnector>
+
+                <div>
+                  {curve.points.map((point, i) => {
                     return (
                       <div key={i} className={classes.flex}>
+                        <Typography className={classes.alignSelfCenter}>P{i + 1}</Typography>
                         <TextField
+                          label="X-Coordinate"
                           type="number"
-                          value={coefficient}
-                          onChange={e => handleCurveCoefficientsChange(e, i)}
+                          value={point[0]}
+                          onChange={e => handlePointCoordinateChange(e, i, 0)}
                           inputProps={{
-                            step: Utils.precisionToStepSize(SETTINGS.precisionCoefficient),
+                            min: curve.xAxis.min,
+                            max: curve.xAxis.max,
+                            step: Utils.precisionToStepSize(SETTINGS.precisionPoints),
                           }}
                           InputLabelProps={{
                             shrink: true,
@@ -818,115 +858,79 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
                           margin={textFiledMargin}
                           className={classes.numberInput}
                         />
-                        <Typography className={classes.alignSelfCenter}>
-                          {Utils.generatePolynomialTerm(curve.coefficients.length, i, 'x')}
-                        </Typography>
+                        <TextField
+                          label="Y-Coordinate"
+                          type="number"
+                          value={point[1]}
+                          onChange={e => handlePointCoordinateChange(e, i, 1)}
+                          inputProps={{
+                            min: curve.yAxis.min,
+                            max: curve.yAxis.max,
+                            step: Utils.precisionToStepSize(SETTINGS.precisionPoints),
+                          }}
+                          InputLabelProps={{
+                            shrink: true,
+                          }}
+                          variant="outlined"
+                          margin={textFiledMargin}
+                          className={classes.numberInput}
+                        />
                       </div>
                     );
                   })}
                 </div>
-
-                <Typography style={{ color: curve.r2 === 1 ? 'green' : 'red' }}>
-                  Coefficient of Determination (R^2): {JSON.stringify(curve.r2)}
-                </Typography>
               </div>
+            </ExpansionPanelDetails>
+          </ExpansionPanel>
 
-              <StepConnector className={classes.stepConnector}></StepConnector>
-
-              <div>
-                {curve.points.map((point, i) => {
-                  return (
-                    <div key={i} className={classes.flex}>
-                      <Typography className={classes.alignSelfCenter}>P{i + 1}</Typography>
-                      <TextField
-                        label="X-Coordinate"
-                        type="number"
-                        value={point[0]}
-                        onChange={e => handlePointCoordinateChange(e, i, 0)}
-                        inputProps={{
-                          min: curve.xAxis.min,
-                          max: curve.xAxis.max,
-                          step: Utils.precisionToStepSize(SETTINGS.precisionPoints),
-                        }}
-                        InputLabelProps={{
-                          shrink: true,
-                        }}
-                        variant="outlined"
-                        margin={textFiledMargin}
-                        className={classes.numberInput}
-                      />
-                      <TextField
-                        label="Y-Coordinate"
-                        type="number"
-                        value={point[1]}
-                        onChange={e => handlePointCoordinateChange(e, i, 1)}
-                        inputProps={{
-                          min: curve.yAxis.min,
-                          max: curve.yAxis.max,
-                          step: Utils.precisionToStepSize(SETTINGS.precisionPoints),
-                        }}
-                        InputLabelProps={{
-                          shrink: true,
-                        }}
-                        variant="outlined"
-                        margin={textFiledMargin}
-                        className={classes.numberInput}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </ExpansionPanelDetails>
-        </ExpansionPanel>
-
-        <ExpansionPanel expanded={expanded === 'panel2'} onChange={handlePanelChange('panel2')}>
-          <ExpansionPanelSummary
-            expandIcon={<ExpandMoreIcon />}
-            aria-controls="panel2bh-content"
-            id="panel2bh-header"
-          >
-            <Typography className={classes.heading}>Text Settings</Typography>
-          </ExpansionPanelSummary>
-          <ExpansionPanelDetails className={classes.flexColumn}>
-            <TextField
-              label="Name"
-              variant="outlined"
-              type="text"
-              value={curve.name}
-              onChange={e => handleCurveNameChange(e)}
-              placeholder="Curve Name"
-            />
-            <br></br>
-            <TextField
-              label="X-Axis"
-              variant="outlined"
-              type="text"
-              value={curve.xAxis.label}
-              onChange={e => handleXAxisLabelChange(e)}
-              placeholder="X-Axis Label"
-            />
-            <br></br>
-            <TextField
-              label="Y-Axis"
-              variant="outlined"
-              type="text"
-              value={curve.yAxis.label}
-              onChange={e => handleYAxisLabelChange(e)}
-              placeholder="Y-Axis Label"
-            />
-            <br></br>
-            <TextField
-              label="Description"
-              multiline
-              rows={5}
-              variant="outlined"
-              onChange={e => handleCurveDescriptionChange(e)}
-              value={curve.description}
-            />
-          </ExpansionPanelDetails>
-        </ExpansionPanel>
-      </div>
+          <ExpansionPanel expanded={expanded === 'panel2'} onChange={handlePanelChange('panel2')}>
+            <ExpansionPanelSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="panel2bh-content"
+              id="panel2bh-header"
+            >
+              <Typography className={classes.heading}>Text Settings</Typography>
+            </ExpansionPanelSummary>
+            <ExpansionPanelDetails className={classes.flexColumn}>
+              <TextField
+                label="Name"
+                variant="outlined"
+                type="text"
+                value={curve.name}
+                onChange={e => handleCurveNameChange(e)}
+                placeholder="Curve Name"
+              />
+              <br></br>
+              <TextField
+                label="X-Axis"
+                variant="outlined"
+                type="text"
+                value={curve.xAxis.label}
+                onChange={e => handleXAxisLabelChange(e)}
+                placeholder="X-Axis Label"
+              />
+              <br></br>
+              <TextField
+                label="Y-Axis"
+                variant="outlined"
+                type="text"
+                value={curve.yAxis.label}
+                onChange={e => handleYAxisLabelChange(e)}
+                placeholder="Y-Axis Label"
+              />
+              <br></br>
+              <TextField
+                label="Description"
+                multiline
+                rows={5}
+                variant="outlined"
+                onChange={e => handleCurveDescriptionChange(e)}
+                value={curve.description}
+              />
+            </ExpansionPanelDetails>
+          </ExpansionPanel>
+        </div>
+      )}
     </div>
   );
 };

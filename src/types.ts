@@ -49,6 +49,8 @@ export interface PropsSettings {
   drawGrid?: boolean;
   drawAxisLabels?: boolean;
   drawDraggablePoints?: boolean;
+
+  graphOnly?: boolean;
 }
 
 /*****************************************************************************/
