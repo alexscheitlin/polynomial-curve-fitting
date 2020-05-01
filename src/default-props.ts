@@ -61,6 +61,7 @@ export const defaultProps: DefaultProps = {
     },
 
     svg: {
+      id: 'polynomial-graph',
       // size of the final SVG in pixel
       size: { width: 750, height: 450 },
     },

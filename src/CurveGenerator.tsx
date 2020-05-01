@@ -737,6 +737,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
             width={SETTINGS.svg.size.width}
             height={SETTINGS.svg.size.height}
             style={{ float: 'left' }}
+            id={SETTINGS.svg.id}
           >
             <defs>
               <style type="text/css">

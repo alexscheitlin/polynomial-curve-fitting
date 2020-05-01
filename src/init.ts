@@ -74,6 +74,7 @@ export const generateSettings = (props: Props, defaultProps: DefaultProps): Sett
       },
     },
     svg: {
+      id: settings?.svg?.id || defaultSettings.svg.id,
       size: {
         width: settings?.svg?.size?.width || defaultSettings.svg.size.width,
         height: settings?.svg?.size?.height || defaultSettings.svg.size.height,

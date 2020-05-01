@@ -110,6 +110,7 @@ export interface GridSettings {
 }
 
 export interface SvgSettings {
+  id: string;
   size: Size;
 }
 
