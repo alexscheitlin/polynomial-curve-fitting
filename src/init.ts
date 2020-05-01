@@ -80,6 +80,17 @@ export const generateSettings = (props: Props, defaultProps: DefaultProps): Sett
         height: settings?.svg?.size?.height || defaultSettings.svg.size.height,
       },
     },
+
+    drawTitle: settings?.drawTitle !== undefined ? settings?.drawTitle : defaultSettings.drawTitle,
+    drawGrid: settings?.drawGrid !== undefined ? settings?.drawGrid : defaultSettings.drawGrid,
+    drawAxisLabels:
+      settings?.drawAxisLabels !== undefined
+        ? settings?.drawAxisLabels
+        : defaultSettings.drawAxisLabels,
+    drawDraggablePoints:
+      settings?.drawDraggablePoints !== undefined
+        ? settings?.drawDraggablePoints
+        : defaultSettings.drawDraggablePoints,
   };
 
   // additional fields for the `Settings` type

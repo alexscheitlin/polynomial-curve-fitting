@@ -65,5 +65,11 @@ export const defaultProps: DefaultProps = {
       // size of the final SVG in pixel
       size: { width: 750, height: 450 },
     },
+
+    // configure what to draw and what not
+    drawTitle: true,
+    drawGrid: true,
+    drawAxisLabels: true,
+    drawDraggablePoints: true,
   },
 };

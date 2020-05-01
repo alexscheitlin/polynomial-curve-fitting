@@ -268,13 +268,14 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
     SETTINGS.xScale.domain([curve.xAxis.min, curve.xAxis.max]);
     SETTINGS.yScale.domain([curve.yAxis.min, curve.yAxis.max]);
 
-    Drawing.drawGrid(
-      graph,
-      SETTINGS.xScale,
-      SETTINGS.yScale,
-      SETTINGS.graphSize,
-      SETTINGS.graph.grid.color
-    );
+    SETTINGS.drawGrid &&
+      Drawing.drawGrid(
+        graph,
+        SETTINGS.xScale,
+        SETTINGS.yScale,
+        SETTINGS.graphSize,
+        SETTINGS.graph.grid.color
+      );
     Drawing.drawAxesOnGraph(
       graph,
       SETTINGS.xScale,
@@ -293,25 +294,28 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       SETTINGS.initialCurve.strokeWidth
     );
 
-    Drawing.drawGraphTitle(
-      svg,
-      SETTINGS.graph.margin,
-      SETTINGS.graphSize,
-      curve.name,
-      SETTINGS.graph.title.color,
-      SETTINGS.graph.title.fontFamily,
-      SETTINGS.graph.title.fontSize
-    );
-    Drawing.drawAxisLables(
-      svg,
-      SETTINGS.graph.margin,
-      SETTINGS.graphSize,
-      curve.xAxis.label,
-      curve.yAxis.label,
-      SETTINGS.graph.axis.labels.color,
-      SETTINGS.graph.axis.labels.fontFamily,
-      SETTINGS.graph.axis.labels.fontSize
-    );
+    SETTINGS.drawTitle &&
+      Drawing.drawGraphTitle(
+        svg,
+        SETTINGS.graph.margin,
+        SETTINGS.graphSize,
+        curve.name,
+        SETTINGS.graph.title.color,
+        SETTINGS.graph.title.fontFamily,
+        SETTINGS.graph.title.fontSize
+      );
+
+    SETTINGS.drawAxisLabels &&
+      Drawing.drawAxisLables(
+        svg,
+        SETTINGS.graph.margin,
+        SETTINGS.graphSize,
+        curve.xAxis.label,
+        curve.yAxis.label,
+        SETTINGS.graph.axis.labels.color,
+        SETTINGS.graph.axis.labels.fontFamily,
+        SETTINGS.graph.axis.labels.fontSize
+      );
 
     // draw curve points or lines
     if (SETTINGS.showDottedCurve) {
@@ -342,14 +346,15 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       SETTINGS.graphSize,
       SETTINGS.crosshairColor
     );
-    drawDraggablePoints(
-      svg,
-      graph,
-      curve,
-      SETTINGS.xScale,
-      SETTINGS.yScale,
-      SETTINGS.draggablePoint.radius
-    );
+    SETTINGS.drawDraggablePoints &&
+      drawDraggablePoints(
+        svg,
+        graph,
+        curve,
+        SETTINGS.xScale,
+        SETTINGS.yScale,
+        SETTINGS.draggablePoint.radius
+      );
 
     // most likely, this is not best practice
     // (these variables are needed for methods like `handlePointCoordinateChange`)

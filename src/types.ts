@@ -44,6 +44,11 @@ export interface PropsSettings {
   draggablePoint?: DraggablePointSettings;
   graph?: GraphSettings;
   svg?: SvgSettings;
+
+  drawTitle?: boolean;
+  drawGrid?: boolean;
+  drawAxisLabels?: boolean;
+  drawDraggablePoints?: boolean;
 }
 
 /*****************************************************************************/
