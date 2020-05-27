@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "d3": "^5.15.1",
+    "react-mathjax2": "0.0.2",
     "regression": "^2.0.1"
   },
   "devDependencies": {

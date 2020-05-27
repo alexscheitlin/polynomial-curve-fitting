@@ -20,6 +20,7 @@ import * as Utils from './utils';
 import { Curve, Props, Settings } from './types';
 import { defaultProps } from './default-props';
 import { initValues } from './init';
+import Equation from './Equation';
 
 const CurveGenerator: React.FC<Props> = (props: Props) => {
   /***************************************************************************/
@@ -771,7 +772,11 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
         </div>
         {!SETTINGS.graphOnly && (
           <div className={classes.textAlignCenter}>
-            <Typography>{`y = ${Utils.generatePolynomialEquation(curve.coefficients)}`}</Typography>
+            <div>
+              <Equation
+                equation={`y = ${Utils.generatePolynomialEquation(curve.coefficients)}`}
+              ></Equation>
+            </div>
             <Button variant="contained" onClick={() => handleResetZoomClick()}>
               Reset Zoom
             </Button>
@@ -779,7 +784,6 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
           </div>
         )}
       </Card>
-
       {!SETTINGS.graphOnly && (
         <div className={classes.root}>
           <ExpansionPanel expanded={expanded === 'panel1'} onChange={handlePanelChange('panel1')}>

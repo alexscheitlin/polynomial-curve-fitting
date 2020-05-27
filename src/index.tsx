@@ -1,5 +1,6 @@
 import CurveGenerator from './CurveGenerator';
+import Equation from './Equation';
 import * as Utils from './utils';
 
 export default CurveGenerator;
-export { Utils };
+export { Equation, Utils };
