@@ -772,7 +772,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
         </div>
         {!SETTINGS.graphOnly && (
           <div className={classes.textAlignCenter}>
-            <div>
+            <div style={{ marginBottom: '10px' }}>
               <Equation
                 equation={`y = ${Utils.generatePolynomialEquation(curve.coefficients)}`}
               ></Equation>
