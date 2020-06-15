@@ -1,6 +1,7 @@
 import { makeStyles, MenuItem, StepConnector, TextField, Typography } from '@material-ui/core';
 import React from 'react';
 
+import Equation from '../Equation';
 import * as Utils from '../utils';
 
 const LABEL_ORDER = 'Polynomial Order';
@@ -108,7 +109,9 @@ const CurveSettings = ({
                 }}
               />
               <Typography className={classes.alignSelfCenter}>
-                {Utils.generatePolynomialTerm(coefficients.length, i, 'x')}
+                <Equation
+                  equation={Utils.generatePolynomialTerm(coefficients.length, i, 'x')}
+                ></Equation>
               </Typography>
             </div>
           );
