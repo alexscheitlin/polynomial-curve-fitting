@@ -6,9 +6,7 @@ import {
   ExpansionPanel,
   ExpansionPanelDetails,
   ExpansionPanelSummary,
-  MenuItem,
   StepConnector,
-  TextField,
   Typography,
 } from '@material-ui/core';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
@@ -22,6 +20,7 @@ import { defaultProps } from './default-props';
 import { initValues } from './init';
 import Equation from './Equation';
 import TextSettings from './components/TextSettings';
+import CurveSettings from './components/CurveSettings';
 
 const CurveGenerator: React.FC<Props> = (props: Props) => {
   /***************************************************************************/
@@ -712,9 +711,6 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
         width: `${SETTINGS.svg.size.width}px`,
         height: `${SETTINGS.svg.size.height}px`,
       },
-      numberInput: {
-        width: '110px',
-      },
       description: {
         width: `${SETTINGS.svg.size.width}px`,
         padding: '5px',
@@ -726,9 +722,6 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       /******************/
       /* single styles  */
       /******************/
-      alignSelfCenter: {
-        alignSelf: 'center',
-      },
       flex: {
         display: 'flex',
       },
@@ -742,8 +735,6 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   );
 
   const classes = useStyles();
-
-  const textFiledMargin = 'dense';
 
   return (
     <div className={classes.flex}>
@@ -792,108 +783,34 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
               <Typography className={classes.heading}>Polynomial Equation and Points</Typography>
             </ExpansionPanelSummary>
             <ExpansionPanelDetails>
-              <div style={{ marginLeft: '1rem' }}>
-                <TextField
-                  select
-                  label="Select"
-                  value={curve.polynomialOrder}
-                  onChange={e => handleOrderChange(e)}
-                  variant="outlined"
-                  margin={textFiledMargin}
-                >
-                  {orders.map(option => (
-                    <MenuItem key={option} value={option}>
-                      {option}
-                    </MenuItem>
-                  ))}
-                </TextField>
+              <div>
+                <CurveSettings
+                  orderOptions={orders}
+                  order={curve.polynomialOrder}
+                  onOrderChange={e => handleOrderChange(e)}
+                  coefficientPrecision={SETTINGS.precisionCoefficient}
+                  coefficients={curve.coefficients}
+                  onCoefficientChange={(e, i) => handleCurveCoefficientsChange(e, i)}
+                  xAxisMin={curve.xAxis.min}
+                  xAxisMax={curve.xAxis.max}
+                  yAxisMin={curve.yAxis.min}
+                  yAxisMax={curve.yAxis.max}
+                  pointCoordinatePrecision={SETTINGS.precisionPoints}
+                  points={curve.points}
+                  onPointCoordinateChange={(e, i, j) => handlePointCoordinateChange(e, i, j)}
+                ></CurveSettings>
 
                 <StepConnector className={classes.stepConnector}></StepConnector>
 
-                <div>
-                  {/* <div>
+                <Typography style={{ color: curve.r2 === 1 ? 'green' : 'red' }}>
+                  Coefficient of Determination (R^2): {JSON.stringify(curve.r2)}
+                </Typography>
+                {/* <div>
                   <Typography>
                     Polynomial: {`y = ${Utils.generatePolynomialEquation(curve.coefficients)}`}
                   </Typography>
                   <Typography>Equation: {curve.equation}</Typography>
                 </div> */}
-                  <div className={classes.flex}>
-                    <Typography className={classes.alignSelfCenter}>y =</Typography>
-                    {curve.coefficients.map((coefficient, i) => {
-                      return (
-                        <div key={i} className={classes.flex}>
-                          <TextField
-                            type="number"
-                            value={coefficient}
-                            onChange={e => handleCurveCoefficientsChange(e, i)}
-                            inputProps={{
-                              step: Utils.precisionToStepSize(SETTINGS.precisionCoefficient),
-                            }}
-                            InputLabelProps={{
-                              shrink: true,
-                            }}
-                            variant="outlined"
-                            margin={textFiledMargin}
-                            className={classes.numberInput}
-                          />
-                          <Typography className={classes.alignSelfCenter}>
-                            {Utils.generatePolynomialTerm(curve.coefficients.length, i, 'x')}
-                          </Typography>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <Typography style={{ color: curve.r2 === 1 ? 'green' : 'red' }}>
-                    Coefficient of Determination (R^2): {JSON.stringify(curve.r2)}
-                  </Typography>
-                </div>
-
-                <StepConnector className={classes.stepConnector}></StepConnector>
-
-                <div>
-                  {curve.points.map((point, i) => {
-                    return (
-                      <div key={i} className={classes.flex}>
-                        <Typography className={classes.alignSelfCenter}>P{i + 1}</Typography>
-                        <TextField
-                          label="X-Coordinate"
-                          type="number"
-                          value={point[0]}
-                          onChange={e => handlePointCoordinateChange(e, i, 0)}
-                          inputProps={{
-                            min: curve.xAxis.min,
-                            max: curve.xAxis.max,
-                            step: Utils.precisionToStepSize(SETTINGS.precisionPoints),
-                          }}
-                          InputLabelProps={{
-                            shrink: true,
-                          }}
-                          variant="outlined"
-                          margin={textFiledMargin}
-                          className={classes.numberInput}
-                        />
-                        <TextField
-                          label="Y-Coordinate"
-                          type="number"
-                          value={point[1]}
-                          onChange={e => handlePointCoordinateChange(e, i, 1)}
-                          inputProps={{
-                            min: curve.yAxis.min,
-                            max: curve.yAxis.max,
-                            step: Utils.precisionToStepSize(SETTINGS.precisionPoints),
-                          }}
-                          InputLabelProps={{
-                            shrink: true,
-                          }}
-                          variant="outlined"
-                          margin={textFiledMargin}
-                          className={classes.numberInput}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
             </ExpansionPanelDetails>
           </ExpansionPanel>
