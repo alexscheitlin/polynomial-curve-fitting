@@ -21,6 +21,7 @@ import { Curve, Props, Settings } from './types';
 import { defaultProps } from './default-props';
 import { initValues } from './init';
 import Equation from './Equation';
+import TextSettings from './components/TextSettings';
 
 const CurveGenerator: React.FC<Props> = (props: Props) => {
   /***************************************************************************/
@@ -906,41 +907,16 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
               <Typography className={classes.heading}>Text Settings</Typography>
             </ExpansionPanelSummary>
             <ExpansionPanelDetails className={classes.flexColumn}>
-              <TextField
-                label="Name"
-                variant="outlined"
-                type="text"
-                value={curve.name}
-                onChange={e => handleCurveNameChange(e)}
-                placeholder="Curve Name"
-              />
-              <br></br>
-              <TextField
-                label="X-Axis"
-                variant="outlined"
-                type="text"
-                value={curve.xAxis.label}
-                onChange={e => handleXAxisLabelChange(e)}
-                placeholder="X-Axis Label"
-              />
-              <br></br>
-              <TextField
-                label="Y-Axis"
-                variant="outlined"
-                type="text"
-                value={curve.yAxis.label}
-                onChange={e => handleYAxisLabelChange(e)}
-                placeholder="Y-Axis Label"
-              />
-              <br></br>
-              <TextField
-                label="Description"
-                multiline
-                rows={5}
-                variant="outlined"
-                onChange={e => handleCurveDescriptionChange(e)}
-                value={curve.description}
-              />
+              <TextSettings
+                curveName={curve.name}
+                onCurveNameChange={e => handleCurveNameChange(e)}
+                xAxisLabel={curve.xAxis.label}
+                onXAxisLabelChange={e => handleXAxisLabelChange(e)}
+                yAxisLable={curve.yAxis.label}
+                onYAxisLabelChange={e => handleYAxisLabelChange(e)}
+                description={curve.description}
+                onDescriptionChange={e => handleCurveDescriptionChange(e)}
+              ></TextSettings>
             </ExpansionPanelDetails>
           </ExpansionPanel>
         </div>
