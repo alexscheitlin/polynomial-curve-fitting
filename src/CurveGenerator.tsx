@@ -681,7 +681,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
 
   const orders = [1, 2, 3, 4, 5, 6];
 
-  const [expanded, setExpanded] = React.useState<string | false>('panel1');
+  const [expanded, setExpanded] = React.useState<string | false>('panel2');
 
   const handlePanelChange = (panel: string) => (
     event: React.ChangeEvent<{}>,
@@ -780,6 +780,24 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
         <div className={classes.root}>
           <ExpansionPanel expanded={expanded === 'panel1'} onChange={handlePanelChange('panel1')}>
             <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography className={classes.heading}>Text Settings</Typography>
+            </ExpansionPanelSummary>
+            <ExpansionPanelDetails className={classes.flexColumn}>
+              <TextSettings
+                curveName={curve.name}
+                onCurveNameChange={e => handleCurveNameChange(e)}
+                xAxisLabel={curve.xAxis.label}
+                onXAxisLabelChange={e => handleXAxisLabelChange(e)}
+                yAxisLable={curve.yAxis.label}
+                onYAxisLabelChange={e => handleYAxisLabelChange(e)}
+                description={curve.description}
+                onDescriptionChange={e => handleCurveDescriptionChange(e)}
+              ></TextSettings>
+            </ExpansionPanelDetails>
+          </ExpansionPanel>
+
+          <ExpansionPanel expanded={expanded === 'panel2'} onChange={handlePanelChange('panel2')}>
+            <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
               <Typography className={classes.heading}>Polynomial Equation and Points</Typography>
             </ExpansionPanelSummary>
             <ExpansionPanelDetails>
@@ -812,28 +830,6 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
                   <Typography>Equation: {curve.equation}</Typography>
                 </div> */}
               </div>
-            </ExpansionPanelDetails>
-          </ExpansionPanel>
-
-          <ExpansionPanel expanded={expanded === 'panel2'} onChange={handlePanelChange('panel2')}>
-            <ExpansionPanelSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="panel2bh-content"
-              id="panel2bh-header"
-            >
-              <Typography className={classes.heading}>Text Settings</Typography>
-            </ExpansionPanelSummary>
-            <ExpansionPanelDetails className={classes.flexColumn}>
-              <TextSettings
-                curveName={curve.name}
-                onCurveNameChange={e => handleCurveNameChange(e)}
-                xAxisLabel={curve.xAxis.label}
-                onXAxisLabelChange={e => handleXAxisLabelChange(e)}
-                yAxisLable={curve.yAxis.label}
-                onYAxisLabelChange={e => handleYAxisLabelChange(e)}
-                description={curve.description}
-                onDescriptionChange={e => handleCurveDescriptionChange(e)}
-              ></TextSettings>
             </ExpansionPanelDetails>
           </ExpansionPanel>
         </div>
