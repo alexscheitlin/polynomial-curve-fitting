@@ -48,6 +48,9 @@ const useStyles = makeStyles(() => ({
   flex: {
     display: 'flex',
   },
+  flexWrap: {
+    flexWrap: 'wrap',
+  },
   alignSelfCenter: {
     alignSelf: 'center',
   },
@@ -89,8 +92,7 @@ const CurveSettings = ({
 
       <StepConnector className={classes.stepConnector}></StepConnector>
 
-      <div className={classes.flex}>
-        <Typography className={classes.alignSelfCenter}>y =</Typography>
+      <div className={`${classes.flex} ${classes.flexWrap}`}>
         {coefficients.map((coefficient, i) => {
           return (
             <div key={i} className={classes.flex}>

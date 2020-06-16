@@ -719,6 +719,9 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       stepConnector: {
         margin: '15px 0',
       },
+      expansionPanelDetails: {
+        maxWidth: '500px',
+      },
       /******************/
       /* single styles  */
       /******************/
@@ -782,7 +785,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
             <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
               <Typography className={classes.heading}>Text Settings</Typography>
             </ExpansionPanelSummary>
-            <ExpansionPanelDetails className={classes.flexColumn}>
+            <ExpansionPanelDetails className="classes.flexColumn classes.expansionPanelDetails">
               <TextSettings
                 curveName={curve.name}
                 onCurveNameChange={e => handleCurveNameChange(e)}
@@ -800,7 +803,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
             <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
               <Typography className={classes.heading}>Polynomial Equation and Points</Typography>
             </ExpansionPanelSummary>
-            <ExpansionPanelDetails>
+            <ExpansionPanelDetails className={classes.expansionPanelDetails}>
               <div>
                 <CurveSettings
                   orderOptions={orders}

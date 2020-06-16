@@ -29,6 +29,7 @@ const useStyles = makeStyles(() => ({
   divStyle: {
     display: 'flex',
     flexDirection: 'column',
+    flexGrow: 1,
   },
 }));
 
