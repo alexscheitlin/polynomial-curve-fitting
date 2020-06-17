@@ -98,6 +98,52 @@ const App = () => {
 };
 ```
 
+### Set Translations
+
+The `internationalization` prop accepts a `PropsInternationalization` object specifying translations. Depending on the current UI language change the `i18n` object in the following example to either `ENGLISH` or `GERMAN`. Have a look at the [default props](./src/default-props.ts) to see the default strings and what can be changed. Note that every string is optional.
+
+```jsx
+import CurveGenerator from 'polynomial-curve-fitting';
+import { PropsInternationalization } from 'polynomial-curve-fitting/lib/types';
+import React from 'react';
+
+const ENGLISH: PropsInternationalization = {
+  textSettings: { title: 'English Title' },
+};
+
+const GERMAN: PropsInternationalization = {
+  textSettings: {
+    title: 'German Title',
+    curveName: {
+      label: 'German Label',
+    },
+  },
+};
+
+const App = () => {
+  const [lang, setLang] = React.useState < string > 'en';
+  const [i18n, setI18n] = React.useState < PropsInternationalization > ENGLISH;
+
+  const langChange = (newLang: string) => {
+    setLang(newLang);
+    newLang === 'en' && setI18n(ENGLISH);
+    newLang === 'de' && setI18n(GERMAN);
+  };
+
+  return (
+    <div>
+      <select value={lang} onChange={e => langChange(e.target.value)}>
+        <option value="en">EN</option>
+        <option value="de">DE</option>
+      </select>
+      <CurveGenerator internationalization={i18n}></CurveGenerator>
+    </div>
+  );
+};
+
+export default App;
+```
+
 ## Development
 
 The following steps show how to make changes to `polynomial-curve-fitting` and use the component in an `pcf-example` react app. The commands used below assume that the two projects are sibling directories.
