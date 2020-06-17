@@ -11,7 +11,14 @@ export const defaultProps: DefaultProps = {
     polynomialOrder: 3,
   },
   settings: {
+    // crosshair indicating the position of the mouse pointer on the coordinate system
+    showCrosshair: true,
     crosshairColor: 'gray',
+
+    // crosshair and point on the curve based on the x coordinate of the mouse pointer
+    // if this crosshair is displayed, the other one will not be displayed
+    showCrosshairOnCurve: true,
+    crosshairOnCurveColor: 'gray',
 
     // whether the curve should be plotted as dots or not (= as a continuous line)
     showDottedCurve: false,
@@ -34,7 +41,7 @@ export const defaultProps: DefaultProps = {
       radius: 8.0,
     },
 
-    // element within the svg that contains the coordinatesystem, curves, and draggable points
+    // element within the svg that contains the coordinate system, curves, and draggable points
     // title and axis labels are located relative to the graph but are directly drawn on the svg
     graph: {
       axis: {

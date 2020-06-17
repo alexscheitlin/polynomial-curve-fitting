@@ -36,7 +36,12 @@ export interface PropsCurveOrder extends PropsBaseCurve {
 }
 
 export interface PropsSettings {
+  showCrosshair?: boolean;
   crosshairColor?: string;
+
+  showCrosshairOnCurve?: boolean;
+  crosshairOnCurveColor?: string;
+
   showDottedCurve?: boolean;
 
   curve?: CurveSettings;

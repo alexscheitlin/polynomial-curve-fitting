@@ -40,6 +40,11 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
     //.selectAll('*') // remove everything withing the svg tag (including the styling)
   };
 
+  const removeCrosshairOnCurve = () => {
+    const svg = d3.select(SVG_REF.current);
+    svg.select('g#crosshairOnCurve').remove();
+  };
+
   const drawDraggablePoints = (
     svg: d3.Selection<d3.BaseType, any, HTMLElement, any>,
     graph: d3.Selection<SVGGElement, any, HTMLElement, any>,
@@ -105,6 +110,18 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
         curve.polynomialOrder,
         SETTINGS.precisionCoefficient
       );
+
+      if (SETTINGS.showCrosshairOnCurve) {
+        removeCrosshairOnCurve();
+        Drawing.addCrosshairOnCurve(
+          graph,
+          SETTINGS.xScale,
+          SETTINGS.yScale,
+          SETTINGS.graphSize,
+          SETTINGS.crosshairOnCurveColor,
+          regression.predict
+        );
+      }
 
       setCurve({
         ...curve,
@@ -350,13 +367,32 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
       );
     }
 
-    Drawing.addCrosshair(
-      graph,
-      SETTINGS.xScale,
-      SETTINGS.yScale,
-      SETTINGS.graphSize,
-      SETTINGS.crosshairColor
-    );
+    if (SETTINGS.showCrosshair) {
+      Drawing.addCrosshair(
+        graph,
+        SETTINGS.xScale,
+        SETTINGS.yScale,
+        SETTINGS.graphSize,
+        SETTINGS.crosshairColor
+      );
+    }
+
+    if (SETTINGS.showCrosshairOnCurve) {
+      const regression = Regression.polynomialRegression(
+        curve.points,
+        curve.polynomialOrder,
+        SETTINGS.precisionCoefficient
+      );
+      Drawing.addCrosshairOnCurve(
+        graph,
+        SETTINGS.xScale,
+        SETTINGS.yScale,
+        SETTINGS.graphSize,
+        SETTINGS.crosshairOnCurveColor,
+        regression.predict
+      );
+    }
+
     SETTINGS.drawDraggablePoints &&
       drawDraggablePoints(
         svg,

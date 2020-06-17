@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import { DataPoint } from 'regression';
 
 import * as Utils from './utils';
 
@@ -353,17 +354,16 @@ export const addCrosshair = (
     const mouseX = mouse[0];
     const mouseY = mouse[1];
 
-    verticalLine.attr('x1', mouseX).attr('x2', mouseX).attr('opacity', 1);
+    const xLabel = Utils.round(xScale.invert(mouseX), 2);
+    const yLabel = Utils.round(yScale.invert(mouseY), 2);
 
+    verticalLine.attr('x1', mouseX).attr('x2', mouseX).attr('opacity', 1);
     horizontalLine.attr('y1', mouseY).attr('y2', mouseY).attr('opacity', 1);
 
     text
       .attr('x', () => mouseX)
       .attr('y', () => mouseY)
-      .text(
-        () =>
-          `x: ${Utils.round(xScale.invert(mouseX), 2)}, y: ${Utils.round(yScale.invert(mouseY), 2)}`
-      )
+      .text(() => `x: ${xLabel}, y: ${yLabel}`)
       .attr('opacity', 1);
   };
 
@@ -371,6 +371,112 @@ export const addCrosshair = (
     verticalLine.attr('opacity', 0);
     horizontalLine.attr('opacity', 0);
     text.attr('opacity', 0);
+  };
+
+  transpRect.on('mousemove', (d, i, n) => mouseMove(d, i, n)).on('mouseout', () => mouseOut());
+};
+
+export const addCrosshairOnCurve = (
+  graph: d3.Selection<SVGGElement, any, HTMLElement, any>,
+  xScale: d3.ScaleLinear<number, number>,
+  yScale: d3.ScaleLinear<number, number>,
+  graphSize: { width: number; height: number },
+  color: string,
+  predict: (x: number) => DataPoint
+) => {
+  // based on
+  // https://stackoverflow.com/questions/38687588/add-horizontal-crosshair-to-d3-js-chart
+  const lineWidth = 1.0;
+  const dashes = '3 3'; // width of one dash and space between two dashes
+
+  const crosshair = graph.append('g').attr('id', 'crosshairOnCurve');
+
+  const transpRect = crosshair
+    .append('rect')
+    .attr('x', 0)
+    .attr('y', 0)
+    .attr('width', graphSize.width)
+    .attr('height', graphSize.height)
+    .attr('fill', 'white')
+    .attr('opacity', 0);
+
+  const verticalLine = crosshair
+    .append('line')
+    .attr('id', 'crosshair-vertcal')
+    .attr('y1', 0)
+    .attr('y2', graphSize.height)
+    .attr('opacity', 0)
+    .attr('stroke', color)
+    .attr('stroke-width', lineWidth)
+    .attr('pointer-events', 'none')
+    .style('stroke-dasharray', dashes);
+
+  const horizontalLine = crosshair
+    .append('line')
+    .attr('id', 'crosshair-horizontal')
+    .attr('x1', 0)
+    .attr('x2', graphSize.width)
+    .attr('opacity', 0)
+    .attr('stroke', color)
+    .attr('stroke-width', lineWidth)
+    .attr('pointer-events', 'none')
+    .style('stroke-dasharray', dashes);
+
+  const text = crosshair
+    .append('text')
+    .attr('id', 'crosshair-coordinates')
+    .attr('x', 0)
+    .attr('y', 0)
+    .attr('opacity', 0)
+    .attr('dx', '1em')
+    .attr('dy', '-1em')
+    .attr('font-size', '0.75rem')
+    .attr('fill', 'gray');
+
+  const circle = crosshair
+    .append('circle')
+    .attr('r', 5)
+    .attr('cx', 0)
+    .attr('cy', 0)
+    .attr('opacity', 0);
+
+  const mouseMove = (
+    _datum: any, // won't be used here but needs to be declared as `index` and `nodes` are needed => ignore `datum`
+    index: number,
+    nodes: SVGRectElement[] | d3.ArrayLike<SVGRectElement>
+  ) => {
+    const node = nodes[index];
+    const mouse = d3.mouse(node);
+    const mouseX = mouse[0];
+
+    // compute the y value given the x coordinate of the mouse pointer
+    const xValue = xScale.invert(mouseX);
+    const yValue = predict(xValue)[1];
+    const yy = yScale(yValue);
+
+    const xLabel = Utils.round(xValue, 2);
+    const yLabel = Utils.round(yValue, 2);
+
+    verticalLine.attr('x1', mouseX).attr('x2', mouseX).attr('opacity', 1);
+    horizontalLine.attr('y1', yy).attr('y2', yy).attr('opacity', 1);
+
+    text
+      .attr('x', () => mouseX)
+      .attr('y', () => yy)
+      .text(() => `x: ${xLabel}, y: ${yLabel}`)
+      .attr('opacity', 1);
+
+    circle
+      .attr('cx', () => mouseX)
+      .attr('cy', () => yy)
+      .attr('opacity', 1);
+  };
+
+  const mouseOut = () => {
+    verticalLine.attr('opacity', 0);
+    horizontalLine.attr('opacity', 0);
+    text.attr('opacity', 0);
+    circle.attr('opacity', 0);
   };
 
   transpRect.on('mousemove', (d, i, n) => mouseMove(d, i, n)).on('mouseout', () => mouseOut());

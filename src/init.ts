@@ -30,7 +30,12 @@ export const generateSettings = (props: Props, defaultProps: DefaultProps): Sett
   const defaultSettings = defaultProps.settings;
 
   const propsSettings: Required<PropsSettings> = {
+    showCrosshair: settings?.showCrosshair || defaultSettings.showCrosshair,
     crosshairColor: settings?.crosshairColor || defaultSettings.crosshairColor,
+
+    showCrosshairOnCurve: settings?.showCrosshairOnCurve || defaultSettings.showCrosshairOnCurve,
+    crosshairOnCurveColor: settings?.crosshairOnCurveColor || defaultSettings.crosshairOnCurveColor,
+
     showDottedCurve: settings?.showDottedCurve || defaultSettings.showDottedCurve,
 
     curve: {
