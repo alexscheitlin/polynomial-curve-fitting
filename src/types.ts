@@ -1,8 +1,14 @@
+// Extends the `Required` type so that not only optional fields of the type T
+// are required but also optional fields of the types of all fields of type T.
+type RequiredAll<T> = {
+  [P in keyof T]-?: RequiredAll<T[P]>;
+};
+
 /*****************************************************************************/
 /* Properties                                                                */
 /*****************************************************************************/
 
-// Both the curve and settings are optional.
+// Note that the curve, settings, and internationalization are optional.
 // A curve can be specified in three different ways:
 // 1. only provide base information and get a random polynomial
 // 2. additionally specify curve points to get a regression through these points
@@ -11,13 +17,16 @@
 export interface Props {
   curve?: PropsBaseCurve | PropsCurvePoints | PropsCurveOrder;
   settings?: PropsSettings;
+  internationalization?: PropsInternationalization;
   curveChange?: (value: CurveOut) => void;
 }
 
-// Mirror the `Props` from above but require all fields to be present (except the 'output callback').
+// Mirror the `Props` from above but require all fields to be present (except the
+// 'output callback').
 export interface DefaultProps {
   curve: Required<PropsCurveOrder>;
   settings: Required<PropsSettings>;
+  internationalization: RequiredAll<PropsInternationalization>;
 }
 
 export interface PropsBaseCurve {
@@ -58,6 +67,26 @@ export interface PropsSettings {
   graphOnly?: boolean;
 }
 
+export interface PropsInternationalization {
+  common?: {
+    determinationCoefficient?: string;
+    resetZoom?: string;
+  };
+  curveSettings?: {
+    title?: string;
+    polynomialOrder?: { label?: string };
+    xCoordinate?: { label?: string };
+    yCoordinate?: { label?: string };
+  };
+  textSettings?: {
+    title?: string;
+    curveName?: { label?: string; placeholder?: string };
+    xAxis?: { label?: string; placeholder?: string };
+    yAxis?: { label?: string; placeholder?: string };
+    description?: { label?: string; placeholder?: string };
+  };
+}
+
 /*****************************************************************************/
 /* Main Types                                                                */
 /*****************************************************************************/
@@ -87,6 +116,11 @@ export interface Settings extends Required<PropsSettings> {
   xScale: d3.ScaleLinear<number, number>;
   yScale: d3.ScaleLinear<number, number>;
 }
+
+// ignore as there are no additional fields but a type with all optional fields
+// being required is necessary
+// eslint-disable-next-line
+export interface Internationalization extends RequiredAll<PropsInternationalization> {}
 
 /*****************************************************************************/
 /* Helper Types                                                              */

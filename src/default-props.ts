@@ -81,4 +81,26 @@ export const defaultProps: DefaultProps = {
 
     graphOnly: false,
   },
+  internationalization: {
+    common: {
+      determinationCoefficient: 'Coefficient of Determination',
+      resetZoom: 'Reset Zoom',
+    },
+    curveSettings: {
+      title: 'Polynomial Equation and Points',
+      polynomialOrder: { label: 'Polynomial Order' },
+      xCoordinate: { label: 'X-Coordinate' },
+      yCoordinate: { label: 'Y-Coordinate' },
+    },
+    textSettings: {
+      title: 'Text Settings',
+      curveName: { label: 'Curve', placeholder: 'Curve Name' },
+      xAxis: { label: 'X-Axis', placeholder: 'X-Axis Label' },
+      yAxis: { label: 'Y-Axis', placeholder: 'Y-Axis Label' },
+      description: {
+        label: 'Description',
+        placeholder: 'Describe the purpose, properties and peculiarities of the curve.',
+      },
+    },
+  },
 };

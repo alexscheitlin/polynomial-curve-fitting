@@ -15,7 +15,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import * as Drawing from './drawing';
 import * as Regression from './regression';
 import * as Utils from './utils';
-import { Curve, Props, Settings } from './types';
+import { Curve, Props, Settings, Internationalization } from './types';
 import { defaultProps } from './default-props';
 import { initValues } from './init';
 import Equation from './Equation';
@@ -224,7 +224,10 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   /* Variables                                                               */
   /***************************************************************************/
 
-  let [SETTINGS, INITIAL_CURVE]: [Settings, Curve] = initValues(props, defaultProps);
+  let [SETTINGS, INITIAL_CURVE, I18N]: [Settings, Curve, Internationalization] = initValues(
+    props,
+    defaultProps
+  );
 
   interface Drawing {
     svg: d3.Selection<d3.BaseType, any, HTMLElement, any>;
@@ -239,7 +242,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   const [initialCurve, setInitialCurve] = React.useState<Curve>(INITIAL_CURVE);
 
   React.useEffect(() => {
-    [SETTINGS, INITIAL_CURVE] = initValues(props, defaultProps);
+    [SETTINGS, INITIAL_CURVE, I18N] = initValues(props, defaultProps);
 
     const newCurve = Utils.deepCopy(INITIAL_CURVE);
     setCurve(newCurve);
@@ -809,7 +812,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
               ></Equation>
             </div>
             <Button variant="contained" onClick={() => handleResetZoomClick()}>
-              Reset Zoom
+              {I18N.common.resetZoom}
             </Button>
             <Typography className={classes.description}>{curve.description}</Typography>
           </div>
@@ -819,7 +822,7 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
         <div className={classes.root}>
           <ExpansionPanel expanded={expanded === 'panel1'} onChange={handlePanelChange('panel1')}>
             <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography className={classes.heading}>Text Settings</Typography>
+              <Typography className={classes.heading}>{I18N.textSettings.title}</Typography>
             </ExpansionPanelSummary>
             <ExpansionPanelDetails className="classes.flexColumn classes.expansionPanelDetails">
               <TextSettings
@@ -831,13 +834,14 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
                 onYAxisLabelChange={e => handleYAxisLabelChange(e)}
                 description={curve.description}
                 onDescriptionChange={e => handleCurveDescriptionChange(e)}
+                i18n={I18N}
               ></TextSettings>
             </ExpansionPanelDetails>
           </ExpansionPanel>
 
           <ExpansionPanel expanded={expanded === 'panel2'} onChange={handlePanelChange('panel2')}>
             <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography className={classes.heading}>Polynomial Equation and Points</Typography>
+              <Typography className={classes.heading}>{I18N.curveSettings.title}</Typography>
             </ExpansionPanelSummary>
             <ExpansionPanelDetails className={classes.expansionPanelDetails}>
               <div>
@@ -855,12 +859,13 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
                   pointCoordinatePrecision={SETTINGS.precisionPoints}
                   points={curve.points}
                   onPointCoordinateChange={(e, i, j) => handlePointCoordinateChange(e, i, j)}
+                  i18n={I18N}
                 ></CurveSettings>
 
                 <StepConnector className={classes.stepConnector}></StepConnector>
 
                 <Typography style={{ color: curve.r2 === 1 ? 'green' : 'red' }}>
-                  Coefficient of Determination (R^2): {JSON.stringify(curve.r2)}
+                  {I18N.common.determinationCoefficient} (R^2): {JSON.stringify(curve.r2)}
                 </Typography>
                 {/* <div>
                   <Typography>

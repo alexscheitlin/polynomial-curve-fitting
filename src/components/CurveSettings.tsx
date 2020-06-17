@@ -2,11 +2,8 @@ import { makeStyles, MenuItem, StepConnector, TextField, Typography } from '@mat
 import React from 'react';
 
 import Equation from '../Equation';
+import { Internationalization } from '../types';
 import * as Utils from '../utils';
-
-const LABEL_ORDER = 'Polynomial Order';
-const LABEL_X_COORDINATE = 'X-Coordinate';
-const LABEL_Y_COORDINATE = 'Y-Coordinate';
 
 interface Props {
   orderOptions: number[];
@@ -31,6 +28,8 @@ interface Props {
     index: number,
     coordinateIndex: number
   ) => void;
+
+  i18n: Internationalization;
 }
 
 const useStyles = makeStyles(() => ({
@@ -70,6 +69,7 @@ const CurveSettings = ({
   pointCoordinatePrecision,
   points,
   onPointCoordinateChange,
+  i18n,
 }: Props) => {
   const classes = useStyles();
 
@@ -77,7 +77,7 @@ const CurveSettings = ({
     <div className={classes.divStyle}>
       <TextField
         select
-        label={LABEL_ORDER}
+        label={i18n.curveSettings.polynomialOrder.label}
         variant="outlined"
         margin="dense"
         value={order}
@@ -128,7 +128,7 @@ const CurveSettings = ({
             <div key={i} className={classes.flex}>
               <Typography className={classes.alignSelfCenter}>P{i + 1}</Typography>
               <TextField
-                label={LABEL_X_COORDINATE}
+                label={i18n.curveSettings.xCoordinate.label}
                 type="number"
                 variant="outlined"
                 margin="dense"
@@ -145,7 +145,7 @@ const CurveSettings = ({
                 }}
               />
               <TextField
-                label={LABEL_Y_COORDINATE}
+                label={i18n.curveSettings.yCoordinate.label}
                 type="number"
                 variant="outlined"
                 margin="dense"
