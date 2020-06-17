@@ -17,6 +17,23 @@ npm i polynomial-curve-fitting
 
 Use the react component generating a random curve:
 
+<details>
+<summary>JavaScript Example</summary>
+
+```jsx
+import React from 'react';
+import CurveGenerator from 'polynomial-curve-fitting';
+
+const App = () => <CurveGenerator></CurveGenerator>;
+
+export default App;
+```
+
+</details>
+
+<details open="">
+<summary>TypeScript Example</summary>
+
 ```tsx
 import React from 'react';
 import CurveGenerator from 'polynomial-curve-fitting';
@@ -25,6 +42,8 @@ const App = () => <CurveGenerator></CurveGenerator>;
 
 export default App;
 ```
+
+</details>
 
 The following sections show:
 
@@ -38,6 +57,23 @@ To provide initial information about the curve, there are three options:
 
 1. Use `PropsBaseCurve` and specify the following fields (all optional):
 
+   <details>
+   <summary>JavaScript Example</summary>
+
+   ```javascript
+   const curve1 = {
+     name: 'Fancy Polynomial',
+     description: 'This polynomial is a random polynomial.',
+     xAxis: { label: 'x Axis', min: 0, max: 10 },
+     yAxis: { label: 'y Axis', min: 0, max: 10 },
+   };
+   ```
+
+   </details>
+
+   <details open="">
+   <summary>TypeScript Example</summary>
+
    ```typescript
    import { PropsBaseCurve } from 'polynomial-curve-fitting/lib/types';
    const curve1: PropsBaseCurve = {
@@ -48,7 +84,26 @@ To provide initial information about the curve, there are three options:
    };
    ```
 
+   </details>
+
 2. Use `PropsCurvePoints` to specify points for the least squares regression. The order of the polynomial will be one less than the number of provided points. The fields of `PropsBaseCurve` are still optional, but the `points` field is required:
+
+   <details>
+   <summary>JavaScript Example</summary>
+
+   ```javascript
+   const curve2 = {
+     points: [
+       [0, 0],
+       [1, 1],
+     ],
+   };
+   ```
+
+   </details>
+
+   <details open="">
+   <summary>TypeScript Example</summary>
 
    ```typescript
    import { PropsCurvePoints } from 'polynomial-curve-fitting/lib/types';
@@ -60,7 +115,23 @@ To provide initial information about the curve, there are three options:
    };
    ```
 
+   </details>
+
 3. Use `PropsCurveOrder` to specify the order of the polynomial. The points on the curve are randomly generated. The fields of `PropsBaseCurve` are still optional, but the `polynomialOrder` field is required:
+
+   <details>
+   <summary>JavaScript Example</summary>
+
+   ```javascript
+   const curve3 = {
+     polynomialOrder: 2,
+   };
+   ```
+
+   </details>
+
+   <details open="">
+   <summary>TypeScript Example</summary>
 
    ```typescript
    import { PropsCurveOrder } from 'polynomial-curve-fitting/lib/types';
@@ -69,18 +140,41 @@ To provide initial information about the curve, there are three options:
    };
    ```
 
+   </details>
+
 Provide the information about the curve as follows:
 
-```tsx
-import CurveGenerator from "polynomial-curve-fitting";
-import React from "react";
+<details>
+<summary>JavaScript Example</summary>
 
-...
+```jsx
+import CurveGenerator from 'polynomial-curve-fitting';
+import React from 'react';
+
+// const curve ...
 
 const App = () => <CurveGenerator curve={curve}></CurveGenerator>;
 
 export default App;
 ```
+
+</details>
+
+<details open="">
+<summary>TypeScript Example</summary>
+
+```tsx
+import CurveGenerator from 'polynomial-curve-fitting';
+import React from 'react';
+
+// const curve ...
+
+const App = () => <CurveGenerator curve={curve}></CurveGenerator>;
+
+export default App;
+```
+
+</details>
 
 ### Provide Settings
 
@@ -93,6 +187,33 @@ const App = () => <CurveGenerator settings={settings}></CurveGenerator>;
 ### Get Curve
 
 To get updates on the curve while changing it within the component, use a callback function as shown in the following example:
+
+<details>
+<summary>JavaScript Example</summary>
+
+```jsx
+import CurveGenerator from 'polynomial-curve-fitting';
+import React from 'react';
+
+const App = () => {
+  const [curve, setCurve] = React.useState();
+  return (
+    <div>
+      <CurveGenerator curveChange={value => setCurve(value)}></CurveGenerator>
+      <pre>
+        {JSON.stringify(curve, (_, v) => (v instanceof Array ? JSON.stringify(v, null) : v), 3)}
+      </pre>
+    </div>
+  );
+};
+
+export default App;
+```
+
+</details>
+
+<details open="">
+<summary>TypeScript Example</summary>
 
 ```tsx
 import CurveGenerator from 'polynomial-curve-fitting';
@@ -114,9 +235,60 @@ const App = () => {
 export default App;
 ```
 
+</details>
+
 ### Set Translations
 
 The `internationalization` prop accepts a `PropsInternationalization` object specifying translations. Depending on the current UI language change the `i18n` object in the following example to either `ENGLISH` or `GERMAN`. Have a look at the [default props](./src/default-props.ts) to see the default strings and what can be changed. Note that every string is optional.
+
+<details>
+<summary>JavaScript Example</summary>
+
+```jsx
+import CurveGenerator from 'polynomial-curve-fitting';
+import React from 'react';
+
+const ENGLISH = {
+  textSettings: { title: 'English Title' },
+};
+
+const GERMAN = {
+  textSettings: {
+    title: 'German Title',
+    curveName: {
+      label: 'German Label',
+    },
+  },
+};
+
+const App = () => {
+  const [lang, setLang] = React.useState('en');
+  const [i18n, setI18n] = React.useState(ENGLISH);
+
+  const langChange = newLang => {
+    setLang(newLang);
+    newLang === 'en' && setI18n(ENGLISH);
+    newLang === 'de' && setI18n(GERMAN);
+  };
+
+  return (
+    <div>
+      <select value={lang} onChange={e => langChange(e.target.value)}>
+        <option value="en">EN</option>
+        <option value="de">DE</option>
+      </select>
+      <CurveGenerator internationalization={i18n}></CurveGenerator>
+    </div>
+  );
+};
+
+export default App;
+```
+
+</details>
+
+<details open="">
+<summary>TypeScript Example</summary>
 
 ```tsx
 import CurveGenerator from 'polynomial-curve-fitting';
@@ -159,6 +331,8 @@ const App = () => {
 
 export default App;
 ```
+
+</details>
 
 ## Development
 
