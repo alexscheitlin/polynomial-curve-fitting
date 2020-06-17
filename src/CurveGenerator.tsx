@@ -17,7 +17,7 @@ import * as Regression from './regression';
 import * as Utils from './utils';
 import { Curve, Props, Settings, Internationalization } from './types';
 import { defaultProps } from './default-props';
-import { initValues } from './init';
+import { initValues } from './initialization/index';
 import Equation from './Equation';
 import TextSettings from './components/TextSettings';
 import CurveSettings from './components/CurveSettings';
