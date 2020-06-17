@@ -865,7 +865,8 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
                 <StepConnector className={classes.stepConnector}></StepConnector>
 
                 <Typography style={{ color: curve.r2 === 1 ? 'green' : 'red' }}>
-                  {I18N.common.determinationCoefficient} (R^2): {JSON.stringify(curve.r2)}
+                  {I18N.common.determinationCoefficient} (<Equation equation={'R^2'}></Equation>):{' '}
+                  {JSON.stringify(curve.r2)}
                 </Typography>
                 {/* <div>
                   <Typography>
