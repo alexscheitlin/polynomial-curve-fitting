@@ -15,7 +15,7 @@ type RequiredAll<T> = {
 // 3. instead of points, specify the order of the polynomial and points are
 //    randomly chosen
 export interface Props {
-  curve?: PropsBaseCurve | PropsCurvePoints | PropsCurveOrder;
+  curve?: PropsBaseCurve | PropsCurvePoints | PropsCurveOrder | PropsCurveCoefficients;
   settings?: PropsSettings;
   internationalization?: PropsInternationalization;
   curveChange?: (value: CurveOut) => void;
@@ -42,6 +42,10 @@ export interface PropsCurvePoints extends PropsBaseCurve {
 
 export interface PropsCurveOrder extends PropsBaseCurve {
   polynomialOrder: number;
+}
+
+export interface PropsCurveCoefficients extends PropsBaseCurve {
+  coefficients: number[];
 }
 
 export interface PropsSettings {

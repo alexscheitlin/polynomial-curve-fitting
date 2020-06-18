@@ -7,6 +7,7 @@ import {
   PropsCurveOrder,
   PropsCurvePoints,
   Settings,
+  PropsCurveCoefficients,
 } from '../types';
 import * as Utils from '../utils';
 
@@ -52,10 +53,18 @@ export const generateCurve = (
   // additional fields for the `Curve` type
   let points = (curve as PropsCurvePoints)?.points;
   let polynomialOrder = (curve as PropsCurveOrder)?.polynomialOrder;
+  const coefficients = (curve as PropsCurveCoefficients)?.coefficients;
   if (points) {
     polynomialOrder = points.length - 1;
+
+    if (coefficients) {
+      // TODO: this needs to match
+      polynomialOrder === coefficients.length;
+    }
   } else if (polynomialOrder) {
     // skip
+  } else if (coefficients) {
+    polynomialOrder = coefficients.length - 1;
   } else {
     polynomialOrder = defaultProps.curve.polynomialOrder;
   }
@@ -69,6 +78,13 @@ export const generateCurve = (
       propsCurve.yAxis.min,
       propsCurve.yAxis.max
     );
+
+    // compute y values for the given x values
+    if (coefficients) {
+      points.forEach(point => {
+        point[1] = Utils.polynomialValue(point[0], coefficients);
+      });
+    }
   }
 
   const regression = Regression.polynomialRegression(
