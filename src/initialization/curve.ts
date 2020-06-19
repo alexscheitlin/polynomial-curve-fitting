@@ -59,7 +59,7 @@ export const generateCurve = (
 
     if (coefficients) {
       // TODO: this needs to match
-      polynomialOrder === coefficients.length;
+      polynomialOrder = coefficients.length;
     }
   } else if (polynomialOrder) {
     // skip
