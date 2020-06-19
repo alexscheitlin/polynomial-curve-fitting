@@ -53,7 +53,7 @@ The following sections show:
 
 ### Specify a Curve
 
-To provide initial information about the curve, there are three options:
+To provide initial information about the curve, there are four options:
 
 1. Use `PropsBaseCurve` and specify the following fields (all optional):
 
@@ -137,6 +137,31 @@ To provide initial information about the curve, there are three options:
    import { PropsCurveOrder } from 'polynomial-curve-fitting/lib/types';
    const curve3: PropsCurveOrder = {
      polynomialOrder: 2,
+   };
+   ```
+
+   </details>
+
+4. Use `PropsCurveCoefficients` to specify the coefficients of the polynomial. The points on the curve are randomly generated. The fields of `PropsBaseCurve` are still optional, but the `coefficients` field is required:
+
+   <details>
+   <summary>JavaScript Example</summary>
+
+   ```javascript
+   const curve4 = {
+     coefficients: [-0.1, 1.25, 5],
+   };
+   ```
+
+   </details>
+
+   <details open="">
+   <summary>TypeScript Example</summary>
+
+   ```typescript
+   import { PropsCurveCoefficients } from 'polynomial-curve-fitting/lib/types';
+   const curve4: PropsCurveCoefficients = {
+     coefficients: [-0.1, 1.25, 5],
    };
    ```
 
