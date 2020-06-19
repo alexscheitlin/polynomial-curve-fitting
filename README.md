@@ -142,7 +142,7 @@ To provide initial information about the curve, there are four options:
 
    </details>
 
-4. Use `PropsCurveCoefficients` to specify the coefficients of the polynomial. The points on the curve are randomly generated. The fields of `PropsBaseCurve` are still optional, but the `coefficients` field is required:
+4. Use `PropsCurveCoefficients` to specify the coefficients of the polynomial. When optionally specifying points, the x values are taken to create points on the curve (ideally the y values match). If no points have been specified, they are randomly generated. The fields of `PropsBaseCurve` are still optional, but the `coefficients` field is required:
 
    <details>
    <summary>JavaScript Example</summary>
@@ -150,6 +150,11 @@ To provide initial information about the curve, there are four options:
    ```javascript
    const curve4 = {
      coefficients: [-0.1, 1.25, 5],
+     points: [
+       [0, 5],
+       [1, 6.15],
+       [2, 7.1],
+     ],
    };
    ```
 
@@ -162,6 +167,11 @@ To provide initial information about the curve, there are four options:
    import { PropsCurveCoefficients } from 'polynomial-curve-fitting/lib/types';
    const curve4: PropsCurveCoefficients = {
      coefficients: [-0.1, 1.25, 5],
+     points: [
+       [0, 5],
+       [1, 6.15],
+       [2, 7.1],
+     ],
    };
    ```
 
