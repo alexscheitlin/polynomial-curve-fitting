@@ -46,6 +46,7 @@ export interface PropsCurveOrder extends PropsBaseCurve {
 
 export interface PropsCurveCoefficients extends PropsBaseCurve {
   coefficients: number[];
+  points?: number[][];
 }
 
 export interface PropsSettings {

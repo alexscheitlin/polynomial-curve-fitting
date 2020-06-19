@@ -69,6 +69,7 @@ export const generateCurve = (
     polynomialOrder = defaultProps.curve.polynomialOrder;
   }
 
+  // generate random points if the points have not been specified
   if (!points) {
     points = Utils.generateRandomPoints(
       polynomialOrder + 1,
@@ -78,13 +79,15 @@ export const generateCurve = (
       propsCurve.yAxis.min,
       propsCurve.yAxis.max
     );
+  }
 
-    // compute y values for the given x values
-    if (coefficients) {
-      points.forEach(point => {
-        point[1] = Utils.polynomialValue(point[0], coefficients);
-      });
-    }
+  // if coefficients have been specified, compute y values for the given x values of either
+  // - the specified points or
+  // - the random generated points
+  if (coefficients) {
+    points.forEach(point => {
+      point[1] = Utils.polynomialValue(point[0], coefficients);
+    });
   }
 
   const regression = Regression.polynomialRegression(
