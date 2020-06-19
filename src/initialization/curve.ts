@@ -59,7 +59,7 @@ export const generateCurve = (
 
     if (coefficients) {
       // TODO: this needs to match
-      polynomialOrder = coefficients.length;
+      polynomialOrder = coefficients.length - 1;
     }
   } else if (polynomialOrder) {
     // skip
@@ -70,7 +70,7 @@ export const generateCurve = (
   }
 
   // generate random points if the points have not been specified
-  if (!points) {
+  if (!points || points.length === 0) {
     points = Utils.generateRandomPoints(
       polynomialOrder + 1,
       settings.precisionPoints,
