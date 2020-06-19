@@ -85,9 +85,7 @@ export const generateCurve = (
   // - the specified points or
   // - the random generated points
   if (coefficients) {
-    points.forEach(point => {
-      point[1] = Utils.polynomialValue(point[0], coefficients);
-    });
+    points = points.map(point => [point[0], Utils.polynomialValue(point[0], coefficients)]);
   }
 
   const regression = Regression.polynomialRegression(
