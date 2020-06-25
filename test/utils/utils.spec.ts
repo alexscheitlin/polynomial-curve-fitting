@@ -1,4 +1,4 @@
-import * as Utils from '../src/utils';
+import * as Utils from '../../src/utils/utils';
 
 test('round 1.4 to 1', () => {
   expect(Utils.round(1.4, 0)).toBe(1);

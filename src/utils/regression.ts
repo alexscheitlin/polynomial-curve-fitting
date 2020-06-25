@@ -1,4 +1,5 @@
 import regression, { DataPoint, Result } from 'regression';
+
 import { range } from './utils';
 
 /*****************************************************************************/

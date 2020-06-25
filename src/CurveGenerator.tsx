@@ -12,13 +12,13 @@ import {
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
-import * as Drawing from './drawing';
-import * as Regression from './regression';
-import * as Utils from './utils';
+import * as Drawing from './utils/drawing';
+import * as Regression from './utils/regression';
+import * as Utils from './utils/utils';
 import { Curve, Props, Settings, Internationalization } from './types';
 import { defaultProps } from './default-props';
 import { initValues } from './initialization/index';
-import Equation from './Equation';
+import Equation from './components/Equation';
 import TextSettings from './components/TextSettings';
 import CurveSettings from './components/CurveSettings';
 

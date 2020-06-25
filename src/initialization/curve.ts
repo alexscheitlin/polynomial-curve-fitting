@@ -1,4 +1,3 @@
-import * as Regression from '../regression';
 import {
   Curve,
   DefaultProps,
@@ -9,7 +8,8 @@ import {
   PropsCurvePoints,
   Settings,
 } from '../types';
-import * as Utils from '../utils';
+import * as Regression from '../utils/regression';
+import * as Utils from '../utils/utils';
 
 /**
  * Generate the `Curve` for the react component based on the provided `props` and `defaultProps`.

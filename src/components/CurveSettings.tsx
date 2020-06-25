@@ -1,9 +1,9 @@
 import { makeStyles, MenuItem, StepConnector, TextField, Typography } from '@material-ui/core';
 import React from 'react';
 
-import Equation from '../Equation';
 import { Internationalization } from '../types';
-import * as Utils from '../utils';
+import * as Utils from '../utils/utils';
+import Equation from './Equation';
 
 interface Props {
   orderOptions: number[];
