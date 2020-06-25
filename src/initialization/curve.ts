@@ -4,10 +4,10 @@ import {
   DefaultProps,
   Props,
   PropsBaseCurve,
+  PropsCurveCoefficients,
   PropsCurveOrder,
   PropsCurvePoints,
   Settings,
-  PropsCurveCoefficients,
 } from '../types';
 import * as Utils from '../utils';
 
@@ -93,6 +93,32 @@ export const generateCurve = (
     polynomialOrder,
     settings.precisionCoefficient
   );
+
+  // calculate the y coordinate of the intersection of the curve and the x axis (= y(0))
+  const curveAtXAxis = Utils.polynomialValue(0, regression.equation);
+
+  // rescale coordinate system if the x axis intersection would not be displayed
+  if (!(propsCurve.yAxis.min <= curveAtXAxis && curveAtXAxis <= propsCurve.yAxis.max)) {
+    // get the min/max values for both axes (based on the coordinates of the points)
+    const xCoordinates = points.map(point => point[0]);
+    const yCoordinates = points.map(point => point[1]);
+    const xSpan = [Math.min(...xCoordinates), Math.max(...xCoordinates)];
+    const ySpan = [Math.min(...yCoordinates), Math.max(...yCoordinates)];
+
+    // set the min/max values of the axes so that
+    // - all points are displayed
+    // - both axes have the same "length"
+    // Note: floor/ceil the values so that the min/max values of the axes are integers (which is required for the
+    //       random curve point generation)
+    const maxLength = Math.ceil(Math.max(xSpan[1] - xSpan[0], ySpan[1] - ySpan[0]));
+    const xSpanStart = Math.floor(xSpan[0]);
+    const ySpanStart = Math.floor(ySpan[0]);
+
+    propsCurve.xAxis.min = xSpanStart;
+    propsCurve.xAxis.max = xSpanStart + maxLength;
+    propsCurve.yAxis.min = ySpanStart;
+    propsCurve.yAxis.max = ySpanStart + maxLength;
+  }
 
   return {
     ...propsCurve,
