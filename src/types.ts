@@ -72,6 +72,7 @@ export interface PropsSettings {
   graphOnly?: boolean;
 
   autoRescale?: boolean;
+  autoRescaleMargin?: number;
 }
 
 export interface PropsInternationalization {

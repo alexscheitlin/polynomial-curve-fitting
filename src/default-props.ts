@@ -83,6 +83,10 @@ export const defaultProps: DefaultProps = {
 
     // whether the coordinate system should be rescaled so that all draggable curve points are visible
     autoRescale: false,
+
+    // margin (in percentage of the total width/height) around the auto rescaled view so that no draggable
+    // curve point is placed on the border
+    autoRescaleMargin: 0.25,
   },
   internationalization: {
     common: {

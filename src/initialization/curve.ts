@@ -108,11 +108,10 @@ export const generateCurve = (
     // - there is a margin around the new view so that no point is placed on the border of the view
     // Note: floor/ceil the values so that the min/max values of the axes are integers (which is required for the
     //       random curve point generation)
-    const margin = 0.25; // in percentage of the maxLength
     let maxLength = Math.max(xSpan[1] - xSpan[0], ySpan[1] - ySpan[0]);
-    const xSpanStart = Math.floor(xSpan[0] - maxLength * margin);
-    const ySpanStart = Math.floor(ySpan[0] - maxLength * margin);
-    maxLength = Math.ceil(maxLength * (1 + 2 * margin));
+    const xSpanStart = Math.floor(xSpan[0] - maxLength * settings.autoRescaleMargin);
+    const ySpanStart = Math.floor(ySpan[0] - maxLength * settings.autoRescaleMargin);
+    maxLength = Math.ceil(maxLength * (1 + 2 * settings.autoRescaleMargin));
 
     propsCurve.xAxis.min = xSpanStart;
     propsCurve.xAxis.max = xSpanStart + maxLength;

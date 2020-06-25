@@ -90,6 +90,7 @@ export const generateSettings = (props: Props, defaultProps: DefaultProps): Sett
 
     autoRescale:
       settings?.autoRescale != undefined ? settings?.autoRescale : defaultSettings.autoRescale,
+    autoRescaleMargin: settings?.autoRescaleMargin || defaultSettings.autoRescaleMargin,
   };
 
   // additional fields for the `Settings` type
