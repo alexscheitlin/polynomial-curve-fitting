@@ -1,6 +1,6 @@
 import Equation from './components/Equation';
-import CurveGenerator from './CurveGenerator';
+import PolynomialCurveFitting from './PolynomialCurveFitting';
 import * as Utils from './utils/utils';
 
-export default CurveGenerator;
+export default PolynomialCurveFitting;
 export { Equation, Utils };

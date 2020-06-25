@@ -22,9 +22,9 @@ Use the react component generating a random curve:
 
 ```jsx
 import React from 'react';
-import CurveGenerator from 'polynomial-curve-fitting';
+import PolynomialCurveFitting from 'polynomial-curve-fitting';
 
-const App = () => <CurveGenerator></CurveGenerator>;
+const App = () => <PolynomialCurveFitting></PolynomialCurveFitting>;
 
 export default App;
 ```
@@ -36,9 +36,9 @@ export default App;
 
 ```tsx
 import React from 'react';
-import CurveGenerator from 'polynomial-curve-fitting';
+import PolynomialCurveFitting from 'polynomial-curve-fitting';
 
-const App = () => <CurveGenerator></CurveGenerator>;
+const App = () => <PolynomialCurveFitting></PolynomialCurveFitting>;
 
 export default App;
 ```
@@ -183,12 +183,12 @@ Provide the information about the curve as follows:
 <summary>JavaScript Example</summary>
 
 ```jsx
-import CurveGenerator from 'polynomial-curve-fitting';
+import PolynomialCurveFitting from 'polynomial-curve-fitting';
 import React from 'react';
 
 // const curve ...
 
-const App = () => <CurveGenerator curve={curve}></CurveGenerator>;
+const App = () => <PolynomialCurveFitting curve={curve}></PolynomialCurveFitting>;
 
 export default App;
 ```
@@ -199,12 +199,12 @@ export default App;
 <summary>TypeScript Example</summary>
 
 ```tsx
-import CurveGenerator from 'polynomial-curve-fitting';
+import PolynomialCurveFitting from 'polynomial-curve-fitting';
 import React from 'react';
 
 // const curve ...
 
-const App = () => <CurveGenerator curve={curve}></CurveGenerator>;
+const App = () => <PolynomialCurveFitting curve={curve}></PolynomialCurveFitting>;
 
 export default App;
 ```
@@ -216,7 +216,7 @@ export default App;
 In addition to the `curve` prop, there is also a `settings` prop that allows to set the style of the drawn graph (e.g, the size of the svg, font sizes, colors, and spacing). Have a look at the [default props](./src/default-props.ts) to see the default settings and what can be changed.
 
 ```jsx
-const App = () => <CurveGenerator settings={settings}></CurveGenerator>;
+const App = () => <PolynomialCurveFitting settings={settings}></PolynomialCurveFitting>;
 ```
 
 ### Get Curve
@@ -227,14 +227,14 @@ To get updates on the curve while changing it within the component, use a callba
 <summary>JavaScript Example</summary>
 
 ```jsx
-import CurveGenerator from 'polynomial-curve-fitting';
+import PolynomialCurveFitting from 'polynomial-curve-fitting';
 import React from 'react';
 
 const App = () => {
   const [curve, setCurve] = React.useState();
   return (
     <div>
-      <CurveGenerator curveChange={value => setCurve(value)}></CurveGenerator>
+      <PolynomialCurveFitting curveChange={value => setCurve(value)}></PolynomialCurveFitting>
       <pre>
         {JSON.stringify(curve, (_, v) => (v instanceof Array ? JSON.stringify(v, null) : v), 3)}
       </pre>
@@ -251,7 +251,7 @@ export default App;
 <summary>TypeScript Example</summary>
 
 ```tsx
-import CurveGenerator from 'polynomial-curve-fitting';
+import PolynomialCurveFitting from 'polynomial-curve-fitting';
 import { CurveOut } from 'polynomial-curve-fitting/lib/types';
 import React from 'react';
 
@@ -259,7 +259,9 @@ const App = () => {
   const [curve, setCurve] = React.useState<CurveOut>();
   return (
     <div>
-      <CurveGenerator curveChange={(value: CurveOut) => setCurve(value)}></CurveGenerator>
+      <PolynomialCurveFitting
+        curveChange={(value: CurveOut) => setCurve(value)}
+      ></PolynomialCurveFitting>
       <pre>
         {JSON.stringify(curve, (_, v) => (v instanceof Array ? JSON.stringify(v, null) : v), 3)}
       </pre>
@@ -280,7 +282,7 @@ The `internationalization` prop accepts a `PropsInternationalization` object spe
 <summary>JavaScript Example</summary>
 
 ```jsx
-import CurveGenerator from 'polynomial-curve-fitting';
+import PolynomialCurveFitting from 'polynomial-curve-fitting';
 import React from 'react';
 
 const ENGLISH = {
@@ -312,7 +314,7 @@ const App = () => {
         <option value="en">EN</option>
         <option value="de">DE</option>
       </select>
-      <CurveGenerator internationalization={i18n}></CurveGenerator>
+      <PolynomialCurveFitting internationalization={i18n}></PolynomialCurveFitting>
     </div>
   );
 };
@@ -326,7 +328,7 @@ export default App;
 <summary>TypeScript Example</summary>
 
 ```tsx
-import CurveGenerator from 'polynomial-curve-fitting';
+import PolynomialCurveFitting from 'polynomial-curve-fitting';
 import { PropsInternationalization } from 'polynomial-curve-fitting/lib/types';
 import React from 'react';
 
@@ -359,7 +361,7 @@ const App = () => {
         <option value="en">EN</option>
         <option value="de">DE</option>
       </select>
-      <CurveGenerator internationalization={i18n}></CurveGenerator>
+      <PolynomialCurveFitting internationalization={i18n}></PolynomialCurveFitting>
     </div>
   );
 };

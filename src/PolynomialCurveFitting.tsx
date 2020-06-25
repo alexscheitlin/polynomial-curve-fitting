@@ -22,7 +22,7 @@ import Equation from './components/Equation';
 import TextSettings from './components/TextSettings';
 import CurveSettings from './components/CurveSettings';
 
-const CurveGenerator: React.FC<Props> = (props: Props) => {
+const PolynomialCurveFitting: React.FC<Props> = (props: Props) => {
   /***************************************************************************/
   /* Drawing Methods                                                         */
   /***************************************************************************/
@@ -883,4 +883,4 @@ const CurveGenerator: React.FC<Props> = (props: Props) => {
   );
 };
 
-export default CurveGenerator;
+export default PolynomialCurveFitting;
