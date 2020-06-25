@@ -87,6 +87,9 @@ export const generateSettings = (props: Props, defaultProps: DefaultProps): Sett
         : defaultSettings.drawDraggablePoints,
 
     graphOnly: settings?.graphOnly !== undefined ? settings?.graphOnly : defaultSettings.graphOnly,
+
+    autoRescale:
+      settings?.autoRescale != undefined ? settings?.autoRescale : defaultSettings.autoRescale,
   };
 
   // additional fields for the `Settings` type

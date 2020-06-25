@@ -80,6 +80,9 @@ export const defaultProps: DefaultProps = {
     drawDraggablePoints: true,
 
     graphOnly: false,
+
+    // whether the coordinate system should be rescaled so that all draggable curve points are visible
+    autoRescale: false,
   },
   internationalization: {
     common: {

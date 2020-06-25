@@ -94,11 +94,8 @@ export const generateCurve = (
     settings.precisionCoefficient
   );
 
-  // calculate the y coordinate of the intersection of the curve and the x axis (= y(0))
-  const curveAtXAxis = Utils.polynomialValue(0, regression.equation);
-
-  // rescale coordinate system if the x axis intersection would not be displayed
-  if (!(propsCurve.yAxis.min <= curveAtXAxis && curveAtXAxis <= propsCurve.yAxis.max)) {
+  // rescale coordinate system
+  if (settings.autoRescale) {
     // get the min/max values for both axes (based on the coordinates of the points)
     const xCoordinates = points.map(point => point[0]);
     const yCoordinates = points.map(point => point[1]);

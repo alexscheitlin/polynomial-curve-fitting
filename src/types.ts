@@ -70,6 +70,8 @@ export interface PropsSettings {
   drawDraggablePoints?: boolean;
 
   graphOnly?: boolean;
+
+  autoRescale?: boolean;
 }
 
 export interface PropsInternationalization {
