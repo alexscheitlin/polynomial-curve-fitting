@@ -28,7 +28,7 @@
     "react": ">=16.8.0"
   },
   "dependencies": {
-    "d3": "^5.15.1",
+    "d3": "^7.6.1",
     "react-mathjax2": "0.0.2",
     "regression": "^2.0.1"
   },
